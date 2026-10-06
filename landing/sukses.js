@@ -13,6 +13,7 @@ const orderId = params.get('order_id') || params.get('orderId') || null;
 const paymentStatus = params.get('status') || 'paid';
 
 let orderData = { url: null, start: null, end: null };
+let resolvedJobId = orderId || txId;
 try {
   if (refRaw) orderData = JSON.parse(decodeURIComponent(refRaw));
 } catch (_) {
@@ -192,6 +193,14 @@ function enterSuccess(clips) {
 
   showState('success');
 
+  const targetJobId = resolvedJobId || orderId || txId;
+  if (targetJobId) {
+    const resultsUrl = new URL('coba.html', window.location.href);
+    resultsUrl.searchParams.set('job_id', targetJobId);
+    resultsUrl.hash = 'job-history-panel';
+    setTimeout(() => window.location.assign(resultsUrl), 2500);
+  }
+
   // 24-hour expiry countdown
   let expirySecs = 24 * 60 * 60;
   const expiryInterval = setInterval(() => {
@@ -238,6 +247,32 @@ const POLL_TIMEOUT_MS  = 5 * 60 * 1000; // 5 menit batas maksimum polling
 const pollStart        = Date.now();
 let pollInterval;
 
+async function findLinkedJobId(orderId) {
+  const response = await fetch(`${API_BASE}/api/jobs`);
+  if (!response.ok) return null;
+
+  const jobs = (await response.json()).jobs || [];
+  const order = jobs.find(job => job.job_id === orderId);
+  if (!order) return null;
+
+  const orderCreatedAt = Number(order.created_at || 0);
+  const candidates = jobs.filter(job => (
+    job.job_id !== orderId
+    && job.url === order.url
+    && job.mode === order.mode
+    && Math.abs(Number(job.created_at || 0) - orderCreatedAt) <= 5
+    && ['queue', 'processing', 'done', 'error'].includes(job.status)
+  ));
+
+  candidates.sort((a, b) => {
+    const priority = { processing: 0, done: 1, queue: 2, error: 3 };
+    return priority[a.status] - priority[b.status]
+      || Math.abs(Number(a.created_at || 0) - orderCreatedAt)
+        - Math.abs(Number(b.created_at || 0) - orderCreatedAt);
+  });
+  return candidates[0]?.job_id || null;
+}
+
 async function pollStatus() {
   if (Date.now() - pollStart > POLL_TIMEOUT_MS) {
     enterError('Waktu pemrosesan melebihi batas. Hubungi kami dengan ID transaksi kamu.');
@@ -274,7 +309,16 @@ async function pollStatus() {
       return;
     }
 
-    const data = await res.json();
+    let data = await res.json();
+
+    if (['queue', 'pending'].includes(data.status) && orderId) {
+      const linkedJobId = await findLinkedJobId(orderId);
+      if (linkedJobId && linkedJobId !== orderId) {
+        resolvedJobId = linkedJobId;
+        const jobResponse = await fetch(`${API_BASE}/api/status?id=${encodeURIComponent(linkedJobId)}`);
+        if (jobResponse.ok) data = await jobResponse.json();
+      }
+    }
 
     if (data.status === 'completed' && data.clips && data.clips.length > 0) {
       enterSuccess(data.clips);

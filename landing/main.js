@@ -536,7 +536,7 @@ function renderJobHistory(jobs = []) {
       : '';
 
     return `
-      <article class="history-item">
+      <article class="history-item" data-job-id="${escapeHtml(job.job_id || '')}">
         <div class="history-head">
           <div class="history-title" title="${title}">${title}</div>
           <span class="history-status ${statusClass}">${formatHistoryStatus(status)}</span>
@@ -557,6 +557,16 @@ function renderJobHistory(jobs = []) {
       </article>
     `;
   }).join('');
+
+  const focusJobId = new URLSearchParams(window.location.search).get('job_id');
+  if (focusJobId) {
+    const target = Array.from(list.querySelectorAll('.history-item'))
+      .find(item => item.dataset.jobId === focusJobId);
+    if (target) {
+      target.classList.add('is-highlighted');
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
 }
 
 async function loadJobHistory() {

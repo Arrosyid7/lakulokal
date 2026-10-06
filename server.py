@@ -335,19 +335,30 @@ def doku_webhook():
     if event not in ('payment.success', 'success', 'paid'):
         return jsonify({'received': True}), 200
 
-    tx_id = data.get('transaction_id') or data.get('id') or str(uuid.uuid4())
-    ref_raw = (data.get('metadata') or {}).get('ref') or data.get('ref') or ''
-    order = parse_ref(ref_raw)
+    metadata = data.get('metadata') or {}
+    payment_order = data.get('order') or {}
+    order_id = (
+        metadata.get('order_id')
+        or data.get('order_id')
+        or data.get('invoice_number')
+        or payment_order.get('invoice_number')
+    )
+    existing_job = get_job(order_id) if order_id else None
+    ref_raw = metadata.get('ref') or data.get('ref') or ''
+    order = (existing_job or {}).get('order') or parse_ref(ref_raw)
 
     if not order.get('url'):
         return jsonify({'error': 'ref tidak mengandung URL YouTube'}), 400
 
-    job_id = tx_id
+    job_id = order_id or data.get('transaction_id') or data.get('id') or str(uuid.uuid4())
+    if existing_job and existing_job.get('status') in ('processing', 'done'):
+        return jsonify({'job_id': job_id, 'status': existing_job['status']}), 200
+
     set_job(job_id, {
         'status': 'queue',
         'clips': [],
         'error': None,
-        'created_at': time.time(),
+        'created_at': (existing_job or {}).get('created_at', time.time()),
         'order': order,
     })
 
@@ -434,15 +445,9 @@ def create_order():
             'payment_id': payment_data.get('payment_id'),
         }), 200
 
-    # Fallback tanpa DOKU: langsung proses demo
-    job_id = f"demo_{uuid.uuid4().hex[:8]}"
-    set_job(job_id, {
-        'status': 'processing',
-        'clips': [],
-        'error': None,
-        'created_at': time.time(),
-        'order': payload,
-    })
+    # Fallback tanpa DOKU: proses order yang sama agar halaman sukses bisa polling.
+    job_id = order_id
+    update_job(job_id, status='processing')
     t = threading.Thread(target=run_job, args=(job_id, payload), daemon=True)
     t.start()
 
@@ -463,6 +468,7 @@ def get_order(order_id: str):
 
     return jsonify({
         'order_id': order_id,
+        'job_id': order_id,
         'status': order.get('status', 'pending'),
         'error': order.get('error'),
         'clips': order.get('clips', []),
