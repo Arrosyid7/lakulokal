@@ -89,6 +89,10 @@ def build_job_summary(job_id: str, job: dict) -> dict:
     clips = job.get('clips') or []
     first_clip = clips[0] if clips else None
     url = (order.get('url') or '').strip()
+    preview_url = first_clip.get('preview_url') if first_clip else None
+    if first_clip and not preview_url and first_clip.get('url'):
+        clip_url = first_clip['url']
+        preview_url = f'{clip_url}&inline=1' if '?' in clip_url else f'{clip_url}?inline=1'
     return {
         'job_id': job_id,
         'status': job.get('status', 'pending'),
@@ -96,8 +100,9 @@ def build_job_summary(job_id: str, job: dict) -> dict:
         'url': url,
         'title': order.get('title') or 'Video YouTube',
         'mode': order.get('mode', 'custom'),
+        'error': job.get('error'),
         'clip_count': len(clips),
-        'preview_url': first_clip.get('url') if first_clip else None,
+        'preview_url': preview_url,
         'download_url': first_clip.get('url') if first_clip else None,
     }
 
@@ -166,6 +171,7 @@ def run_job(job_id: str, order: dict):
                 {
                     'filename': Path(f).name,
                     'url': f'/api/download/{job_id}/{Path(f).name}',
+                    'preview_url': f'/api/download/{job_id}/{Path(f).name}?inline=1',
                     'size_mb': round(os.path.getsize(f) / 1_000_000, 1)
                 }
                 for f in result_files if os.path.exists(f)
@@ -480,8 +486,9 @@ def download_clip(job_id: str, filename: str):
         file_path.unlink(missing_ok=True)
         return jsonify({'error': 'File sudah kedaluwarsa (>24 jam)'}), 410
 
-    return send_file(str(file_path), as_attachment=True,
-                     download_name=safe_filename, mimetype='video/mp4')
+    inline = request.args.get('inline') == '1'
+    return send_file(str(file_path), as_attachment=not inline,
+                     download_name=safe_filename, mimetype='video/mp4', conditional=True)
 
 
 # ── Cleanup job yang sudah > 25 jam ──────────────────────────────────────

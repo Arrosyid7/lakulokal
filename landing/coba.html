@@ -511,6 +511,20 @@
       gap: 12px;
       flex-wrap: wrap;
     }
+    .history-preview {
+      display: block;
+      width: min(100%, 360px);
+      max-height: 560px;
+      aspect-ratio: 9 / 16;
+      object-fit: contain;
+      background: #0f172a;
+      border-radius: 8px;
+    }
+    .history-error {
+      color: #b91c1c;
+      font-size: 0.82rem;
+      overflow-wrap: anywhere;
+    }
     .history-download-btn {
       display: inline-flex;
       align-items: center;
@@ -554,10 +568,10 @@
     .clip-result-video {
       width: 100%;
       aspect-ratio: 9/16;
-      object-fit: cover;
+      object-fit: contain;
       display: block;
       background: #0f172a;
-      max-height: 300px;
+      max-height: 480px;
     }
     .clip-result-info {
       padding: 14px 16px;

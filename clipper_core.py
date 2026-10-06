@@ -6,7 +6,9 @@ Logika inti pemotongan klip untuk dipanggil dari backend web.
 import os
 import subprocess
 import tempfile
+import glob
 import yt_dlp
+from yt_dlp.utils import download_range_func
 
 # Coba import speaker detection (opsional)
 try:
@@ -16,8 +18,10 @@ except Exception:
     SPEAKER_DETECTION_AVAILABLE = False
 
 
-def parse_seconds(time_str: str) -> float:
+def parse_seconds(time_str: str | float | int) -> float:
     """Konversi HH:MM:SS atau MM:SS ke detik."""
+    if isinstance(time_str, (int, float)):
+        return float(time_str)
     parts = list(map(float, time_str.split(':')))
     if len(parts) == 3:
         return parts[0] * 3600 + parts[1] * 60 + parts[2]
@@ -26,14 +30,89 @@ def parse_seconds(time_str: str) -> float:
     return float(parts[0])
 
 
+def download_audio(url: str, out_path: str) -> bool:
+    source_template = out_path[:-4] + '.source.%(ext)s' if out_path.endswith('.mp3') else out_path + '.source.%(ext)s'
+    ydl_opts = {
+        'format': 'bestaudio[abr<=96]/bestaudio',
+        'outtmpl': source_template,
+        'force_overwrites': True,
+        'quiet': True,
+        'no_warnings': True,
+    }
+
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+
+        sources = [
+            path for path in glob.glob(source_template.replace('%(ext)s', '*'))
+            if not path.endswith(('.part', '.ytdl'))
+        ]
+        if not sources:
+            return False
+
+        subprocess.run(
+            ['ffmpeg', '-y', '-i', sources[0], '-vn', '-ar', '16000', '-ac', '1', '-b:a', '32k', out_path],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        return os.path.exists(out_path)
+    except Exception as e:
+        print(f'[download_audio] Error: {e}')
+        return False
+    finally:
+        for source in glob.glob(source_template.replace('%(ext)s', '*')):
+            if os.path.isfile(source):
+                os.remove(source)
+
+
 def download_segment(url: str, start: str | None, end: str | None, out_path: str) -> bool:
     """
     Unduh video dari YouTube ke out_path.
     Untuk segmen custom, unduh seluruh video dulu lalu potong pakai ffmpeg.
     """
+    if start is not None and end is not None:
+        start_sec = parse_seconds(start)
+        end_sec = parse_seconds(end)
+        if start_sec < 0 or end_sec <= start_sec:
+            return False
+
+        section_template = out_path[:-4] + '.section.%(ext)s' if out_path.endswith('.mp4') else out_path + '.section.%(ext)s'
+        section_options = {
+            'format': 'bestvideo[height<=720]+bestaudio/best[height<=720]',
+            'outtmpl': section_template,
+            'merge_output_format': 'mp4',
+            'download_ranges': download_range_func(None, [(start_sec, end_sec)]),
+            'force_keyframes_at_cuts': True,
+            'force_overwrites': True,
+            'quiet': True,
+            'no_warnings': True,
+        }
+
+        try:
+            with yt_dlp.YoutubeDL(section_options) as ydl:
+                ydl.download([url])
+
+            sections = [
+                path for path in glob.glob(section_template.replace('%(ext)s', '*'))
+                if not path.endswith(('.part', '.ytdl'))
+            ]
+            merged = next((path for path in sections if path.endswith('.section.mp4')), None)
+            if not merged:
+                return False
+
+            os.replace(merged, out_path)
+            return os.path.exists(out_path)
+        except Exception as e:
+            print(f'[download_segment] Section download error: {e}')
+            return False
+        finally:
+            for section in glob.glob(section_template.replace('%(ext)s', '*')):
+                if os.path.isfile(section):
+                    os.remove(section)
+
     temp_source = out_path
-    if start and end:
-        temp_source = out_path + '.full.mp4'
 
     ydl_opts = {
         'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
@@ -47,25 +126,27 @@ def download_segment(url: str, start: str | None, end: str | None, out_path: str
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
 
-        if start and end:
-            ffmpeg_cmd = [
-                'ffmpeg', '-y',
-                '-ss', str(parse_seconds(start)),
-                '-to', str(parse_seconds(end)),
-                '-i', temp_source,
-                '-c:v', 'libx264', '-preset', 'fast', '-crf', '20',
-                '-c:a', 'aac',
-                out_path,
-            ]
-            subprocess.run(ffmpeg_cmd, check=True,
-                           stdout=subprocess.DEVNULL,
-                           stderr=subprocess.DEVNULL)
-            if os.path.exists(temp_source):
-                os.remove(temp_source)
-
         return os.path.exists(out_path)
     except Exception as e:
         print(f'[download_segment] Error: {e}')
+        return False
+
+
+def download_full_video_720(url: str, out_path: str) -> bool:
+    ydl_opts = {
+        'format': 'bestvideo[height<=720]+bestaudio/best[height<=720]',
+        'outtmpl': out_path,
+        'merge_output_format': 'mp4',
+        'force_overwrites': True,
+        'quiet': True,
+        'no_warnings': True,
+    }
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+        return os.path.exists(out_path)
+    except Exception as e:
+        print(f'[download_full_video_720] Error: {e}')
         return False
 
 
@@ -112,7 +193,7 @@ def cut_and_crop(input_path: str, output_path: str,
             'ffmpeg', '-y', '-i', source,
             '-vf', 'crop=ih*(9/16):ih',
             '-c:v', 'libx264', '-crf', '20', '-preset', 'fast',
-            '-c:a', 'aac', output_path
+            '-c:a', 'aac', '-movflags', '+faststart', output_path
         ]
         try:
             subprocess.run(ffmpeg_crop, check=True,
@@ -140,19 +221,45 @@ def process_custom_order(url: str, segments: list[dict], output_dir: str) -> lis
         list of output file paths (kosong jika semua gagal)
     """
     results = []
-    for i, seg in enumerate(segments):
-        start = seg.get('start') or None
-        end   = seg.get('end')   or None
-        out   = os.path.join(output_dir, f'klip_{i + 1:02d}.mp4')
-        temp  = os.path.join(output_dir, f'raw_{i:02d}.mp4')
+    fallback_source = os.path.join(output_dir, 'fallback_full_720.mp4')
+    fallback_attempted = False
 
-        ok = download_segment(url, start, end, temp)
-        if ok:
-            ok = cut_and_crop(temp, out)
+    try:
+        for i, seg in enumerate(segments):
+            start = seg.get('start') or None
+            end = seg.get('end') or None
+            out = os.path.join(output_dir, f'klip_{i + 1:02d}.mp4')
+            temp = os.path.join(output_dir, f'raw_{i:02d}.mp4')
+
+            ok = download_segment(url, start, end, temp)
+            if ok:
+                ok = cut_and_crop(temp, out)
+
+            if not ok and start is not None and end is not None:
+                if not fallback_attempted:
+                    fallback_attempted = True
+                    print('[process_custom_order] Section download failed; retrying from full 720p source.')
+                    if not download_full_video_720(url, fallback_source):
+                        fallback_source = None
+
+                if fallback_source and os.path.exists(fallback_source):
+                    ok = cut_and_crop(
+                        fallback_source,
+                        out,
+                        start_sec=parse_seconds(start),
+                        end_sec=parse_seconds(end),
+                    )
+
+            if ok:
+                results.append(out)
+            elif os.path.exists(out):
+                os.remove(out)
+
             if os.path.exists(temp):
                 os.remove(temp)
-        if ok:
-            results.append(out)
+    finally:
+        if fallback_source and os.path.exists(fallback_source):
+            os.remove(fallback_source)
 
     return results
 
@@ -161,37 +268,37 @@ def process_auto_order(url: str, max_clips: int, output_dir: str,
                        groq_api_key: str) -> list[str]:
     """
     Proses mode Potong AI:
-    1. Unduh seluruh video
+    1. Unduh audio saja untuk transkripsi
     2. Transkripsi dengan Groq Whisper
     3. Analisis segmen dengan Groq Llama 3
-    4. Potong dan crop setiap segmen
+    4. Unduh rentang video terpilih dan crop
     """
     from groq_ai import transcribe_and_segment
 
-    temp_full = os.path.join(output_dir, 'full_video.mp4')
+    temp_audio = os.path.join(output_dir, 'full_audio.mp3')
 
-    # 1. Unduh video
-    ok = download_segment(url, None, None, temp_full)
+    ok = download_audio(url, temp_audio)
     if not ok:
         return []
 
-    # 2 & 3. Transkripsi + analisis AI → list of {start_sec, end_sec, title}
-    segments = transcribe_and_segment(temp_full, max_clips, groq_api_key)
+    try:
+        segments = transcribe_and_segment(temp_audio, max_clips, groq_api_key)
+    finally:
+        if os.path.exists(temp_audio):
+            os.remove(temp_audio)
     if not segments:
-        os.remove(temp_full)
         return []
 
-    # 4. Potong dan crop tiap segmen
     results = []
     for i, seg in enumerate(segments):
         out = os.path.join(output_dir, f'klip_{i + 1:02d}.mp4')
-        ok  = cut_and_crop(temp_full, out,
-                           start_sec=seg['start_sec'],
-                           end_sec=seg['end_sec'])
+        temp = os.path.join(output_dir, f'raw_{i:02d}.mp4')
+        ok = download_segment(url, seg['start_sec'], seg['end_sec'], temp)
+        if ok:
+            ok = cut_and_crop(temp, out)
+        if os.path.exists(temp):
+            os.remove(temp)
         if ok:
             results.append(out)
-
-    if os.path.exists(temp_full):
-        os.remove(temp_full)
 
     return results

@@ -55,6 +55,49 @@ def transcribe_audio(audio_path: str, client: Groq) -> dict | None:
         return None
 
 
+def parse_segment_response(raw: str, max_clips: int) -> list[dict]:
+    if not raw or not raw.strip():
+        raise ValueError('Model AI mengembalikan respons kosong.')
+
+    decoder = json.JSONDecoder()
+    parsed = None
+    text = raw.strip()
+    for index, character in enumerate(text):
+        if character not in '[{':
+            continue
+        try:
+            parsed, _ = decoder.raw_decode(text[index:])
+            break
+        except json.JSONDecodeError:
+            continue
+
+    if isinstance(parsed, dict):
+        parsed = parsed.get('segments')
+    if not isinstance(parsed, list):
+        raise ValueError('Respons AI tidak berisi array segmen JSON yang valid.')
+
+    segments = []
+    for segment in parsed:
+        if not isinstance(segment, dict):
+            continue
+        try:
+            start_sec = float(segment['start_sec'])
+            end_sec = float(segment['end_sec'])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if start_sec < 0 or end_sec <= start_sec:
+            continue
+        segments.append({
+            'start_sec': start_sec,
+            'end_sec': end_sec,
+            'title': str(segment.get('title') or 'Klip pilihan AI'),
+        })
+
+    if not segments:
+        raise ValueError('Model AI tidak menghasilkan rentang klip yang valid.')
+    return segments[:max_clips]
+
+
 def analyze_segments(transcript_text: str, timestamps: list[dict],
                      max_clips: int, client: Groq) -> list[dict]:
     """
@@ -84,34 +127,46 @@ Tugasmu: tentukan maksimal {max_clips} segmen klip yang paling bermakna dan bisa
 - Memiliki durasi antara 30 detik hingga 3 menit
 - Mewakili satu topik atau momen yang utuh
 
-Kembalikan HANYA JSON array, tanpa markdown, tanpa penjelasan:
-[
-  {{"start_sec": 12.5, "end_sec": 78.0, "title": "Judul singkat klip"}},
-  ...
-]"""
+Kembalikan objek JSON valid saja, tanpa markdown atau teks tambahan, dengan struktur:
+{{
+    "segments": [
+        {{"start_sec": 12.5, "end_sec": 78.0, "title": "Judul singkat klip"}}
+    ]
+}}"""
 
     try:
         response = client.chat.completions.create(
             model=GROQ_CHAT_MODEL,
             messages=[{'role': 'user', 'content': prompt}],
             temperature=0.2,
-            max_tokens=1024,
+            max_completion_tokens=4096,
+            reasoning_effort='low',
         )
-        raw = response.choices[0].message.content.strip()
-
-        # Bersihkan jika ada markdown fence
-        if raw.startswith('```'):
-            raw = raw.split('```')[1]
-            if raw.startswith('json'):
-                raw = raw[4:]
-        raw = raw.strip()
-
-        segments = json.loads(raw)
-        return segments[:max_clips]
+        choice = response.choices[0]
+        raw = choice.message.content or ''
+        if not raw.strip():
+            usage = response.usage
+            completion_tokens = getattr(usage, 'completion_tokens', None) if usage else None
+            finish_reason = choice.finish_reason
+            response = client.chat.completions.create(
+                model=GROQ_CHAT_MODEL,
+                messages=[{'role': 'user', 'content': prompt}],
+                temperature=0.2,
+                max_completion_tokens=4096,
+                reasoning_effort='none',
+            )
+            choice = response.choices[0]
+            raw = choice.message.content or ''
+            if not raw.strip():
+                raise ValueError(
+                    'Model AI mengembalikan respons kosong '
+                    f'(finish_reason={finish_reason}, completion_tokens={completion_tokens}).'
+                )
+        return parse_segment_response(raw, max_clips)
 
     except Exception as e:
-        print(f'[groq_ai] analyze_segments error: {e}')
-        return []
+        print(f'[groq_ai] analyze_segments error: {type(e).__name__}: {e}')
+        raise RuntimeError(f'Analisis AI gagal: {e}') from e
 
 
 def transcribe_and_segment(video_path: str, max_clips: int,
@@ -125,9 +180,9 @@ def transcribe_and_segment(video_path: str, max_clips: int,
     """
     client = Groq(api_key=api_key)
 
-    # Ekstrak audio sementara
-    audio_path = video_path.replace('.mp4', '_audio.mp3')
-    if not extract_audio(video_path, audio_path):
+    supplied_audio = os.path.splitext(video_path)[1].lower() in {'.mp3', '.m4a', '.wav', '.ogg', '.webm'}
+    audio_path = video_path if supplied_audio else video_path.replace('.mp4', '_audio.mp3')
+    if not supplied_audio and not extract_audio(video_path, audio_path):
         return []
 
     try:
@@ -156,5 +211,5 @@ def transcribe_and_segment(video_path: str, max_clips: int,
         return segments
 
     finally:
-        if os.path.exists(audio_path):
+        if not supplied_audio and os.path.exists(audio_path):
             os.remove(audio_path)

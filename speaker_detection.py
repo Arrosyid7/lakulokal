@@ -239,6 +239,7 @@ def process_with_speaker_detection(input_path, output_path, status_callback=None
             '-preset', 'fast',
             '-c:a', 'aac',
             '-shortest',
+            '-movflags', '+faststart',
             output_path
         ]
         subprocess.run(ffmpeg_merge, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

@@ -421,9 +421,11 @@ function showClipResults(clips) {
       card.className = 'clip-result-card';
 
       const downloadHref = clip.url.startsWith('http') ? clip.url : `${API_BASE}${clip.url}`;
+      const previewUrl = clip.preview_url || `${clip.url}${clip.url.includes('?') ? '&' : '?'}inline=1`;
+      const previewHref = previewUrl.startsWith('http') ? previewUrl : `${API_BASE}${previewUrl}`;
 
       card.innerHTML = `
-        <video class="clip-result-video" src="${downloadHref}" controls preload="metadata" playsinline></video>
+        <video class="clip-result-video" src="${previewHref}" controls preload="metadata" playsinline aria-label="Preview Klip ${i + 1}"></video>
         <div class="clip-result-info">
           <div class="clip-result-name">Klip ${i + 1}${clip.filename ? ` — ${clip.filename}` : ''}</div>
           <div class="clip-result-meta">${clip.size_mb ? `${clip.size_mb} MB · ` : ''}MP4 · 9:16</div>
@@ -454,9 +456,11 @@ function showClipResults(clips) {
 function showResultsError(msg) {
   const section = document.getElementById('clip-results-section');
   const body    = document.getElementById('results-body');
+  const countBadge = document.getElementById('results-count-badge');
   if (!section || !body) return;
 
   section.classList.add('active');
+  if (countBadge) countBadge.textContent = '0 Klip';
   setJobStatus('failed', 'Proses gagal', msg || 'Terjadi kesalahan saat memproses video.');
   body.innerHTML = `
     <div class="results-error" role="alert">
@@ -487,6 +491,7 @@ function formatHistoryStatus(status) {
     case 'processing': return 'Processing';
     case 'done': return 'Done';
     case 'failed': return 'Failed';
+    case 'error': return 'Gagal';
     case 'pending': return 'Pending';
     default: return 'Unknown';
   }
@@ -506,8 +511,10 @@ function renderJobHistory(jobs = []) {
 
   list.innerHTML = jobs.map(job => {
     const status = job.status || 'queue';
+    const statusClass = status === 'error' ? 'failed' : status;
     const title = escapeHtml(job.title || 'Video YouTube');
     const url = escapeHtml(job.url || '');
+    const errorMessage = escapeHtml(job.error || '');
     const timeLabel = new Date(job.created_at * 1000 || Date.now()).toLocaleString('id-ID', {
       day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
@@ -520,13 +527,19 @@ function renderJobHistory(jobs = []) {
           </svg>
           Download Premium
         </a>`
-      : `<span class="history-status ${status}">${formatHistoryStatus(status)}</span>`;
+      : `<span class="history-status ${statusClass}">${formatHistoryStatus(status)}</span>`;
+    const previewMarkup = status === 'done' && job.preview_url
+      ? `<video class="history-preview" src="${job.preview_url.startsWith('http') ? job.preview_url : `${API_BASE}${job.preview_url}`}" controls preload="metadata" playsinline aria-label="Preview klip hasil"></video>`
+      : '';
+    const errorMarkup = status === 'error' && errorMessage
+      ? `<div class="history-error" role="alert">${errorMessage}</div>`
+      : '';
 
     return `
       <article class="history-item">
         <div class="history-head">
           <div class="history-title" title="${title}">${title}</div>
-          <span class="history-status ${status}">${formatHistoryStatus(status)}</span>
+          <span class="history-status ${statusClass}">${formatHistoryStatus(status)}</span>
         </div>
         <div class="history-meta">
           <span>${timeLabel}</span>
@@ -536,6 +549,8 @@ function renderJobHistory(jobs = []) {
           <span>${escapeHtml(job.mode || 'custom')}</span>
         </div>
         <div class="history-url" title="${url}">${url || 'URL tidak tersedia'}</div>
+        ${errorMarkup}
+        ${previewMarkup}
         <div class="history-actions">
           ${downloadMarkup}
         </div>
