@@ -60,8 +60,8 @@ DOKU_SECRET_KEY = os.getenv('DOKU_SECRET_KEY', '')
 DOKU_BASE_URL = os.getenv('DOKU_BASE_URL', 'https://api.doku.com')
 DOKU_WEBHOOK_SECRET = os.getenv('DOKU_WEBHOOK_SECRET', '')
 APP_BASE_URL = os.getenv('APP_BASE_URL', 'https://lakulokal.my.id')
-SUPABASE_URL = os.getenv('SUPABASE_URL', 'https://nwrsnxdihgrbbhvhejvc.supabase.co')
-SUPABASE_KEY = os.getenv('SUPABASE_KEY', 'sb_publishable_zNr14YUYuz9x6sFHahNvqQ_QJ7lIIZk') or os.getenv('SUPABASE_SERVICE_ROLE_KEY', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im53cnNueGRpaGdyYmJodmhlanZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4MjU3NzgsImV4cCI6MjEwNTQwMTc3OH0.ICRzlkxYyz401QVRNVL44Nb96Kz-H5wqxUM_ZrFu2EU')
+SUPABASE_URL = os.getenv('SUPABASE_URL', '')
+SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY', '') or os.getenv('SUPABASE_KEY', '')
 SUPABASE_READY = bool(SUPABASE_URL and SUPABASE_KEY and create_client)
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_READY else None
