@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO -->
+  <title>Potong Video YouTube — lakulokal | Klip Pendek Rp1.000</title>
+  <meta name="description" content="Tempel link YouTube, pilih waktu atau biarkan AI tentukan titik potong. Bayar Rp1.000 untuk 1 sampai 5 klip. Tanpa daftar akun." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://lakulokal.id/coba.html" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://lakulokal.id/coba.html" />
+  <meta property="og:title" content="Potong Video YouTube — lakulokal | Klip Pendek Rp1.000" />
+  <meta property="og:description" content="Tempel link YouTube, pilih waktu atau biarkan AI tentukan. Bayar Rp1.000 untuk 5 klip pertama." />
+  <meta property="og:image" content="https://lakulokal.id/og-image.jpg" />
+  <meta property="og:locale" content="id_ID" />
+  <meta property="og:site_name" content="lakulokal" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Potong Video YouTube — lakulokal | Klip Pendek Rp1.000" />
+  <meta name="twitter:description" content="Tempel link YouTube, pilih waktu atau biarkan AI tentukan. Bayar Rp1.000 untuk 5 klip pertama." />
+  <meta name="twitter:image" content="https://lakulokal.id/og-image.jpg" />
+
+  <!-- Schema.org -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "lakulokal Clip Converter",
+    "url": "https://lakulokal.id/coba.html",
+    "description": "Potong video YouTube menjadi klip pendek. Bayar Rp1.000 per sesi.",
+    "applicationCategory": "VideoApplication",
+    "inLanguage": "id-ID",
+    "offers": {
+      "@type": "Offer",
+      "price": "1000",
+      "priceCurrency": "IDR"
+    }
+  }
+  </script>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── Layout coba.html ── */
+    .coba-page {
+      background: var(--ink-100);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .coba-main {
+      flex: 1;
+      max-width: 1240px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 40px 24px 60px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    /* Card pembungkus panel */
+    .coba-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: var(--shadow-float);
+      border: 1px solid rgba(74, 63, 159, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    /* Back link */
+    .coba-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--ink-500);
+      transition: color var(--transition);
+      margin-bottom: -4px;
+    }
+    .coba-back:hover { color: var(--purple); }
+    .coba-back:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; border-radius: 2px; }
+
+    /* Titles */
+    .coba-header-title {
+      font-size: 1.375rem;
+      font-weight: 800;
+      color: var(--ink-900);
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+    .coba-header-sub {
+      font-size: 0.875rem;
+      color: var(--ink-500);
+      line-height: 1.5;
+    }
+
+    /* Live Preview Panel (Kanan) */
+    .preview-box {
+      background: #0f172a;
+      border-radius: 16px;
+      height: 220px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+    }
+    .preview-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.85;
+      transition: opacity 0.3s ease;
+    }
+    .preview-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: rgba(255,255,255,0.7);
+      text-align: center;
+      padding: 24px;
+    }
+    .preview-placeholder-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+    }
+    .preview-badge-status {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 99px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .preview-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f59e0b;
+      transition: background 0.3s;
+    }
+    .preview-overlay-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(0deg, rgba(15,23,42,0.95) 0%, rgba(15,23,42,0) 100%);
+      padding: 20px 16px 14px;
+      color: #fff;
+    }
+    .preview-video-title {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Clip Breakdown List */
+    .clips-breakdown-title {
+      font-size: 0.9375rem;
+      font-weight: 800;
+      color: var(--ink-900);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .clips-list-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .clip-summary-card {
+      background: var(--purple-soft);
+      border: 1px solid rgba(74,63,159,0.12);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .clip-summary-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .clip-summary-name {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--purple);
+    }
+    .clip-summary-time {
+      font-size: 0.8125rem;
+      color: var(--ink-500);
+    }
+    .clip-summary-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: var(--white);
+      color: var(--ink-700);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--ink-100);
+    }
+
+    /* Technical Specs Grid */
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .spec-item {
+      background: var(--ink-100);
+      border-radius: 10px;
+      padding: 10px 14px;
+    }
+    .spec-label {
+      font-size: 0.75rem;
+      color: var(--ink-500);
+      display: block;
+      margin-bottom: 2px;
+    }
+    .spec-val {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--ink-900);
+    }
+
+    /* Trust banner bottom */
+    .trust-banner {
+      background: linear-gradient(135deg, var(--purple) 0%, #362e78 100%);
+      border-radius: 12px;
+      padding: 16px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .trust-banner-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .trust-banner-text {
+      font-size: 0.8125rem;
+      line-height: 1.45;
+      color: rgba(255,255,255,0.85);
+    }
+    .trust-banner-text strong { color: #fff; display: block; margin-bottom: 1px; }
+
+    /* ── Processing Overlay ── */
+    #processing-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15,10,40,0.75);
+      backdrop-filter: blur(6px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    #processing-overlay.active { display: flex; }
+    .processing-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 40px 48px;
+      max-width: 420px;
+      width: calc(100% - 48px);
+      text-align: center;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.35);
+    }
+    .proc-spinner {
+      width: 52px;
+      height: 52px;
+      border: 4px solid rgba(74,63,159,0.15);
+      border-top-color: var(--purple);
+      border-radius: 50%;
+      animation: spin 0.85s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .proc-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--ink-900);
+      margin-bottom: 8px;
+    }
+    .proc-desc { font-size: 0.875rem; color: var(--ink-500); line-height: 1.6; }
+    .proc-progress-track {
+      height: 6px;
+      background: rgba(74,63,159,0.12);
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 20px 0 8px;
+    }
+    .proc-progress-fill {
+      height: 100%;
+      background: var(--purple);
+      border-radius: 99px;
+      width: 0%;
+      transition: width 0.6s ease;
+    }
+    .proc-step-label { font-size: 0.8rem; color: var(--ink-500); }
+
+    /* ── Clip Results Section (ditampilkan di panel kanan setelah proses) ── */
+    #clip-results-section {
+      display: none;
+      grid-column: 1 / -1; /* full width */
+      background: var(--white);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: var(--shadow-float);
+      border: 1px solid rgba(74, 63, 159, 0.08);
+      flex-direction: column;
+      gap: 24px;
+    }
+    #clip-results-section.active { display: flex; }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .results-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--ink-900);
+      letter-spacing: -0.02em;
+    }
+    .results-badge {
+      background: rgba(16,185,129,0.1);
+      color: #059669;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 5px 14px;
+      border-radius: 99px;
+    }
+
+    .results-status-panel {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(74,63,159,0.08), rgba(16,185,129,0.05));
+      border: 1px solid rgba(74,63,159,0.08);
+    }
+    .status-pill {
+      min-width: 92px;
+      text-align: center;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+    .status-pill.queue {
+      background: rgba(251,191,36,0.12);
+      color: #b45309;
+      border-color: rgba(251,191,36,0.25);
+    }
+    .status-pill.processing {
+      background: rgba(59,130,246,0.12);
+      color: #1d4ed8;
+      border-color: rgba(59,130,246,0.22);
+    }
+    .status-pill.done {
+      background: rgba(16,185,129,0.12);
+      color: #047857;
+      border-color: rgba(16,185,129,0.2);
+    }
+    .status-pill.failed {
+      background: rgba(239,68,68,0.12);
+      color: #b91c1c;
+      border-color: rgba(239,68,68,0.2);
+    }
+    .status-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .status-copy strong {
+      font-size: 0.96rem;
+      color: var(--ink-900);
+    }
+    .status-copy span {
+      font-size: 0.8rem;
+      color: var(--ink-500);
+    }
+
+    .job-history-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      background: var(--white);
+      border-radius: 20px;
+      padding: 24px 28px;
+      box-shadow: var(--shadow-float);
+      border: 1px solid rgba(74, 63, 159, 0.08);
+      grid-column: 1 / -1;
+    }
+    .job-history-list {
+      display: grid;
+      gap: 12px;
+    }
+    .history-item {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 16px 18px;
+      border-radius: 14px;
+      background: var(--ink-100);
+      border: 1px solid rgba(74,63,159,0.08);
+    }
+    .history-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .history-title {
+      font-size: 0.96rem;
+      font-weight: 800;
+      color: var(--ink-900);
+      max-width: 65%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .history-status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 88px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+    .history-status.queue { background: rgba(251,191,36,0.12); color:#b45309; border-color: rgba(251,191,36,0.2); }
+    .history-status.processing { background: rgba(59,130,246,0.12); color:#1d4ed8; border-color: rgba(59,130,246,0.22); }
+    .history-status.done { background: rgba(16,185,129,0.12); color:#047857; border-color: rgba(16,185,129,0.2); }
+    .history-status.failed { background: rgba(239,68,68,0.12); color:#b91c1c; border-color: rgba(239,68,68,0.2); }
+    .history-meta {
+      font-size: 0.78rem;
+      color: var(--ink-500);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .history-url {
+      font-size: 0.78rem;
+      color: var(--ink-500);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .history-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .history-download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #4A3F9F 0%, #3b82f6 100%);
+      color: var(--white);
+      padding: 9px 14px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform var(--transition), box-shadow var(--transition);
+      box-shadow: 0 12px 24px rgba(74,63,159,0.2);
+    }
+    .history-download-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 28px rgba(74,63,159,0.24);
+    }
+    .history-empty {
+      padding: 18px 20px;
+      border: 1px dashed rgba(74,63,159,0.2);
+      border-radius: 12px;
+      background: rgba(74,63,159,0.02);
+      color: var(--ink-500);
+      font-size: 0.85rem;
+    }
+
+    .clip-results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+    }
+    .clip-result-card {
+      background: var(--ink-100);
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(74,63,159,0.08);
+      display: flex;
+      flex-direction: column;
+    }
+    .clip-result-video {
+      width: 100%;
+      aspect-ratio: 9/16;
+      object-fit: cover;
+      display: block;
+      background: #0f172a;
+      max-height: 300px;
+    }
+    .clip-result-info {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .clip-result-name {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: var(--ink-900);
+    }
+    .clip-result-meta {
+      font-size: 0.8rem;
+      color: var(--ink-500);
+    }
+    .clip-download-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: #059669;
+      color: var(--white);
+      font-size: 0.875rem;
+      font-weight: 700;
+      padding: 10px 16px;
+      border-radius: 10px;
+      transition: background var(--transition), transform var(--transition);
+      text-decoration: none;
+    }
+    .clip-download-btn:hover {
+      background: #047857;
+      transform: translateY(-1px);
+    }
+    .clip-download-btn:focus-visible { outline: 3px solid #059669; outline-offset: 3px; }
+
+    /* Error state in results */
+    .results-error {
+      background: #fef2f2;
+      border: 1.5px solid #fecaca;
+      border-radius: 12px;
+      padding: 20px 24px;
+      color: #991b1b;
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    /* ── Tab bar untuk mode tampilan ── */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      background: var(--purple-soft);
+      border-radius: 10px;
+      padding: 3px;
+      margin-bottom: -6px;
+    }
+    .view-tab {
+      flex: 1;
+      padding: 9px 12px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--ink-500);
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .view-tab.active {
+      background: var(--white);
+      color: var(--purple);
+      box-shadow: 0 1px 6px rgba(74,63,159,0.14);
+    }
+    .view-tab:focus-visible { outline: 3px solid var(--orange); outline-offset: 2px; }
+
+    @media (max-width: 960px) {
+      .coba-main {
+        grid-template-columns: 1fr;
+        padding: 24px 16px 40px;
+        gap: 24px;
+      }
+      .coba-card { padding: 24px; }
+      #clip-results-section { padding: 24px; }
+      .clip-results-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="coba-page">
+
+  <!-- ===== NAVBAR ===== -->
+  <header class="navbar" role="banner">
+    <div class="container nav-inner">
+      <a href="index.html" class="logo" aria-label="lakulokal — kembali ke beranda">
+        <svg class="logo-img" width="36" height="36" viewBox="0 0 36 36" role="img" aria-label="lakulokal logo">
+          <rect width="36" height="36" rx="8" fill="#4A3F9F"/>
+          <path d="M10 26 L18 12 L26 26" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="26" cy="11" r="4.5" fill="#E8602B"/>
+        </svg>
+        <span class="logo-text">lakulokal</span>
+      </a>
+      <nav aria-label="Navigasi utama">
+        <ul class="nav-links" id="nav-links">
+          <li><a href="index.html#cara-kerja" class="nav-link">Cara Kerja</a></li>
+          <li><a href="index.html#harga" class="nav-link">Harga</a></li>
+          <li><a href="index.html#faq" class="nav-link">FAQ</a></li>
+          <li><a href="blog/" class="nav-link">Blog</a></li>
+          <li>
+            <a href="coba.html" class="btn btn-primary nav-cta" id="nav-cta-btn" aria-current="page">
+              Coba Sekarang
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <button class="hamburger" id="hamburger-btn" aria-label="Buka menu navigasi" aria-expanded="false" aria-controls="nav-links">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== PROCESSING OVERLAY ===== -->
+  <div id="processing-overlay" role="dialog" aria-modal="true" aria-label="Video sedang diproses">
+    <div class="processing-card">
+      <div class="proc-spinner" aria-hidden="true"></div>
+      <div class="proc-title">Memotong video...</div>
+      <p class="proc-desc" id="proc-desc">Video sedang diunduh dan dipotong. Harap tunggu sebentar.</p>
+      <div class="proc-progress-track" role="progressbar" aria-label="Progress konversi" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="proc-progress-wrap">
+        <div class="proc-progress-fill" id="proc-progress-fill"></div>
+      </div>
+      <div class="proc-step-label" id="proc-step-label">Memulai...</div>
+    </div>
+  </div>
+
+  <main>
+    <div class="coba-main" id="coba-main-grid">
+
+      <!-- ===== PANEL KIRI — ALAT CONVERT ===== -->
+      <section class="coba-card coba-tool-panel" aria-labelledby="tool-heading">
+        <a href="index.html" class="coba-back" id="back-home-link">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M11 7H3M6 4L3 7l3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Kembali ke beranda
+        </a>
+
+        <div>
+          <h1 class="coba-header-title" id="tool-heading">Alat Pemotong Video</h1>
+          <p class="coba-header-sub">Tempelkan link YouTube, atur waktu atau biarkan AI memilih momen terbaik.</p>
+        </div>
+
+        <!-- Panel Form Web -->
+        <div id="panel-web-form" role="tabpanel" aria-labelledby="tab-form">
+          <div role="form" aria-label="Form konversi klip YouTube">
+
+            <!-- URL input -->
+            <div class="form-group" style="margin-bottom:18px;">
+              <label for="yt-url" class="form-label">Link Video YouTube</label>
+              <input
+                type="url"
+                id="yt-url"
+                name="yt-url"
+                class="form-input"
+                placeholder="https://youtube.com/watch?v=..."
+                autocomplete="url"
+                required
+                aria-describedby="yt-url-hint"
+              />
+              <span id="yt-url-hint" class="mode-hint">Video publik dan tidak terikat lisensi privat.</span>
+            </div>
+
+            <!-- Mode toggle -->
+            <div class="mode-toggle" role="group" aria-label="Pilih mode pemotongan" style="margin-bottom:18px;">
+              <button type="button" class="mode-btn active" id="mode-custom" aria-pressed="true">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <rect x="2" y="7" width="12" height="2" rx="1" fill="currentColor"/>
+                  <rect x="2" y="3" width="6" height="2" rx="1" fill="currentColor"/>
+                  <rect x="2" y="11" width="9" height="2" rx="1" fill="currentColor"/>
+                </svg>
+                Custom Waktu
+              </button>
+              <button type="button" class="mode-btn" id="mode-auto" aria-pressed="false">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M8 2a6 6 0 100 12A6 6 0 008 2zM6 7l2-2 2 2M8 5v5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+                Potong AI
+              </button>
+            </div>
+
+            <!-- MODE CUSTOM -->
+            <div id="panel-custom" class="mode-panel">
+              <div class="segments-list" id="segments-list" role="list" aria-label="Daftar segmen">
+                <div class="segment-row" data-index="0" role="listitem">
+                  <span class="segment-badge" aria-hidden="true">Klip 1</span>
+                  <div class="form-row segment-inputs">
+                    <div class="form-group">
+                      <label class="form-label" for="seg-start-0">Mulai</label>
+                      <input type="text" id="seg-start-0" class="form-input seg-start" placeholder="00:00" pattern="[0-9]{1,2}:[0-5][0-9]" />
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label" for="seg-end-0">Selesai</label>
+                      <input type="text" id="seg-end-0" class="form-input seg-end" placeholder="01:00" pattern="[0-9]{1,2}:[0-5][0-9]" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn-add-segment" id="add-segment-btn" aria-label="Tambah segmen klip baru">
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                  <path d="M7.5 2v11M2 7.5h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                Tambah segmen klip
+              </button>
+              <p class="mode-hint" style="margin-top:8px;">Setiap segmen menghasilkan 1 file klip MP4 terpisah.</p>
+            </div>
+
+            <!-- MODE POTONG AI -->
+            <div id="panel-auto" class="mode-panel" hidden>
+              <div class="ai-pipeline-info" aria-label="Cara kerja mode AI">
+                <div class="pipeline-step">
+                  <div class="pipeline-num" aria-hidden="true">1</div>
+                  <div class="pipeline-body">
+                    <strong>Whisper transkripsi audio</strong>
+                    <span>Membaca audio dengan timestamp presisi.</span>
+                  </div>
+                </div>
+                <div class="pipeline-step">
+                  <div class="pipeline-num pipeline-num-gemini" aria-hidden="true">2</div>
+                  <div class="pipeline-body">
+                    <strong>Gemini analisis semantik</strong>
+                    <span>Menentukan batas topik &amp; momen alami.</span>
+                  </div>
+                </div>
+                <div class="pipeline-step">
+                  <div class="pipeline-num" aria-hidden="true">3</div>
+                  <div class="pipeline-body">
+                    <strong>Potong &amp; Crop 9:16</strong>
+                    <span>Deteksi pembicara aktif secara otomatis.</span>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group" style="margin-top:10px;">
+                <label class="form-label" for="auto-max">Maksimum klip yang dihasilkan</label>
+                <select id="auto-max" class="form-input form-select">
+                  <option value="5" selected>5 klip (Rp1.000)</option>
+                  <option value="10">10 klip (Rp2.000)</option>
+                  <option value="15">15 klip (Rp3.000)</option>
+                  <option value="20">20 klip (Rp4.000)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Live price -->
+            <div class="form-fee-row" id="price-display-row" aria-live="polite" style="margin-top:16px;">
+              <span class="form-fee-label">
+                Total Biaya
+                <span class="clip-count-tag" id="clip-count-tag">1 klip</span>
+              </span>
+              <span class="form-fee-value" id="live-price">Rp1.000</span>
+            </div>
+
+            <button type="button" class="btn btn-accent btn-full" id="submit-direct-btn" style="padding:16px; margin-top:16px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); font-weight:800; font-size:1.05rem;">
+              🚀 Potong Video Sekarang (Demo Gratis)
+            </button>
+
+            <button type="button" class="btn btn-secondary btn-full" id="submit-convert-btn" style="padding:12px; margin-top:10px; font-size:0.875rem; background: var(--purple-soft); color: var(--purple); border: 1px solid rgba(74,63,159,0.2);">
+              💳 Bayar via DOKU (Produksi)
+            </button>
+
+            <p class="form-disclaimer" style="margin-top:12px; text-align:center;">
+              Mode Demo: tekan <strong>"Potong Video Sekarang"</strong> untuk proses langsung tanpa pembayaran.
+            </p>
+
+          </div>
+        </div>
+
+
+      </section>
+
+      <!-- ===== PANEL KANAN — PREVIEW ===== -->
+      <section class="coba-card coba-result-panel" aria-labelledby="result-heading">
+        <div>
+          <h2 class="coba-header-title" id="result-heading">Hasil &amp; Preview Klip</h2>
+          <p class="coba-header-sub">Estimasi tampilan dan rincian klip yang akan diproses.</p>
+        </div>
+
+        <!-- Preview Video Player Box -->
+        <div class="preview-box" id="preview-box">
+          <div class="preview-badge-status" id="preview-status-badge">
+            <span class="preview-status-dot" id="preview-status-dot"></span>
+            <span id="preview-status-text">Menunggu Link</span>
+          </div>
+
+          <img id="preview-img" class="preview-img" src="" alt="Thumbnail Video YouTube" style="display:none;" />
+
+          <div class="preview-placeholder" id="preview-placeholder">
+            <div class="preview-placeholder-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <polygon points="9,6 18,12 9,18" fill="currentColor"/>
+              </svg>
+            </div>
+            <div>
+              <strong style="display:block; color:#fff; font-size:0.9375rem; margin-bottom:4px;">Belum Ada Video</strong>
+              <span style="font-size:0.8125rem;">Masukkan URL YouTube di sebelah kiri untuk melihat thumbnail.</span>
+            </div>
+          </div>
+
+          <div class="preview-overlay-info" id="preview-overlay" style="display:none;">
+            <div class="preview-video-title" id="preview-video-title">YouTube Video</div>
+            <div style="font-size:0.75rem; color:rgba(255,255,255,0.7); margin-top:2px;" id="preview-video-sub">Siap dipotong menjadi klip pendek</div>
+          </div>
+        </div>
+
+        <!-- Breakdown List Klip Output -->
+        <div>
+          <div class="clips-breakdown-title" style="margin-bottom:10px;">
+            <span>Rincian Klip Output</span>
+            <span style="font-size:0.8125rem; font-weight:600; color:var(--purple);" id="preview-clips-count-badge">1 Klip Dibuat</span>
+          </div>
+
+          <div class="clips-list-wrap" id="preview-clips-breakdown">
+            <div class="clip-summary-card">
+              <div class="clip-summary-info">
+                <span class="clip-summary-name">Klip #1</span>
+                <span class="clip-summary-time">Durasi: 00:00 — 01:00</span>
+              </div>
+              <span class="clip-summary-badge">MP4 1080p</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Specs grid -->
+        <div class="specs-grid">
+          <div class="spec-item">
+            <span class="spec-label">Format Output</span>
+            <span class="spec-val">MP4 (H.264)</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Speaker Crop</span>
+            <span class="spec-val">Otomatis 9:16</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Masa Aktif Link</span>
+            <span class="spec-val">24 Jam</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Watermark</span>
+            <span class="spec-val">Tanpa Watermark</span>
+          </div>
+        </div>
+
+        <!-- Trust banner -->
+        <div class="trust-banner">
+          <div class="trust-banner-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M10 2L3 6v5c0 5 4 8 7 9 3-1 7-4 7-9V6l-7-4z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="trust-banner-text">
+            <strong>Garansi Proses Berhasil</strong>
+            Bayar cuma Rp1.000 per sesi. Jika proses gagal, dana tidak terpotong.
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===== HASIL KLIP (muncul setelah proses selesai) ===== -->
+      <section id="clip-results-section" aria-labelledby="results-heading" aria-live="polite">
+        <div class="results-header">
+          <h2 class="results-title" id="results-heading">Klip Selesai Diproses</h2>
+          <span class="results-badge" id="results-count-badge">0 Klip</span>
+        </div>
+
+        <div class="results-status-panel" id="results-status-panel" aria-live="polite">
+          <span class="status-pill queue" id="job-status-pill">Queue</span>
+          <div class="status-copy">
+            <strong id="job-status-title">Antrian diterima</strong>
+            <span id="job-status-text">Permintaan kamu sedang menunggu diproses.</span>
+          </div>
+        </div>
+
+        <div id="results-body">
+          <!-- Diisi oleh JS: grid kartu klip atau pesan error -->
+        </div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:8px;">
+          <button type="button" class="btn btn-ghost" id="potong-lagi-btn" style="font-size:0.875rem;">
+            Potong Video Lain
+          </button>
+          <a href="index.html" class="btn" style="font-size:0.875rem; background:var(--purple-soft); color:var(--purple);">
+            Kembali ke Beranda
+          </a>
+        </div>
+      </section>
+
+      <section class="job-history-panel" aria-labelledby="history-heading">
+        <div class="results-header">
+          <h2 class="results-title" id="history-heading">Riwayat Proses</h2>
+          <span class="results-badge" id="history-count-badge">0 Job</span>
+        </div>
+        <div id="job-history-list" class="job-history-list">
+          <div class="history-empty">Belum ada job yang diproses. Hasil terbaru akan muncul di sini.</div>
+        </div>
+      </section>
+
+    </div><!-- /.coba-main -->
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer" role="contentinfo">
+    <div class="container footer-inner">
+      <a href="index.html" class="logo" aria-label="lakulokal">
+        <svg class="logo-img" width="28" height="28" viewBox="0 0 36 36" role="img" aria-label="lakulokal logo">
+          <rect width="36" height="36" rx="8" fill="#4A3F9F"/>
+          <path d="M10 26 L18 12 L26 26" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="26" cy="11" r="4.5" fill="#E8602B"/>
+        </svg>
+        <span class="logo-text">lakulokal</span>
+      </a>
+      <nav class="footer-nav" aria-label="Navigasi footer">
+        <a href="coba.html" class="footer-link">Coba Sekarang</a>
+        <a href="blog/" class="footer-link">Blog</a>
+        <a href="syarat.html" class="footer-link">Syarat Layanan</a>
+        <a href="privasi.html" class="footer-link">Kebijakan Privasi</a>
+        <a href="mailto:halo@lakulokal.id" class="footer-link">Kontak</a>
+      </nav>
+      <p class="footer-copy">&copy; 2026 lakulokal. Dibuat dengan sepenuh hati di Indonesia.</p>
+    </div>
+  </footer>
+
+  <script src="main.js"></script>
+</body>
+</html>
