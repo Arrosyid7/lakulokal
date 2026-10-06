@@ -1,0 +1,16 @@
+requirements.txt
+**/requirements.txt
+*.py
+**/*.py
+app/
+core/
+services/
+outputs/
+.venv/
+venv/
+__pycache__/
+**/__pycache__/
+apt.txt
+Procfile
+render.yaml
+supabase_schema.sql
