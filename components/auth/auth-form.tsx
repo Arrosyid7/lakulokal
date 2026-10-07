@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -106,7 +107,9 @@ export function AuthForm({ mode }: AuthFormProps) {
       <main className="auth-page">
         <div className="auth-layout">
           <aside className="auth-aside">
-            <Link className="brand" href="/">LakuLokal</Link>
+            <Link className="brand brand-logo-link" href="/" aria-label="LakuLokal, beranda">
+              <Image className="brand-logo" src="/brand/lakulokal-logo-dark.svg" alt="" width={420} height={156} priority />
+            </Link>
             <div>
               <h2>Video panjang jadi <em>clip</em> yang mudah dikelola.</h2>
               <p>{asideCopy}</p>

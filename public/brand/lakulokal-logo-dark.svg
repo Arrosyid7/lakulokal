@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 156">
+  <title>Lakulokal logo, dark background version</title>
+  <g transform="translate(46,46) scale(0.9)">
+    <rect x="2" y="2" width="96" height="96" rx="24" fill="#F8F7F3"/>
+    <polyline points="32,62 50,34 68,62" fill="none" stroke="#4B3F8F" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="78" cy="22" r="11" fill="#F0744A"/>
+  </g>
+  <text x="160" y="94" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="700" letter-spacing="-1" fill="#F8F7F3">lakulokal</text>
+  <text x="160" y="124" font-family="Arial, Helvetica, sans-serif" font-size="18" letter-spacing="0.5" fill="#F0744A">marketplace kreator lokal</text>
+</svg>

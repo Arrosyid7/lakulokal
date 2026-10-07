@@ -48,6 +48,8 @@ button { color: inherit; }
 }
 .skip-link:focus { transform: translateY(0); }
 .brand { color: var(--purple); font-family: var(--font-display); font-size: 1.55rem; font-weight: 800; letter-spacing: -.055em; }
+.brand-logo-link { display: inline-flex; align-items: center; flex: 0 0 auto; }
+.brand-logo { display: block; width: 176px; height: auto; }
 .site-header {
   position: sticky;
   z-index: 20;
@@ -95,27 +97,8 @@ button { color: inherit; }
 .cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 24px; }
 .hero-secondary-link { min-height: 44px; display: inline-flex; align-items: center; }
 .hero-note { margin: 18px 0 0; color: var(--muted); font-size: .83rem; }
-.hero-side { position: relative; border: 1px solid #d8d4e8; border-top: 5px solid var(--coral); border-radius: 6px 28px 6px 6px; padding: 24px 24px 20px; background: var(--purple-wash); }
-.hero-side::after { content: ""; position: absolute; top: 17px; right: 18px; width: 34px; height: 8px; transform: rotate(-35deg); border: 1px solid var(--purple-deep); background: var(--coral); }
-.hero-side-label { margin: 0 0 22px; color: var(--purple-deep); font-size: 1.05rem; font-weight: 700; }
-.hero-timeline { list-style: none; margin: 0 0 24px; padding: 0; }
-.hero-timeline li { display: grid; grid-template-columns: 42px 1fr; gap: 14px; padding: 0 0 22px; }
-.hero-timeline li > span { color: var(--purple); font-size: .9rem; font-weight: 800; }
-.hero-timeline strong { color: var(--ink); }
-.hero-timeline p { margin: 4px 0 0; color: var(--muted); font-size: .88rem; line-height: 1.6; }
-.clip-diagram { margin-bottom: 24px; border: 1px solid var(--line); border-radius: 15px 4px 15px 4px; padding: 13px; background: var(--white); transform: rotate(-1deg); }
-.clip-diagram > p { margin: 0 0 9px; color: var(--purple-deep); font-family: var(--font-display); font-size: .95rem; font-weight: 700; }
-.clip-frame { min-height: 72px; display: flex; align-items: center; justify-content: center; gap: 8px; overflow: hidden; border: 1px solid #c8c2dc; border-radius: 8px 3px 8px 3px; padding: 12px; background: var(--purple-wash); }
-.clip-frame-block { display: block; height: 34px; border-radius: 3px; }
-.clip-frame-block-one { width: 24%; background: var(--purple); }
-.clip-frame-block-two { width: 39%; height: 44px; border: 1px solid var(--purple-deep); background: var(--coral); }
-.clip-frame-block-three { width: 18%; background: var(--purple-deep); }
-.clip-track-labels { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 11px; color: var(--muted); font-size: .72rem; }
-.clip-track-labels strong { color: var(--purple-deep); }
-.clip-track { height: 8px; display: grid; grid-template-columns: 1.1fr .9fr .55fr; gap: 4px; margin-top: 5px; }
-.clip-track span { border-radius: 2px; background: #d8d4e8; }
-.clip-track .clip-track-selected { border: 1px solid var(--purple-deep); background: var(--coral); }
-.clip-track .clip-track-end { background: var(--purple); }
+.hero-character-stage { min-height: 520px; display: grid; place-items: center; overflow: hidden; border-radius: 8px 96px 8px 8px; background: var(--purple-wash); }
+.hero-character { display: block; width: auto; height: min(42vw, 520px); max-width: 100%; object-fit: contain; object-position: center bottom; }
 
 .section { padding-block: clamp(64px, 9vw, 108px); }
 .process-section { background: var(--soft); border-block: 1px solid var(--line); }
@@ -151,6 +134,7 @@ button { color: inherit; }
 .site-footer { position: relative; overflow: hidden; border-top: 5px solid var(--coral); padding-block: 44px; background: var(--purple-deep); color: var(--white); }
 .site-footer::before { content: ""; position: absolute; top: 0; right: 7%; width: 150px; height: 5px; background: var(--coral); }
 .site-footer .brand { color: var(--white); }
+.site-footer .brand-logo { width: 210px; }
 .footer-layout { display: flex; align-items: flex-start; justify-content: space-between; gap: 32px; }
 .footer-layout p { color: #f1eff8; font-size: .92rem; }
 .footer-layout nav { display: flex; flex-wrap: wrap; gap: 10px 24px; color: #f1eff8; font-size: .9rem; }
@@ -197,6 +181,7 @@ button { color: inherit; }
 .auth-aside { position: relative; display: flex; flex-direction: column; justify-content: space-between; padding: clamp(28px, 5vw, 60px); overflow: hidden; background: var(--purple-deep); color: var(--white); }
 .auth-aside::after { content: ""; position: absolute; right: -18px; bottom: 54px; width: 120px; height: 15px; transform: rotate(-38deg); background: var(--coral); }
 .auth-aside .brand { color: var(--white); }
+.auth-aside .brand-logo { width: 200px; }
 .auth-aside h2 { max-width: 470px; margin: 52px 0 18px; font-family: var(--font-display); font-size: clamp(2.2rem, 4.2vw, 3.5rem); line-height: 1.05; letter-spacing: -.035em; }
 .auth-aside h2 em { color: #ffd0bd; font-weight: 600; }
 .auth-aside > div > p, .auth-aside-foot { color: #f1eff8; line-height: 1.8; }
@@ -292,6 +277,8 @@ button { color: inherit; }
 
 @media (max-width: 920px) {
   .hero { grid-template-columns: minmax(0, 1fr) minmax(270px, .72fr); gap: 42px; }
+  .hero-character-stage { min-height: 430px; }
+  .hero-character { height: min(48vw, 450px); }
   .process-layout, .pricing-layout, .faq-layout { grid-template-columns: minmax(210px, .7fr) minmax(0, 1.3fr); gap: 40px; }
   .nav-row { min-height: 68px; flex-wrap: wrap; }
   .menu-toggle { min-height: 44px; display: inline-flex; align-items: center; border: 1px solid var(--purple); border-radius: 8px; padding: 8px 12px; background: var(--white); color: var(--purple-deep); font-weight: 700; }
@@ -318,9 +305,10 @@ button { color: inherit; }
   .nav-account-links { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
   .nav-account-links > a:not(.button) { min-height: 44px; display: inline-flex; align-items: center; }
   .nav-account-links .button { width: auto; }
-  .hero { grid-template-columns: 1fr; gap: 44px; padding-block: 64px 70px; }
+  .hero { grid-template-columns: 1fr; gap: 32px; padding-block: 64px 70px; }
   .hero h1 { font-size: clamp(2.45rem, 11vw, 4rem); }
-  .hero-side { padding-left: 16px; }
+  .hero-character-stage { min-height: 370px; border-radius: 8px 72px 8px 8px; }
+  .hero-character { height: 370px; }
   .process-layout, .pricing-layout, .faq-layout { grid-template-columns: 1fr; gap: 28px; }
   .section { padding-block: 58px; }
   .pricing-item { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }

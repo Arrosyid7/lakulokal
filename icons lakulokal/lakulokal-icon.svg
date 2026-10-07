@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>Lakulokal icon</title>
+  <rect x="2" y="2" width="96" height="96" rx="24" fill="#4B3F8F"/>
+  <polyline points="32,62 50,34 68,62" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="78" cy="22" r="11" fill="#F0744A"/>
+</svg>

@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   description: "Pilih paket, kirim tautan YouTube, lalu pantau pembayaran dan hasil clip dari satu akun LakuLokal.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://lakulokal.vercel.app"),
   applicationName: "LakuLokal",
+  icons: { icon: "/brand/lakulokal-icon.svg" },
   openGraph: {
     siteName: "LakuLokal",
     locale: "id_ID",

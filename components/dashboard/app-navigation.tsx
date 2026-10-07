@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
@@ -37,7 +38,9 @@ export function AppNavigation({ fullName, isAdmin }: { fullName: string; isAdmin
   return (
     <header className="app-header">
       <div className="container app-nav">
-        <Link className="brand" href="/dashboard">LakuLokal</Link>
+        <Link className="brand brand-logo-link" href="/dashboard" aria-label="LakuLokal, dashboard">
+          <Image className="brand-logo" src="/brand/lakulokal-logo-light.svg" alt="" width={420} height={156} priority />
+        </Link>
         <button
           className="app-menu-toggle"
           type="button"

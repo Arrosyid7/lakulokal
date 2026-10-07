@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -29,7 +30,9 @@ export function PublicNavigation() {
   return (
     <header className="site-header">
       <div className="container nav-row">
-        <Link className="brand" href="/" aria-label="LakuLokal, beranda">LakuLokal</Link>
+        <Link className="brand brand-logo-link" href="/" aria-label="LakuLokal, beranda">
+          <Image className="brand-logo" src="/brand/lakulokal-logo-light.svg" alt="" width={420} height={156} priority />
+        </Link>
         <button
           className="menu-toggle"
           type="button"
