@@ -73,6 +73,14 @@ function formatMoney(amount: number, currency: string) {
   }).format(amount);
 }
 
+function formatUnitMoney(amount: number, currency: string) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 2
+  }).format(amount);
+}
+
 async function PricingList() {
   const { packages, failed } = await getPackages();
 
@@ -84,11 +92,22 @@ async function PricingList() {
         <p className="empty-state">Belum ada paket aktif. Silakan periksa kembali nanti.</p>
       ) : packages.map((item) => (
         <article className="pricing-item" key={item.id}>
-          <div>
+          <div className="pricing-item-summary">
             <h3>{item.name}</h3>
             <p>{item.clip_count} clip</p>
           </div>
-          <strong>{formatMoney(item.price, item.currency)}</strong>
+          <p className="pricing-unit">
+            <span>Rata-rata per clip</span>
+            <strong>
+              {item.clip_count > 0
+                ? formatUnitMoney(item.price / item.clip_count, item.currency)
+                : "Tidak tersedia"}
+            </strong>
+          </p>
+          <p className="pricing-total">
+            <span>Total paket</span>
+            <strong>{formatMoney(item.price, item.currency)}</strong>
+          </p>
           <Link className="button button-small" href="/login?next=%2Fdashboard%2Fnew">Pilih paket</Link>
         </article>
       ))}
@@ -178,8 +197,8 @@ export default function HomePage() {
           <div className="container pricing-layout">
             <div className="section-intro">
               <p className="section-kicker">Paket aktif</p>
-              <h2>Harga yang ditetapkan dari paket.</h2>
-              <p>Daftar ini mengikuti paket aktif di database. Harga pada saat order dibuat dikonfirmasi kembali oleh server.</p>
+              <h2>Harga jelas, dihitung per clip.</h2>
+              <p>Lihat rata-rata biaya per clip dan total setiap paket aktif. Harga order dikonfirmasi kembali oleh server.</p>
               <Image
                 className="pricing-character"
                 src="/brand/characters/creator-coffee-video.png"

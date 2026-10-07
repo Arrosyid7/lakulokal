@@ -23,6 +23,7 @@ Use Nunito Sans for relaxed, easy-to-read interface text. Pair it with Baloo 2 f
 - Use the supplied creator illustrations as transparent cutouts: one leads the hero, four accompany the actual workflow steps, and one sits beside package pricing so each character supports nearby content without a boxed image background.
 - Use coral in a few vivid moments to bring energy against the purple and white, not as a blanket accent.
 - Keep more space between page sections and tighter spacing inside each task group so the reading order stays clear.
+- Keep the landing hero close to the navigation so the headline and creator image enter the first viewport without excessive blank space.
 - Use bordered surfaces for forms and grouped account data, not as a container for every piece of content.
 - Give the footer a strong purple closing surface with practical contact and policy links.
 - Prefer hover and focus feedback; avoid motion that does not help orientation.
