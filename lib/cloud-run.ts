@@ -46,21 +46,32 @@ export async function dispatchPendingJobs(admin: ReturnType<typeof createSupabas
     if (claimError) throw new Error("Antrean Cloud Run gagal diklaim.");
     if (!claim) break;
 
+    let execution: string;
     try {
-      const execution = await startCloudRunJob(claim.claimed_order_id);
-      const { error: updateError } = await admin.from("processing_jobs")
-        .update({ cloud_run_execution: execution, error_message: null })
-        .eq("id", claim.claimed_job_id)
-        .eq("cloud_run_execution", "DISPATCHING");
-      if (updateError) throw new Error("Execution Cloud Run gagal dicatat.");
-      dispatched.push(execution);
+      execution = await startCloudRunJob(claim.claimed_order_id);
     } catch (error) {
-      await admin.from("processing_jobs")
+      const { error: releaseError } = await admin.from("processing_jobs")
         .update({ cloud_run_execution: null, error_message: "Cloud Run gagal dimulai." })
         .eq("id", claim.claimed_job_id)
         .eq("cloud_run_execution", "DISPATCHING");
+      if (releaseError) {
+        throw new Error(
+          `Cloud Run gagal dimulai dan klaim job gagal dilepas: ${releaseError.message}`,
+          { cause: error }
+        );
+      }
       throw error;
     }
+
+    const { data: updatedJob, error: updateError } = await admin.from("processing_jobs")
+      .update({ cloud_run_execution: execution, error_message: null })
+      .eq("id", claim.claimed_job_id)
+      .eq("cloud_run_execution", "DISPATCHING")
+      .select("id")
+      .maybeSingle();
+    if (updateError) throw new Error(`Execution Cloud Run gagal dicatat: ${updateError.message}`);
+    if (!updatedJob) throw new Error("Execution Cloud Run diterima, tetapi klaim job tidak ditemukan.");
+    dispatched.push(execution);
   }
   return dispatched;
 }

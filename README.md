@@ -33,7 +33,7 @@ Order creation akan mengembalikan `503` sampai seluruh konfigurasi Supabase serv
 
 ## Supabase
 
-Jalankan `supabase_schema.sql` pada SQL Editor atau melalui Supabase CLI. Jika schema sudah pernah diterapkan, jalankan migration yang dibutuhkan dari `supabase/migrations/`, termasuk `20260413000000_fix_confirm_paid_order_payment_reference.sql`, `20261007000000_add_dana_checkout_urls.sql`, `20261007010000_add_dana_partner_reference_no.sql`, `20261007020000_add_missing_order_columns.sql`, `20261007030000_make_legacy_order_url_nullable.sql`, `20261007040000_make_legacy_order_mode_nullable.sql`, `20261007050000_restore_missing_user_profiles.sql`, `20261007060000_fix_orders_user_profile_foreign_key.sql`, dan `20261007070000_add_dana_qris_code_columns.sql` untuk memastikan schema lama sesuai dengan alur pembayaran QRIS.
+Jalankan `supabase_schema.sql` pada SQL Editor atau melalui Supabase CLI. Jika schema sudah pernah diterapkan, jalankan migration yang dibutuhkan dari `supabase/migrations/`, termasuk `20260413000000_fix_confirm_paid_order_payment_reference.sql`, `20261007000000_add_dana_checkout_urls.sql`, `20261007010000_add_dana_partner_reference_no.sql`, `20261007020000_add_missing_order_columns.sql`, `20261007030000_make_legacy_order_url_nullable.sql`, `20261007040000_make_legacy_order_mode_nullable.sql`, `20261007050000_restore_missing_user_profiles.sql`, `20261007060000_fix_orders_user_profile_foreign_key.sql`, `20261007070000_add_dana_qris_code_columns.sql`, dan `20261007080000_recover_stale_cloud_run_dispatch.sql` agar klaim Cloud Run yang macet dapat dipulihkan.
 
 Setelah membuat serta memverifikasi akun administrator, ubah role melalui Supabase SQL Editor:
 
@@ -55,9 +55,29 @@ Daftarkan URL HTTPS publik tersebut sebagai Finish Payment URL di Merchant Porta
 
 ## Worker Cloud Run
 
-Bangun image dari direktori `worker/` dan deploy sebagai Cloud Run Job bernama sesuai `CLOUD_RUN_JOB_NAME`. Konfigurasikan service account job agar dapat membaca order dan mengunggah file ke bucket Supabase. Set `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `STORAGE_BUCKET`, dan `MAX_VIDEO_DURATION` sebagai secret/environment job. Next.js mengirim `ORDER_ID` sebagai override saat pembayaran terverifikasi.
+Deploy worker dari PowerShell dengan Google Cloud CLI yang sudah login dan project aktif. Sebelum deployment, aktifkan Cloud Run, Cloud Build, dan Artifact Registry APIs; buat secret `lakulokal-supabase-service-role` di Secret Manager dan berikan akses `Secret Manager Secret Accessor` pada service account worker.
 
-Worker memeriksa kembali status `PAID` sebelum mengunduh, membatasi video maksimal dua jam secara default, menghasilkan MP4 H.264/AAC berukuran 1080x1920, dan menyimpan lima segmen yang tersebar sepanjang video. Pastikan penggunaan video mematuhi hak cipta serta ketentuan YouTube.
+```powershell
+.\worker\deploy.ps1 `
+  -ProjectId "google-cloud-project-id" `
+  -Region "asia-southeast2" `
+  -WorkerServiceAccount "lakulokal-worker@google-cloud-project-id.iam.gserviceaccount.com" `
+  -SupabaseUrl "https://your-project.supabase.co"
+```
+
+Script membangun image worker ke Artifact Registry (membuat repository `lakulokal` jika belum ada), lalu deploy Cloud Run Job satu task dengan retry otomatis Cloud Run dimatikan agar status gagal tetap dapat ditangani aplikasi. Service account worker membaca key Supabase dari Secret Manager. Next.js mengirim `ORDER_ID` sebagai override saat pembayaran terverifikasi.
+
+Di Vercel, `GOOGLE_CLOUD_PROJECT_ID`, `GOOGLE_CLOUD_REGION`, `CLOUD_RUN_JOB_NAME`, `GOOGLE_SERVICE_ACCOUNT_JSON`, dan `MAX_CONCURRENT_JOBS` harus cocok dengan deployment. Service account yang dipakai aplikasi Next.js untuk memanggil API Cloud Run adalah identitas terpisah dari service account worker; berikan hanya izin minimum untuk menjalankan Cloud Run Job dan memakai project. Jangan pernah menambahkan JSON akun layanan ke repository atau variable `NEXT_PUBLIC_*`.
+
+Worker memeriksa kembali status `PAID` sebelum mengunduh, membatasi video maksimal dua jam secara default, menghasilkan MP4 H.264/AAC berukuran 1080x1920, dan menyimpan segmen yang tersebar rata sepanjang video (maksimal 60 detik per klip). Pemilihan ini berbasis posisi waktu, bukan deteksi momen menarik atau subtitle otomatis. Pastikan hasil tersebut sesuai dengan paket yang dijual serta penggunaan video mematuhi hak cipta dan ketentuan YouTube.
+
+### Uji deployment
+
+1. Gunakan order uji sandbox DANA yang sudah berstatus `PAID`; jangan menjalankan ulang order pelanggan.
+2. Periksa eksekusi di Cloud Run dan log worker. Pastikan status order menjadi `COMPLETED`, jumlah clip sesuai paket, dan file clip serta ZIP muncul di bucket privat.
+3. Masuk sebagai pemilik order, unduh clip dan ZIP, lalu pastikan akun lain tidak dapat mengakses hasilnya.
+4. Uji video yang terlalu singkat/tidak tersedia dan pastikan order berakhir `FAILED` dengan pesan yang dapat ditindaklanjuti; gunakan aksi admin untuk mencoba ulang setelah penyebabnya diperbaiki.
+5. Uji penanganan klaim antrean macet dengan menerapkan migration `20261007080000_recover_stale_cloud_run_dispatch.sql` sebelum mengandalkan pemulihan otomatis.
 
 ## Deploy Vercel
 

@@ -23,3 +23,9 @@ vercel.json           Framework dan jadwal cron Vercel
 6. Cron merekonsiliasi pembayaran dan membersihkan hasil yang melewati masa simpan.
 
 Worker dibangun dan dideploy terpisah dari aplikasi Next.js. Jangan menaruh kredensial worker atau Supabase service role pada variabel `NEXT_PUBLIC_*`.
+
+## Kesiapan operasional
+
+- Worker saat ini menghasilkan segmen berdasarkan jarak waktu yang merata, bukan memilih highlight berdasarkan isi video dan tidak membuat subtitle otomatis.
+- Deployment Cloud Run Job, secret, izin service account, koneksi storage, serta uji proses end-to-end tetap perlu dilakukan pada project Google Cloud dan Supabase target.
+- Klaim dispatch yang tetap berstatus `DISPATCHING` lebih dari 15 menit dikembalikan ke antrean oleh RPC dispatcher. Terapkan migration `20261007080000_recover_stale_cloud_run_dispatch.sql` pada database yang sudah berjalan.

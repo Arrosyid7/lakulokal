@@ -573,6 +573,13 @@ begin
   end if;
 
   perform pg_advisory_xact_lock(hashtext('lakulokal-cloud-run-dispatch'));
+  update public.processing_jobs
+  set cloud_run_execution = null,
+      error_message = 'Klaim dispatch Cloud Run kedaluwarsa sebelum execution tercatat.'
+  where status = 'QUEUED'
+    and cloud_run_execution = 'DISPATCHING'
+    and updated_at < now() - interval '15 minutes';
+
   select count(*) into active_count
   from public.processing_jobs
   where status in ('QUEUED', 'DOWNLOADING', 'PROCESSING', 'UPLOADING')
