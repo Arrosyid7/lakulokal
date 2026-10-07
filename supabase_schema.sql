@@ -142,6 +142,8 @@ create table if not exists public.webhook_events (
 
 -- Upgrade fields from the previous application schema without deleting existing order history.
 alter table public.profiles add column if not exists role public.user_role not null default 'USER';
+alter table public.orders add column if not exists order_code text;
+alter table public.orders add column if not exists youtube_url text;
 alter table public.orders add column if not exists status text;
 alter table public.orders add column if not exists package_id text;
 alter table public.orders add column if not exists package_name text;
@@ -162,6 +164,14 @@ alter table public.orders add column if not exists result_zip_path text;
 alter table public.orders add column if not exists error_message text;
 alter table public.orders add column if not exists metadata jsonb not null default '{}'::jsonb;
 alter table public.orders add column if not exists currency text not null default 'IDR';
+do $$ begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'orders' and column_name = 'url') then
+    alter table public.orders alter column url drop not null;
+  end if;
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'orders' and column_name = 'mode') then
+    alter table public.orders alter column mode drop not null;
+  end if;
+end $$;
 alter table public.payments add column if not exists provider_reference text;
 alter table public.payments add column if not exists partner_reference text;
 alter table public.payments add column if not exists payment_id text;
@@ -185,6 +195,16 @@ alter table public.clips add column if not exists file_name text;
 alter table public.clips add column if not exists content_type text not null default 'video/mp4';
 alter table public.clips add column if not exists size_bytes bigint;
 alter table public.clips add column if not exists duration_seconds numeric(8, 2);
+
+update public.orders
+set order_code = 'LL-LEGACY-' || upper(id::text)
+where order_code is null or btrim(order_code) = '';
+create unique index if not exists orders_order_code_key on public.orders (order_code);
+alter table public.orders alter column order_code set not null;
+
+alter table public.orders drop constraint if exists orders_user_id_fkey;
+alter table public.orders add constraint orders_user_id_fkey
+  foreign key (user_id) references public.profiles(id) on delete restrict;
 
 alter table public.orders drop constraint if exists orders_payment_status_check;
 do $$ begin

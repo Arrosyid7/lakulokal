@@ -1,5 +1,5 @@
 import "server-only";
-import { PaymentGatewayApi, type CreateOrderByRedirectRequest, type QueryPaymentRequest } from "dana-node/payment_gateway/v1";
+import { PaymentGatewayApi, type CreateOrderByApiRequest, type QueryPaymentRequest } from "dana-node/payment_gateway/v1";
 import { WebhookParser, type FinishNotifyRequest } from "dana-node/webhook/v1";
 
 const QRIS_SERVICE_CODE = "54";
@@ -10,6 +10,7 @@ function config() {
     DANA_PRIVATE_KEY: process.env.DANA_PRIVATE_KEY,
     DANA_MERCHANT_ID: process.env.DANA_MERCHANT_ID,
     DANA_MCC: process.env.DANA_MCC,
+    DANA_EXTERNAL_STORE_ID: process.env.DANA_EXTERNAL_STORE_ID,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL
   };
   const missing = Object.entries(required).filter(([, value]) => !value).map(([name]) => name);
@@ -30,6 +31,7 @@ function config() {
     privateKey,
     merchantId: required.DANA_MERCHANT_ID!,
     mcc: required.DANA_MCC!,
+    externalStoreId: required.DANA_EXTERNAL_STORE_ID!,
     siteUrl,
     environment
   };
@@ -57,7 +59,7 @@ function validUpTo() {
 
 export type DanaPaymentResult = {
   providerReference: string;
-  checkoutUrl: string;
+  qrContent: string;
 };
 
 export async function createDanaCheckout(input: {
@@ -67,19 +69,26 @@ export async function createDanaCheckout(input: {
   returnUrl: string;
 }): Promise<DanaPaymentResult> {
   const settings = config();
-  const apiRequest: CreateOrderByRedirectRequest = {
+  const amount = { value: input.amount.toFixed(2), currency: "IDR" };
+  const apiRequest: CreateOrderByApiRequest = {
     partnerReferenceNo: input.orderCode,
     merchantId: settings.merchantId,
-    amount: { value: input.amount.toFixed(2), currency: "IDR" },
+    externalStoreId: settings.externalStoreId,
+    amount,
     validUpTo: validUpTo(),
     urlParams: [
       { url: input.returnUrl, type: "PAY_RETURN", isDeeplink: "N" },
       { url: `${settings.siteUrl}/api/payment/dana/notify`, type: "NOTIFICATION", isDeeplink: "N" }
     ],
+    payOptionDetails: [{
+      payMethod: "NETWORK_PAY",
+      payOption: "NETWORK_PAY_PG_QRIS",
+      transAmount: amount
+    }],
     additionalInfo: {
       mcc: settings.mcc,
       envInfo: { terminalType: "WEB" },
-      order: { scenario: "REDIRECT", orderTitle: input.description }
+      order: { scenario: "API", orderTitle: input.description }
     }
   };
   const result = await createClient().createOrder(apiRequest);
@@ -87,12 +96,12 @@ export async function createDanaCheckout(input: {
     throw new Error(`DANA gagal membuat order (${result.responseCode}).`);
   }
   const providerReference = result.referenceNo;
-  const checkoutUrl = result.webRedirectUrl;
-  if (!providerReference || !checkoutUrl) {
-    throw new Error("Respons DANA tidak memuat referensi transaksi dan URL checkout.");
+  const qrContent = result.additionalInfo?.paymentCode;
+  if (!providerReference || !qrContent) {
+    throw new Error("Respons DANA tidak memuat referensi transaksi dan kode QRIS.");
   }
 
-  return { providerReference, checkoutUrl };
+  return { providerReference, qrContent };
 }
 
 export type DanaPaymentStatus = {
@@ -108,7 +117,8 @@ export async function queryDanaPayment(partnerReference: string): Promise<DanaPa
   const query: QueryPaymentRequest = {
     originalPartnerReferenceNo: partnerReference,
     serviceCode: QRIS_SERVICE_CODE,
-    merchantId: settings.merchantId
+    merchantId: settings.merchantId,
+    externalStoreId: settings.externalStoreId
   };
   const result = await createClient().queryPayment(query);
   const amount = Number(result.amount?.value ?? result.transAmount?.value);

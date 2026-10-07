@@ -105,6 +105,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 .empty-state { padding: 20px 0; color: var(--ink-500); line-height: 1.6; }
 .qr-image { display: block; width: min(100%, 320px); height: auto; border: 1px solid var(--border); border-radius: 8px; }
+.payment-qr { display: grid; justify-items: start; gap: 12px; }
+.payment-qr p { margin: 0; color: var(--ink-700); line-height: 1.6; }
 
 @media (max-width: 900px) {
   .hero-grid { grid-template-columns: minmax(0, 1fr) minmax(250px, .75fr); gap: 30px; }

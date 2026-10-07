@@ -31,6 +31,7 @@ export async function POST(request: Request) {
     process.env.DANA_MERCHANT_ID &&
     process.env.DANA_CLIENT_ID &&
     process.env.DANA_MCC &&
+    process.env.DANA_EXTERNAL_STORE_ID &&
     process.env.NEXT_PUBLIC_SITE_URL &&
     ((process.env.DANA_ENVIRONMENT || process.env.DANA_ENV || "sandbox") !== "production" || process.env.DANA_PUBLIC_KEY)
   );
@@ -100,19 +101,19 @@ export async function POST(request: Request) {
       partner_reference: partnerReference,
       amount: order.amount,
       currency: order.currency,
-      checkout_url: payment.checkoutUrl,
+      qr_content: payment.qrContent,
       expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
     });
     if (paymentError) throw new Error("Data pembayaran gagal disimpan.");
     const { error: updateError } = await admin.from("orders").update({
       dana_reference_no: payment.providerReference,
-      dana_checkout_url: payment.checkoutUrl
+      dana_qr_content: payment.qrContent
     }).eq("id", order.id);
     if (updateError) throw new Error("QR pembayaran gagal disimpan.");
 
     return NextResponse.json({
       order: { order_code: order.order_code, amount: order.amount, currency: order.currency },
-      payment: { checkout_url: payment.checkoutUrl }
+      payment: { qr_content: payment.qrContent }
     }, { status: 201 });
   } catch (error) {
     const { error: updateError } = await admin.from("orders").update({

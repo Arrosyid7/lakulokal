@@ -52,7 +52,7 @@ export function OrderForm({ packages }: { packages: PackageOption[] }) {
       {error && <p className="form-error" role="alert">{error}</p>}
       {packages.length === 0 && <p className="form-error">Belum ada paket yang aktif. Silakan hubungi pengelola.</p>}
       <button className="button button-accent" type="submit" disabled={busy || packages.length === 0}>
-        {busy ? "Membuat order..." : "Buat order dan lanjut ke DANA"}
+        {busy ? "Membuat order..." : "Buat order dan tampilkan QRIS"}
       </button>
     </form>
   );
