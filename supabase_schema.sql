@@ -69,6 +69,7 @@ create table if not exists public.orders (
   dana_qr_content text,
   dana_qr_url text,
   dana_qr_image text,
+  dana_checkout_url text,
   payment_created_at timestamptz not null default now(),
   paid_at timestamptz,
   processing_started_at timestamptz,
@@ -92,6 +93,7 @@ create table if not exists public.payments (
   qr_content text,
   qr_url text,
   qr_image text,
+  checkout_url text,
   paid_at timestamptz,
   expires_at timestamptz,
   created_at timestamptz not null default now(),
@@ -150,6 +152,7 @@ alter table public.orders add column if not exists dana_partner_reference_no tex
 alter table public.orders add column if not exists dana_qr_content text;
 alter table public.orders add column if not exists dana_qr_url text;
 alter table public.orders add column if not exists dana_qr_image text;
+alter table public.orders add column if not exists dana_checkout_url text;
 alter table public.orders add column if not exists payment_created_at timestamptz not null default now();
 alter table public.orders add column if not exists paid_at timestamptz;
 alter table public.orders add column if not exists processing_started_at timestamptz;
@@ -168,6 +171,7 @@ alter table public.payments add column if not exists currency text not null defa
 alter table public.payments add column if not exists qr_content text;
 alter table public.payments add column if not exists qr_url text;
 alter table public.payments add column if not exists qr_image text;
+alter table public.payments add column if not exists checkout_url text;
 alter table public.payments add column if not exists paid_at timestamptz;
 alter table public.payments add column if not exists expires_at timestamptz;
 alter table public.webhook_events add column if not exists provider_event_id text;

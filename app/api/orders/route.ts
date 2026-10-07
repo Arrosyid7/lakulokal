@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { orderSchema, validationMessage } from "@/lib/validation";
-import { createDanaQr } from "@/lib/dana";
+import { createDanaCheckout } from "@/lib/dana";
 
 export const runtime = "nodejs";
 
@@ -29,10 +29,10 @@ export async function POST(request: Request) {
   const paymentReady = Boolean(
     process.env.DANA_PRIVATE_KEY &&
     process.env.DANA_MERCHANT_ID &&
-    process.env.DANA_PARTNER_ID &&
+    process.env.DANA_CLIENT_ID &&
     process.env.DANA_MCC &&
     process.env.NEXT_PUBLIC_SITE_URL &&
-    ((process.env.DANA_ENV || "sandbox") !== "production" || process.env.DANA_PUBLIC_KEY)
+    ((process.env.DANA_ENVIRONMENT || process.env.DANA_ENV || "sandbox") !== "production" || process.env.DANA_PUBLIC_KEY)
   );
   if (!paymentReady || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Pembuatan order belum tersedia. Admin perlu melengkapi konfigurasi pembayaran." }, { status: 503 });
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
   try {
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
     if (!siteUrl) throw new Error("NEXT_PUBLIC_SITE_URL belum dikonfigurasi.");
-    const payment = await createDanaQr({
+    const payment = await createDanaCheckout({
       orderCode,
       amount: order.amount,
       description: `${order.package_name} LakuLokal`,
@@ -100,23 +100,19 @@ export async function POST(request: Request) {
       partner_reference: partnerReference,
       amount: order.amount,
       currency: order.currency,
-      qr_content: payment.qrContent,
-      qr_url: payment.qrUrl,
-      qr_image: payment.qrImage,
+      checkout_url: payment.checkoutUrl,
       expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
     });
     if (paymentError) throw new Error("Data pembayaran gagal disimpan.");
     const { error: updateError } = await admin.from("orders").update({
       dana_reference_no: payment.providerReference,
-      dana_qr_content: payment.qrContent,
-      dana_qr_url: payment.qrUrl,
-      dana_qr_image: payment.qrImage
+      dana_checkout_url: payment.checkoutUrl
     }).eq("id", order.id);
     if (updateError) throw new Error("QR pembayaran gagal disimpan.");
 
     return NextResponse.json({
       order: { order_code: order.order_code, amount: order.amount, currency: order.currency },
-      payment: { qr_content: payment.qrContent, qr_url: payment.qrUrl, qr_image: payment.qrImage }
+      payment: { checkout_url: payment.checkoutUrl }
     }, { status: 201 });
   } catch (error) {
     const { error: updateError } = await admin.from("orders").update({

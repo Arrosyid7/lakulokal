@@ -8,7 +8,7 @@ LakuLokal mengubah video YouTube menjadi clip siap upload. Aplikasi web mengguna
 - Supabase Auth menangani password dan sesi. Password tidak disimpan di tabel aplikasi.
 - PostgreSQL menyimpan profil, paket, order, pembayaran, antrean kerja, hasil clip, dan audit.
 - Bucket `lakulokal-results` bersifat private. API hanya menerbitkan signed URL singkat setelah memeriksa sesi, kepemilikan order, dan status selesai.
-- DANA QR dibuat server-side. Notifikasi hanya menjadi pemicu rekonsiliasi; server mengambil status pembayaran dari API DANA dan mencocokkan referensi, merchant, dan jumlah sebelum menandai PAID.
+- DANA Gapura Drop-In checkout dibuat server-side. Pengguna diarahkan ke halaman pembayaran DANA, dan Finish Notify hanya menjadi pemicu rekonsiliasi; server mengambil status pembayaran dari API DANA dan mencocokkan referensi, merchant, dan jumlah sebelum menandai PAID.
 - Cloud Run Job mengunduh video dengan yt-dlp, menghasilkan lima clip vertikal dengan FFmpeg, lalu mengunggah clip dan ZIP ke Supabase Storage.
 - Scheduled routes merekonsiliasi pembayaran, mengirim antrean ke Cloud Run, dan menghapus hasil setelah masa simpan.
 
@@ -31,7 +31,7 @@ Order creation akan mengembalikan `503` sampai seluruh konfigurasi Supabase serv
 
 ## Supabase
 
-Jalankan `supabase_schema.sql` pada SQL Editor atau melalui Supabase CLI. Script membuat tabel, role, trigger profil Auth, RLS, paket awal `5 Clip`, audit log, limit order per user, RPC transaksi pembayaran, dan bucket private. Jika schema sudah pernah diterapkan, jalankan migration `supabase/migrations/20260413000000_fix_confirm_paid_order_payment_reference.sql` untuk memperbaiki pembaruan status payment saat Finish Notify diterima.
+Jalankan `supabase_schema.sql` pada SQL Editor atau melalui Supabase CLI. Script membuat tabel, role, trigger profil Auth, RLS, paket awal `5 Clip`, audit log, limit order per user, RPC transaksi pembayaran, dan bucket private. Jika schema sudah pernah diterapkan, jalankan migration `supabase/migrations/20260413000000_fix_confirm_paid_order_payment_reference.sql` untuk memperbaiki pembaruan status payment saat Finish Notify diterima dan `supabase/migrations/20261007000000_add_dana_checkout_urls.sql` untuk menyimpan URL checkout Drop-In.
 
 Setelah membuat serta memverifikasi akun administrator, ubah role melalui Supabase SQL Editor:
 
@@ -43,13 +43,13 @@ Jangan memberikan akses `service_role` ke browser. Jangan memberikan grant updat
 
 ## DANA dan batas kesiapan produksi
 
-Integrasi memakai SDK resmi `dana-node` untuk DANA Gapura Custom Checkout: Create Order API dengan metode QRIS, Query Payment API, dan `WebhookParser` untuk memverifikasi Finish Notify memakai signature SNAP dan public key DANA. Aplikasi mengambil ulang status pembayaran dari DANA sebelum order dinyatakan lunas.
+Integrasi memakai SDK resmi `dana-node` untuk DANA Gapura Drop-In checkout: Create Order API dengan skenario `REDIRECT`, Query Payment API, dan `WebhookParser` untuk memverifikasi Finish Notify memakai signature SNAP dan public key DANA. Aplikasi mengambil ulang status pembayaran dari DANA sebelum order dinyatakan lunas. MCC tetap wajib dalam payload Create Order.
 
 ```text
 https://domain-anda/api/payment/dana/notify
 ```
 
-Daftarkan URL HTTPS publik tersebut sebagai Notification URL di konfigurasi merchant DANA. `DANA_PARTNER_ID`, `DANA_PRIVATE_KEY`, `DANA_MERCHANT_ID`, dan `DANA_MCC` harus berasal dari onboarding DANA. SDK menggunakan public key sandbox bawaan ketika `DANA_ENV=sandbox`; untuk production, isi `DANA_PUBLIC_KEY` dengan public key notifikasi dari DANA. Jangan mengaktifkan production sebelum callback, query, dan pembayaran diuji melalui skenario merchant/UAT DANA.
+Daftarkan URL HTTPS publik tersebut sebagai Finish Payment URL di Merchant Portal DANA. `DANA_CLIENT_ID`, `DANA_PRIVATE_KEY`, `DANA_MERCHANT_ID`, dan `DANA_MCC` dipakai untuk Create Order. SDK memakai public key sandbox bawaannya ketika `DANA_ENVIRONMENT=sandbox`; untuk production, isi `DANA_PUBLIC_KEY` dengan public key notifikasi DANA. `DANA_CLIENT_SECRET` diterbitkan portal tetapi tidak dipakai pada alur SNAP asymmetric-signature ini. Jangan aktifkan production sebelum callback, query, dan pembayaran diuji melalui UAT DANA.
 
 ## Worker Cloud Run
 

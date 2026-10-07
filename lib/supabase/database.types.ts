@@ -54,6 +54,7 @@ type OrderRow = {
   dana_qr_content: string | null;
   dana_qr_url: string | null;
   dana_qr_image: string | null;
+  dana_checkout_url: string | null;
   payment_created_at: string;
   paid_at: string | null;
   processing_started_at: string | null;
@@ -78,6 +79,7 @@ type PaymentRow = {
   qr_content: string | null;
   qr_url: string | null;
   qr_image: string | null;
+  checkout_url: string | null;
   paid_at: string | null;
   expires_at: string | null;
   created_at: string;
