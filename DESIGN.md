@@ -20,6 +20,7 @@ Use Nunito Sans for relaxed, easy-to-read interface text. Pair it with Baloo 2 f
 - Keep actions clear, but give each page a distinct composition rather than a flat stack of white panels.
 - Let the landing page use a lively editorial hero, open process timeline, and distinct pricing and FAQ treatments. Give articles a quieter reading column and the workspace a task-first layout.
 - Use cut marks and timeline segments as a repeated motif because they refer directly to selecting and arranging video clips.
+- Use the supplied creator illustrations as transparent cutouts: one leads the hero, four accompany the actual workflow steps, and one sits beside package pricing so each character supports nearby content without a boxed image background.
 - Use coral in a few vivid moments to bring energy against the purple and white, not as a blanket accent.
 - Keep more space between page sections and tighter spacing inside each task group so the reading order stays clear.
 - Use bordered surfaces for forms and grouped account data, not as a container for every piece of content.

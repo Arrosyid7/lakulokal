@@ -97,7 +97,7 @@ button { color: inherit; }
 .cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 24px; }
 .hero-secondary-link { min-height: 44px; display: inline-flex; align-items: center; }
 .hero-note { margin: 18px 0 0; color: var(--muted); font-size: .83rem; }
-.hero-character-stage { min-height: 520px; display: grid; place-items: center; overflow: hidden; border-radius: 8px 96px 8px 8px; background: var(--purple-wash); }
+.hero-character-stage { min-width: 0; display: grid; place-items: center; }
 .hero-character { display: block; width: auto; height: min(42vw, 520px); max-width: 100%; object-fit: contain; object-position: center bottom; }
 
 .section { padding-block: clamp(64px, 9vw, 108px); }
@@ -107,8 +107,10 @@ button { color: inherit; }
 .section-intro h2 { margin: 0; color: var(--purple-deep); font-family: var(--font-display); font-size: clamp(2rem, 3.6vw, 3rem); font-weight: 700; line-height: 1.12; letter-spacing: -.035em; }
 .section-intro > p:last-child { color: var(--muted); line-height: 1.75; }
 .process-steps { list-style: none; margin: 0; padding: 0; }
-.process-steps li { display: grid; grid-template-columns: 52px 1fr; gap: 16px; border-bottom: 1px solid var(--line); padding: 0 0 22px; margin-bottom: 22px; }
+.process-steps li { display: grid; grid-template-columns: 100px minmax(0, 1fr); align-items: end; gap: 20px; border-bottom: 1px solid var(--line); padding: 0 0 18px; margin-bottom: 18px; }
 .process-steps li:last-child { margin-bottom: 0; }
+.process-step-character { display: block; width: 100px; height: 132px; object-fit: contain; object-position: center bottom; }
+.process-step-copy { align-self: center; }
 .step-number { color: var(--purple); font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; }
 .process-steps h3 { margin: 0 0 6px; font-size: 1rem; }
 .process-steps p { margin: 0; color: var(--muted); font-size: .92rem; line-height: 1.7; }
@@ -121,6 +123,7 @@ button { color: inherit; }
 .pricing-item p { margin: 4px 0 0; color: var(--muted); font-size: .88rem; }
 .pricing-item > strong { font-size: 1.05rem; }
 .pricing-list .form-error { margin: 0; }
+.pricing-character { display: block; width: min(170px, 54%); height: auto; margin: 12px 10px -24px auto; object-fit: contain; }
 
 .faq-section { background: var(--purple-wash); }
 .faq-list details { border-bottom: 1px solid #c9c5d9; }
@@ -277,7 +280,7 @@ button { color: inherit; }
 
 @media (max-width: 920px) {
   .hero { grid-template-columns: minmax(0, 1fr) minmax(270px, .72fr); gap: 42px; }
-  .hero-character-stage { min-height: 430px; }
+  .hero-character-stage { min-height: 0; }
   .hero-character { height: min(48vw, 450px); }
   .process-layout, .pricing-layout, .faq-layout { grid-template-columns: minmax(210px, .7fr) minmax(0, 1.3fr); gap: 40px; }
   .nav-row { min-height: 68px; flex-wrap: wrap; }
@@ -307,9 +310,11 @@ button { color: inherit; }
   .nav-account-links .button { width: auto; }
   .hero { grid-template-columns: 1fr; gap: 32px; padding-block: 64px 70px; }
   .hero h1 { font-size: clamp(2.45rem, 11vw, 4rem); }
-  .hero-character-stage { min-height: 370px; border-radius: 8px 72px 8px 8px; }
+  .hero-character-stage { min-height: 0; }
   .hero-character { height: 370px; }
   .process-layout, .pricing-layout, .faq-layout { grid-template-columns: 1fr; gap: 28px; }
+  .process-steps li { grid-template-columns: 82px minmax(0, 1fr); gap: 14px; }
+  .process-step-character { width: 82px; height: 112px; }
   .section { padding-block: 58px; }
   .pricing-item { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
   .pricing-item .button { grid-column: 1 / -1; }

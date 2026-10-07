@@ -136,10 +136,10 @@ export default function HomePage() {
           <div className="hero-character-stage">
             <Image
               className="hero-character"
-              src="/brand/lakulokal-creator-character.png"
-              alt="Karakter kreator muda membawa laptop"
-              width={768}
-              height={1152}
+              src="/brand/characters/creator-seated-laptop.png"
+              alt="Kreator duduk menggunakan laptop"
+              width={215}
+              height={363}
               priority
               sizes="(max-width: 680px) 70vw, (max-width: 920px) 36vw, 28vw"
             />
@@ -154,10 +154,22 @@ export default function HomePage() {
               <p>Order, pembayaran, dan hasil clip terhubung ke akun yang sama supaya mudah ditinjau kembali.</p>
             </div>
             <ol className="process-steps">
-              <li><span className="step-number">01</span><div><h3>Masuk atau buat akun</h3><p>Gunakan akun untuk membuat order dan menyimpan riwayat pribadi.</p></div></li>
-              <li><span className="step-number">02</span><div><h3>Kirim URL dan pilih paket</h3><p>Server mengambil jumlah clip dan harga dari paket aktif saat order dibuat.</p></div></li>
-              <li><span className="step-number">03</span><div><h3>Selesaikan pembayaran</h3><p>Pindai QRIS DANA. Order diproses setelah pembayaran diverifikasi.</p></div></li>
-              <li><span className="step-number">04</span><div><h3>Pantau status dan unduh</h3><p>Buka detail order untuk melihat proses dan mengambil hasil saat tersedia.</p></div></li>
+              <li>
+                <Image className="process-step-character" src="/brand/characters/creator-hijab-phone.png" alt="" aria-hidden="true" width={207} height={364} />
+                <div className="process-step-copy"><span className="step-number">01</span><h3>Masuk atau buat akun</h3><p>Gunakan akun untuk membuat order dan menyimpan riwayat pribadi.</p></div>
+              </li>
+              <li>
+                <Image className="process-step-character" src="/brand/characters/creator-camera.png" alt="" aria-hidden="true" width={312} height={355} />
+                <div className="process-step-copy"><span className="step-number">02</span><h3>Kirim URL dan pilih paket</h3><p>Server mengambil jumlah clip dan harga dari paket aktif saat order dibuat.</p></div>
+              </li>
+              <li>
+                <Image className="process-step-character" src="/brand/characters/creator-mobile-phone.png" alt="" aria-hidden="true" width={211} height={353} />
+                <div className="process-step-copy"><span className="step-number">03</span><h3>Selesaikan pembayaran</h3><p>Pindai QRIS DANA. Order diproses setelah pembayaran diverifikasi.</p></div>
+              </li>
+              <li>
+                <Image className="process-step-character" src="/brand/characters/creator-seated-editor.png" alt="" aria-hidden="true" width={324} height={371} />
+                <div className="process-step-copy"><span className="step-number">04</span><h3>Pantau status dan unduh</h3><p>Buka detail order untuk melihat proses dan mengambil hasil saat tersedia.</p></div>
+              </li>
             </ol>
           </div>
         </section>
@@ -168,6 +180,15 @@ export default function HomePage() {
               <p className="section-kicker">Paket aktif</p>
               <h2>Harga yang ditetapkan dari paket.</h2>
               <p>Daftar ini mengikuti paket aktif di database. Harga pada saat order dibuat dikonfirmasi kembali oleh server.</p>
+              <Image
+                className="pricing-character"
+                src="/brand/characters/creator-coffee-video.png"
+                alt=""
+                aria-hidden="true"
+                width={280}
+                height={377}
+                sizes="(max-width: 680px) 34vw, 180px"
+              />
             </div>
             <Suspense fallback={<PricingLoading />}>
               <PricingList />
