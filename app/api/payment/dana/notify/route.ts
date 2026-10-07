@@ -96,14 +96,18 @@ export async function POST(request: Request) {
       p_order_id: order.id,
       p_provider_reference: order.dana_partner_reference_no,
       p_amount: Number(order.amount)
-    }).single();
-    if (confirmError || !confirmation?.execution_job_id) {
+    }).maybeSingle();
+    if (confirmError) {
       throw new Error("Status pembayaran tidak dapat disimpan.");
     }
+    if (!confirmation) {
+      throw new Error("Konfirmasi pembayaran tidak dikembalikan oleh database.");
+    }
 
-    const executions = await dispatchPendingJobs(admin);
-
+    let executionsStarted = 0;
     if (!confirmation.already_paid) {
+      const executions = await dispatchPendingJobs(admin);
+      executionsStarted = executions.length;
       const { error: auditError } = await admin.from("audit_logs").insert({
         action: "PAYMENT_CONFIRMED",
         entity_type: "order",
@@ -119,7 +123,8 @@ export async function POST(request: Request) {
     console.info("dana_finish_notify_processed", {
       orderCode: order.order_code,
       status: "PAID",
-      executionsStarted: executions.length
+      executionsStarted,
+      alreadyPaid: confirmation.already_paid
     });
     return acknowledge();
   } catch (error) {

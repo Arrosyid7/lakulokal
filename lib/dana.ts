@@ -52,9 +52,18 @@ function createClient() {
   });
 }
 
+export function formatDanaValidUpTo(date = new Date(Date.now() + 15 * 60 * 1000)) {
+  const offsetMinutes = -date.getTimezoneOffset();
+  const sign = offsetMinutes >= 0 ? "+" : "-";
+  const absoluteMinutes = Math.abs(offsetMinutes);
+  const hours = String(Math.floor(absoluteMinutes / 60)).padStart(2, "0");
+  const minutes = String(absoluteMinutes % 60).padStart(2, "0");
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return `${localDate.toISOString().slice(0, 19)}${sign}${hours}:${minutes}`;
+}
+
 function validUpTo() {
-  const localExpiry = new Date(Date.now() + 15 * 60 * 1000 + 7 * 60 * 60 * 1000);
-  return `${localExpiry.toISOString().slice(0, 19)}+07:00`;
+  return formatDanaValidUpTo();
 }
 
 export type DanaPaymentResult = {
@@ -110,6 +119,7 @@ export type DanaPaymentStatus = {
   merchantId: string;
   providerReference: string;
   partnerReference: string;
+  statusCode?: string;
 };
 
 export async function queryDanaPayment(partnerReference: string): Promise<DanaPaymentStatus> {
@@ -130,7 +140,8 @@ export async function queryDanaPayment(partnerReference: string): Promise<DanaPa
     amount,
     merchantId: settings.merchantId,
     providerReference: result.originalReferenceNo ?? "",
-    partnerReference: result.originalPartnerReferenceNo ?? ""
+    partnerReference: result.originalPartnerReferenceNo ?? "",
+    statusCode: typeof result.latestTransactionStatus === "string" ? result.latestTransactionStatus : undefined
   };
 }
 

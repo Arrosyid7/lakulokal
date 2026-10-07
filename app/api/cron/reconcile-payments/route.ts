@@ -45,17 +45,27 @@ export async function GET(request: Request) {
         if (confirmError) throw new Error("Status PAID gagal disimpan.");
         paid += 1;
       } else {
-        const { error: updateError } = await admin.from("orders")
-          .update({ payment_status: "EXPIRED" })
-          .eq("id", order.id)
-          .eq("payment_status", "PENDING");
-        if (updateError) throw new Error("Status kedaluwarsa gagal disimpan.");
-        const { error: paymentError } = await admin.from("payments")
-          .update({ status: "EXPIRED" })
-          .eq("order_id", order.id)
-          .eq("status", "PENDING");
-        if (paymentError) throw new Error("Status payment gagal diperbarui.");
-        expired += 1;
+        const statusCode = (verified.statusCode ?? "").trim().toUpperCase();
+        const terminalStatuses = new Set(["EXPIRED", "FAILED", "CANCELLED", "CANCELED", "TIMEOUT"]);
+        if (statusCode && terminalStatuses.has(statusCode)) {
+          const terminalStatus = statusCode.includes("EXPIRE") ? "EXPIRED" : statusCode.includes("CANCEL") ? "CANCELLED" : "FAILED";
+          const { error: updateError } = await admin.from("orders")
+            .update({ payment_status: terminalStatus })
+            .eq("id", order.id)
+            .eq("payment_status", "PENDING");
+          if (updateError) throw new Error("Status terminal gagal disimpan.");
+          const { error: paymentError } = await admin.from("payments")
+            .update({ status: terminalStatus })
+            .eq("order_id", order.id)
+            .eq("status", "PENDING");
+          if (paymentError) throw new Error("Status payment terminal gagal diperbarui.");
+          expired += 1;
+        } else {
+          console.info("payment_reconciliation_still_pending", {
+            orderCode: order.order_code,
+            statusCode: statusCode || "unknown"
+          });
+        }
       }
     } catch (cause) {
       console.error("payment_reconciliation_order_failed", {

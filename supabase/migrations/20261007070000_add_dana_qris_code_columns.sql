@@ -3,3 +3,5 @@ alter table public.orders
 
 alter table public.payments
   add column if not exists qr_content text;
+
+notify pgrst, 'reload schema';

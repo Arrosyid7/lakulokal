@@ -184,6 +184,7 @@ alter table public.payments add column if not exists qr_image text;
 alter table public.payments add column if not exists checkout_url text;
 alter table public.payments add column if not exists paid_at timestamptz;
 alter table public.payments add column if not exists expires_at timestamptz;
+notify pgrst, 'reload schema';
 alter table public.webhook_events add column if not exists provider_event_id text;
 alter table public.webhook_events add column if not exists event_type text;
 alter table public.webhook_events add column if not exists event_name text;
