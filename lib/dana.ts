@@ -1,6 +1,9 @@
 import "server-only";
 import { PaymentGatewayApi, type CreateOrderByApiRequest, type QueryPaymentRequest } from "dana-node/payment_gateway/v1";
 import { WebhookParser, type FinishNotifyRequest } from "dana-node/webhook/v1";
+import { formatDanaValidUpTo } from "@/lib/dana-date";
+
+export { formatDanaValidUpTo } from "@/lib/dana-date";
 
 const QRIS_SERVICE_CODE = "54";
 
@@ -50,16 +53,6 @@ function createClient() {
     env: settings.environment,
     debugMode: process.env.DANA_DEBUG === "true" ? "true" : "false"
   });
-}
-
-export function formatDanaValidUpTo(date = new Date(Date.now() + 15 * 60 * 1000)) {
-  const offsetMinutes = -date.getTimezoneOffset();
-  const sign = offsetMinutes >= 0 ? "+" : "-";
-  const absoluteMinutes = Math.abs(offsetMinutes);
-  const hours = String(Math.floor(absoluteMinutes / 60)).padStart(2, "0");
-  const minutes = String(absoluteMinutes % 60).padStart(2, "0");
-  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
-  return `${localDate.toISOString().slice(0, 19)}${sign}${hours}:${minutes}`;
 }
 
 function validUpTo() {

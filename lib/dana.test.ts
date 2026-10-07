@@ -1,21 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { formatDanaValidUpTo } from "@/lib/dana";
+import { formatDanaValidUpTo } from "@/lib/dana-date";
 
 describe("DANA QRIS expiry formatting", () => {
-  it("formats a local datetime with the current timezone offset, not a hard-coded UTC offset", () => {
-    const now = new Date("2026-10-07T12:30:00Z");
-    const formatted = formatDanaValidUpTo(now);
-    const offsetMinutes = -now.getTimezoneOffset();
-    const sign = offsetMinutes >= 0 ? "+" : "-";
-    const absolute = Math.abs(offsetMinutes);
-    const hours = String(Math.floor(absolute / 60)).padStart(2, "0");
-    const minutes = String(absolute % 60).padStart(2, "0");
+  it("formats the expiry in Jakarta time regardless of the server timezone", () => {
+    expect(formatDanaValidUpTo(new Date("2026-10-07T12:30:00Z")))
+      .toBe("2026-10-07T19:30:00+07:00");
+  });
 
-    const expectedLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60_000)
-      .toISOString()
-      .slice(0, 19);
-
-    expect(formatted).toBe(`${expectedLocal}${sign}${hours}:${minutes}`);
-    expect(formatted).toContain(`${sign}${hours}:${minutes}`);
+  it("handles a date rollover in Jakarta time", () => {
+    expect(formatDanaValidUpTo(new Date("2026-10-07T17:30:00Z")))
+      .toBe("2026-10-08T00:30:00+07:00");
   });
 });
