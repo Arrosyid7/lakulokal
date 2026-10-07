@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { PublicNavigation } from "@/components/public-navigation";
 import { SiteFooter } from "@/components/site-footer";
 import { articles, getArticle } from "@/lib/articles";
+import { absoluteUrl } from "@/lib/site";
 
 type ArticlePageProps = { params: Promise<{ slug: string }> };
 
@@ -21,13 +22,15 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
   return {
     title: article.seoTitle,
     description: article.description,
-    keywords: [article.keyphrase, "LakuLokal", "clip video"],
     alternates: { canonical: `/artikel/${article.slug}` },
+    robots: { index: true, follow: true },
     openGraph: {
       title: article.seoTitle,
       description: article.description,
       type: "article",
-      url: `/artikel/${article.slug}`
+      siteName: "LakuLokal",
+      locale: "id_ID",
+      url: absoluteUrl(`/artikel/${article.slug}`)
     }
   };
 }
@@ -40,14 +43,35 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     .map((relatedSlug) => getArticle(relatedSlug))
     .filter((relatedArticle) => relatedArticle !== undefined);
 
+  const articleUrl = absoluteUrl(`/artikel/${article.slug}`);
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "Article",
-    headline: article.title,
-    description: article.description,
-    inLanguage: "id-ID",
-    mainEntityOfPage: new URL(`/artikel/${article.slug}`, process.env.NEXT_PUBLIC_SITE_URL || "https://lakulokal.vercel.app").toString(),
-    publisher: { "@type": "Organization", name: "LakuLokal" }
+    "@graph": [
+      {
+        "@type": "Article",
+        headline: article.title,
+        description: article.description,
+        inLanguage: "id-ID",
+        mainEntityOfPage: articleUrl,
+        publisher: {
+          "@type": "Organization",
+          name: "LakuLokal",
+          url: absoluteUrl("/"),
+          logo: {
+            "@type": "ImageObject",
+            url: absoluteUrl("/brand/lakulokal-icon.svg")
+          }
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Beranda", item: absoluteUrl("/") },
+          { "@type": "ListItem", position: 2, name: "Artikel", item: absoluteUrl("/artikel") },
+          { "@type": "ListItem", position: 3, name: article.title, item: articleUrl }
+        ]
+      }
+    ]
   };
 
   return (
@@ -84,6 +108,12 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               </section>
             ))}
           </div>
+          <p className="article-official-source">
+            Rujukan resmi:{" "}
+            <a className="text-link" href="https://www.youtube.com/t/terms?hl=id" target="_blank" rel="noreferrer">
+              Ketentuan Layanan YouTube
+            </a>.
+          </p>
           <aside className="article-next">
             <p>Kelola order clip video YouTube Anda di LakuLokal.</p>
             <Link className="button" href="/register">Buat akun LakuLokal</Link>

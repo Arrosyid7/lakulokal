@@ -24,6 +24,8 @@ Use Nunito Sans for relaxed, easy-to-read interface text. Pair it with Baloo 2 f
 - Use coral in a few vivid moments to bring energy against the purple and white, not as a blanket accent.
 - Keep more space between page sections and tighter spacing inside each task group so the reading order stays clear.
 - Keep the landing hero close to the navigation so the headline and creator image enter the first viewport without excessive blank space.
+- Place the pricing character to the left of its copy and package list so the illustration anchors the section while pricing details read in a clear vertical sequence.
+- Place official references beside related guidance so readers can verify usage and privacy details at the point they need them.
 - Use bordered surfaces for forms and grouped account data, not as a container for every piece of content.
 - Give the footer a strong purple closing surface with practical contact and policy links.
 - Prefer hover and focus feedback; avoid motion that does not help orientation.

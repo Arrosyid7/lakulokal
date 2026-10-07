@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PaymentStatus } from "@/components/orders/payment-status";
@@ -5,6 +6,10 @@ import { PaymentQrCode } from "@/components/orders/payment-qr-code";
 import { requireUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Pembayaran Order",
+  robots: { index: false, follow: true }
+};
 
 export default async function PaymentPage({ params }: { params: Promise<{ orderCode: string }> }) {
   const { supabase } = await requireUser();

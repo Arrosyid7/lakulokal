@@ -1,14 +1,13 @@
 import type { MetadataRoute } from "next";
-
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lakulokal.vercel.app";
+import { absoluteUrl } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: ["/", "/artikel/"],
-      disallow: ["/dashboard/", "/admin/", "/api/", "/payment/"]
+      allow: ["/"],
+      disallow: ["/api/"]
     },
-    sitemap: new URL("/sitemap.xml", baseUrl).toString()
+    sitemap: absoluteUrl("/sitemap.xml")
   };
 }

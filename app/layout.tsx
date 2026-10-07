@@ -1,19 +1,24 @@
 import type { Metadata } from "next";
+import { siteUrl } from "@/lib/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "LakuLokal | Clip Video YouTube",
+    default: "Layanan Clip Video YouTube | LakuLokal",
     template: "%s | LakuLokal"
   },
-  description: "Pilih paket, kirim tautan YouTube, lalu pantau pembayaran dan hasil clip dari satu akun LakuLokal.",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://lakulokal.vercel.app"),
+  description: "Layanan clip video YouTube LakuLokal membantu Anda mengirim tautan, memilih paket, dan memantau hasil dari satu akun.",
+  metadataBase: new URL(siteUrl),
   applicationName: "LakuLokal",
   icons: { icon: "/brand/lakulokal-icon.svg" },
+  robots: { index: true, follow: true },
   openGraph: {
+    title: "Layanan Clip Video YouTube | LakuLokal",
+    description: "Kirim tautan YouTube, pilih paket, lalu pantau pembayaran dan hasil clip dari akun LakuLokal.",
     siteName: "LakuLokal",
     locale: "id_ID",
-    type: "website"
+    type: "website",
+    url: siteUrl
   },
   twitter: {
     card: "summary"

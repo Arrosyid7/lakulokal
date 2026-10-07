@@ -102,7 +102,8 @@ button { color: inherit; }
 
 .section { padding-block: clamp(64px, 9vw, 108px); }
 .process-section { background: var(--soft); border-block: 1px solid var(--line); }
-.process-layout, .pricing-layout, .faq-layout { display: grid; grid-template-columns: minmax(240px, .72fr) minmax(0, 1.28fr); gap: clamp(40px, 9vw, 128px); }
+.process-layout, .faq-layout { display: grid; grid-template-columns: minmax(240px, .72fr) minmax(0, 1.28fr); gap: clamp(40px, 9vw, 128px); }
+.pricing-layout { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(0, 1.2fr); align-items: center; gap: clamp(36px, 7vw, 96px); }
 .section-intro { max-width: 430px; }
 .section-intro h2 { margin: 0; color: var(--purple-deep); font-family: var(--font-display); font-size: clamp(2rem, 3.6vw, 3rem); font-weight: 700; line-height: 1.12; letter-spacing: -.035em; }
 .section-intro > p:last-child { color: var(--muted); line-height: 1.75; }
@@ -116,6 +117,9 @@ button { color: inherit; }
 .process-steps p { margin: 0; color: var(--muted); font-size: .92rem; line-height: 1.7; }
 
 .pricing-section { border-bottom: 1px solid var(--line); }
+.pricing-visual { display: flex; justify-content: center; align-items: center; min-width: 0; }
+.pricing-content { display: grid; gap: 24px; min-width: 0; align-content: center; }
+.pricing-content .section-intro { max-width: 560px; }
 .pricing-list { min-width: 0; }
 .pricing-item { display: grid; grid-template-columns: minmax(0, 1fr) minmax(130px, auto) minmax(130px, auto) auto; align-items: center; gap: 20px; border-bottom: 1px solid var(--line); padding: 18px 0; }
 .pricing-item:first-child { border-top: 1px solid var(--line); }
@@ -125,7 +129,7 @@ button { color: inherit; }
 .pricing-unit strong, .pricing-total strong { color: var(--ink); font-size: .98rem; font-weight: 700; }
 .pricing-total strong { color: var(--purple-deep); font-size: 1.05rem; }
 .pricing-list .form-error { margin: 0; }
-.pricing-character { display: block; width: min(170px, 54%); height: auto; margin: 12px 10px -24px auto; object-fit: contain; }
+.pricing-character { display: block; width: min(100%, 320px); height: auto; max-height: 440px; object-fit: contain; object-position: center bottom; }
 
 .faq-section { background: var(--purple-wash); }
 .faq-list details { border-bottom: 1px solid #c9c5d9; }
@@ -133,6 +137,7 @@ button { color: inherit; }
 .faq-list summary { min-height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 14px 0; color: var(--purple-deep); font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; cursor: pointer; list-style: none; }
 .faq-list summary::-webkit-details-marker { display: none; }
 .faq-list summary::after { content: "+"; color: var(--purple); font-size: 1.25rem; }
+.faq-source { margin: 20px 0 0; color: var(--muted); font-size: .92rem; line-height: 1.7; }
 .faq-list details[open] summary::after { content: "−"; }
 .faq-list details p { max-width: 720px; margin: 0 0 20px; color: var(--muted); font-size: .93rem; line-height: 1.75; }
 
@@ -174,6 +179,7 @@ button { color: inherit; }
 .article-content h2 { color: var(--purple-deep); font-family: var(--font-display); font-size: clamp(1.55rem, 2.8vw, 2rem); letter-spacing: -.025em; }
 .article-content p, .article-content li { color: var(--muted); font-size: 1rem; line-height: 1.9; }
 .article-content li { margin: 8px 0; }
+.article-official-source { color: var(--muted); font-size: .92rem; line-height: 1.7; }
 .article-resources { margin-top: 20px; padding-left: 20px; }
 .related-articles { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 24px; margin-top: 24px; }
 .related-articles h2 { margin: 0; color: var(--purple-deep); font-family: var(--font-display); font-size: 1.5rem; }
@@ -284,7 +290,13 @@ button { color: inherit; }
   .hero { grid-template-columns: minmax(0, 1fr) minmax(270px, .72fr); gap: 42px; }
   .hero-character-stage { min-height: 0; }
   .hero-character { height: min(48vw, 450px); }
-  .process-layout, .pricing-layout, .faq-layout { grid-template-columns: minmax(210px, .7fr) minmax(0, 1.3fr); gap: 40px; }
+  .process-layout, .faq-layout { grid-template-columns: minmax(210px, .7fr) minmax(0, 1.3fr); gap: 40px; }
+  .pricing-layout { grid-template-columns: minmax(190px, .75fr) minmax(0, 1.25fr); gap: 32px; }
+  .pricing-item { grid-template-columns: minmax(0, 1fr) auto; gap: 10px 16px; }
+  .pricing-item-summary { grid-column: 1; }
+  .pricing-unit { grid-column: 1; }
+  .pricing-total { grid-column: 2; grid-row: 1; text-align: right; }
+  .pricing-item .button { grid-column: 2; grid-row: 2; justify-self: end; }
   .nav-row { min-height: 68px; flex-wrap: wrap; }
   .menu-toggle { min-height: 44px; display: inline-flex; align-items: center; border: 1px solid var(--purple); border-radius: 8px; padding: 8px 12px; background: var(--white); color: var(--purple-deep); font-weight: 700; }
   .nav-links { display: none; width: 100%; align-items: stretch; flex-direction: column; gap: 2px; padding: 4px 0 14px; }
@@ -314,15 +326,13 @@ button { color: inherit; }
   .hero h1 { font-size: clamp(2.45rem, 11vw, 4rem); }
   .hero-character-stage { min-height: 0; }
   .hero-character { height: 370px; }
-  .process-layout, .pricing-layout, .faq-layout { grid-template-columns: 1fr; gap: 28px; }
+  .process-layout, .faq-layout { grid-template-columns: 1fr; gap: 28px; }
+  .pricing-layout { grid-template-columns: 1fr; gap: 24px; }
+  .pricing-visual { order: -1; }
+  .pricing-character { width: min(58vw, 260px); max-height: 320px; }
   .process-steps li { grid-template-columns: 82px minmax(0, 1fr); gap: 14px; }
   .process-step-character { width: 82px; height: 112px; }
   .section { padding-block: 58px; }
-  .pricing-item { grid-template-columns: minmax(0, 1fr) auto; gap: 10px 16px; }
-  .pricing-item-summary { grid-column: 1; }
-  .pricing-unit { grid-column: 1; }
-  .pricing-total { grid-column: 2; grid-row: 1; text-align: right; }
-  .pricing-item .button { grid-column: 2; grid-row: 2; justify-self: end; }
   .footer-layout { flex-direction: column; }
   .footer-layout nav { flex-direction: column; gap: 4px; }
   .article-preview { grid-template-columns: 1fr; gap: 8px; }

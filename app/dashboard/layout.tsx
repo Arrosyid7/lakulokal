@@ -1,8 +1,12 @@
+import type { Metadata } from "next";
 import { AppNavigation } from "@/components/dashboard/app-navigation";
 import { SiteFooter } from "@/components/site-footer";
 import { requireUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  robots: { index: false, follow: true }
+};
 
 export default async function DashboardLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const { supabase, user } = await requireUser();

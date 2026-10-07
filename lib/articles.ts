@@ -20,14 +20,14 @@ export const articles: Article[] = [
   {
     slug: "memilih-momen-video-untuk-clip",
     title: "Cara Memilih Momen Video untuk Clip",
-    seoTitle: "Cara Memilih Momen Video untuk Clip",
-    description: "Pelajari cara memilih bagian video YouTube yang layak dijadikan clip, dari satu gagasan utuh sampai konteks dan batas potong.",
+    seoTitle: "Memilih Momen Video untuk Clip: Panduan",
+    description: "Pelajari cara memilih momen video untuk clip YouTube, menjaga konteks, dan memotong satu gagasan sampai selesai.",
     keyphrase: "memilih momen video untuk clip",
     intro: "Memilih momen video untuk clip dimulai dari isi, bukan durasi. Cari bagian yang menyampaikan satu gagasan lengkap, lalu pastikan penonton baru tetap memahami konteksnya.",
-    relatedSlugs: ["panduan-membuat-clip-video-youtube-yang-jelas", "cara-menyiapkan-video-untuk-clip-pendek"],
+    relatedSlugs: ["clip-video-youtube-yang-jelas", "video-untuk-clip-pendek"],
     sections: [
       {
-        heading: "Cari satu gagasan yang utuh",
+        heading: "Memilih momen video untuk clip yang utuh",
         paragraphs: [
           "Tandai bagian ketika pembicara menjawab satu pertanyaan, menjelaskan satu langkah, atau menceritakan satu kejadian. Clip yang baik punya titik mulai yang mudah dikenali dan penutup yang terasa selesai.",
           "Hindari memotong tepat sebelum inti jawaban. Dengarkan beberapa detik sebelum dan sesudah momen yang menarik agar kalimat pembuka maupun penutup tidak terasa terputus.",
@@ -65,16 +65,16 @@ export const articles: Article[] = [
     ]
   },
   {
-    slug: "panduan-membuat-clip-video-youtube-yang-jelas",
+    slug: "clip-video-youtube-yang-jelas",
     title: "Panduan Membuat Clip Video YouTube yang Jelas",
-    seoTitle: "Panduan Clip Video YouTube yang Jelas",
-    description: "Panduan membuat clip video YouTube yang mudah diikuti, dengan satu pesan, pembuka yang kuat, konteks yang cukup, dan penutup rapi.",
-    keyphrase: "clip video YouTube",
-    intro: "Clip video YouTube lebih mudah diikuti ketika penonton segera tahu topiknya. Susun potongan agar pembuka, isi, dan penutup menyampaikan satu pesan yang sama.",
-    relatedSlugs: ["memilih-momen-video-untuk-clip", "hak-cipta-dan-izin-membuat-clip-video"],
+    seoTitle: "Clip Video YouTube yang Jelas: Panduan",
+    description: "Panduan membuat clip video YouTube yang jelas dengan satu pesan, konteks yang cukup, sambungan rapi, dan peninjauan hasil.",
+    keyphrase: "clip video YouTube yang jelas",
+    intro: "Clip video YouTube yang jelas membantu penonton memahami topik sejak awal. Susun potongan agar pembuka, isi, dan penutup menyampaikan satu pesan yang sama.",
+    relatedSlugs: ["memilih-momen-video-untuk-clip", "hak-cipta-clip-video"],
     sections: [
       {
-        heading: "Mulai dari kebutuhan penonton",
+        heading: "Mulai menyusun clip video YouTube yang jelas",
         paragraphs: [
           "Sebelum memotong, tentukan pertanyaan yang ingin dijawab oleh clip. Pertanyaan itu menjadi penyaring: bagian yang tidak membantu menjawabnya mungkin lebih cocok berada di clip lain.",
           "Tuliskan inti clip dalam satu kalimat. Jika kalimatnya terlalu panjang atau berisi beberapa topik, pecah menjadi beberapa bagian yang berdiri sendiri."
@@ -109,16 +109,16 @@ export const articles: Article[] = [
     ]
   },
   {
-    slug: "hak-cipta-dan-izin-membuat-clip-video",
-    title: "Hak Cipta dan Izin Sebelum Membuat Clip Video",
-    seoTitle: "Hak Cipta dan Izin Membuat Clip Video",
-    description: "Pahami hal yang perlu diperiksa soal hak cipta, izin, dan Ketentuan Layanan YouTube sebelum mengolah atau membagikan clip video.",
-    keyphrase: "membuat clip video",
-    intro: "Sebelum membuat clip video, periksa siapa yang memiliki hak atas rekaman, musik, gambar, dan materi lain di dalamnya. Tautan yang bisa ditonton belum tentu memberi izin untuk mengolah atau membagikannya.",
-    relatedSlugs: ["panduan-membuat-clip-video-youtube-yang-jelas", "cara-menyiapkan-video-untuk-clip-pendek"],
+    slug: "hak-cipta-clip-video",
+    title: "Hak Cipta Clip Video: Periksa Izin Sebelum Mengolah",
+    seoTitle: "Hak Cipta Clip Video: Periksa Izin",
+    description: "Periksa hak cipta clip video, izin rekaman, musik, dan materi lain sebelum mengolah atau membagikan potongan dari YouTube.",
+    keyphrase: "hak cipta clip video",
+    intro: "Periksa hak cipta clip video sebelum mengolahnya. Tautan yang bisa ditonton belum tentu memberi izin untuk memotong, mengunggah ulang, atau membagikan rekaman, musik, dan materi lain.",
+    relatedSlugs: ["clip-video-youtube-yang-jelas", "video-untuk-clip-pendek"],
     sections: [
       {
-        heading: "Akses bukan berarti izin penggunaan",
+        heading: "Periksa hak cipta clip video sebelum memproses",
         paragraphs: [
           "Video publik dapat diakses untuk ditonton, tetapi status publik saja tidak membuktikan bahwa Anda boleh mengunduh, memotong, mengunggah ulang, atau memakai materinya untuk tujuan lain.",
           "Tinjau lisensi dan izin yang berlaku untuk video serta materi pihak ketiga di dalamnya. Jika ragu, tanyakan kepada pemilik hak sebelum memproses atau memublikasikan potongan."
@@ -158,16 +158,16 @@ export const articles: Article[] = [
     ]
   },
   {
-    slug: "cara-menyiapkan-video-untuk-clip-pendek",
+    slug: "video-untuk-clip-pendek",
     title: "Cara Menyiapkan Video untuk Clip Pendek",
-    seoTitle: "Menyiapkan Video untuk Clip Pendek",
-    description: "Siapkan video untuk clip pendek dengan memeriksa tautan, topik, hak penggunaan, dan daftar momen sebelum membuat order.",
-    keyphrase: "menyiapkan video untuk clip pendek",
-    intro: "Menyiapkan video untuk clip pendek membantu Anda memeriksa sumber, memilih tujuan, dan meninjau hasil tanpa terburu-buru. Mulai dengan tautan video yang benar dan daftar momen yang ingin dicari.",
-    relatedSlugs: ["memilih-momen-video-untuk-clip", "panduan-membuat-clip-video-youtube-yang-jelas"],
+    seoTitle: "Video untuk Clip Pendek: Cara Menyiapkan",
+    description: "Siapkan video untuk clip pendek dengan memeriksa tautan, topik, hak penggunaan, dan momen sebelum mengirim order.",
+    keyphrase: "video untuk clip pendek",
+    intro: "Menyiapkan video untuk clip pendek membantu Anda memeriksa sumber, menentukan tujuan, dan meninjau hasil. Mulai dengan memastikan tautan video benar dan hak penggunaannya sudah diperiksa.",
+    relatedSlugs: ["memilih-momen-video-untuk-clip", "clip-video-youtube-yang-jelas"],
     sections: [
       {
-        heading: "Pastikan tautan mengarah ke video yang tepat",
+        heading: "Pastikan video untuk clip pendek dapat diakses",
         paragraphs: [
           "Buka tautan sebelum mengirimkannya dan pastikan video yang tampil memang sumber yang akan diproses. Video privat, dibatasi usia, atau tidak tersedia untuk diunduh dapat gagal diproses.",
           "Hindari menyalin tautan playlist atau halaman kanal jika yang dibutuhkan adalah satu video tertentu.",

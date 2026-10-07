@@ -1,17 +1,28 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { absoluteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Kebijakan Privasi",
-  description: "Pelajari data akun dan order yang digunakan LakuLokal untuk menyediakan layanan clip video.",
-  alternates: { canonical: "/privacy" }
+  title: { absolute: "Kebijakan Privasi LakuLokal" },
+  description: "Kebijakan Privasi LakuLokal menjelaskan penggunaan data akun, order, pembayaran, pemrosesan video, dan permintaan data.",
+  alternates: { canonical: "/privacy" },
+  robots: { index: true, follow: true },
+  openGraph: {
+    title: "Kebijakan Privasi LakuLokal",
+    description: "Pelajari data akun dan order yang digunakan untuk menyediakan layanan clip video LakuLokal.",
+    siteName: "LakuLokal",
+    locale: "id_ID",
+    type: "website",
+    url: absoluteUrl("/privacy")
+  }
 };
 
 export default function PrivacyPage() {
   return (
     <main className="container app-main">
       <Link className="text-link" href="/">Kembali ke beranda</Link>
-      <h1 className="page-title" style={{ marginTop: 18 }}>Kebijakan Privasi</h1>
+      <h1 className="page-title" style={{ marginTop: 18 }}>Kebijakan Privasi LakuLokal</h1>
+      <p className="page-lead">Kebijakan Privasi LakuLokal menjelaskan data akun, order, dan permintaan pengguna yang terkait dengan layanan clip video.</p>
       <p className="page-lead">Terakhir diperbarui 7 Oktober 2026.</p>
       <article className="panel stack">
         <section>
@@ -24,7 +35,11 @@ export default function PrivacyPage() {
         </section>
         <section>
           <h2>Penyedia layanan</h2>
-          <p>Supabase menyediakan autentikasi, database, dan penyimpanan file. DANA memproses pembayaran QRIS. Google Cloud menjalankan pemrosesan video. Vercel menyajikan aplikasi web. Setiap penyedia menerima data yang diperlukan untuk menjalankan layanannya.</p>
+          <p>
+            <a className="text-link" href="https://supabase.com/privacy" target="_blank" rel="noreferrer">Supabase</a> menyediakan autentikasi, database, dan penyimpanan file. DANA memproses pembayaran QRIS.{" "}
+            <a className="text-link" href="https://cloud.google.com/terms/cloud-privacy-notice" target="_blank" rel="noreferrer">Google Cloud</a> menjalankan pemrosesan video.{" "}
+            <a className="text-link" href="https://vercel.com/legal/privacy-notice" target="_blank" rel="noreferrer">Vercel</a> menyajikan aplikasi web. Setiap penyedia menerima data yang diperlukan untuk menjalankan layanannya.
+          </p>
           <p>Password akun dikelola Supabase Auth dan tidak disimpan pada tabel aplikasi LakuLokal. Informasi pembayaran seperti nomor kartu atau kredensial dompet ditangani oleh provider pembayaran. LakuLokal menyimpan jumlah dan referensi transaksi untuk mencocokkan pembayaran dengan order.</p>
         </section>
         <section>

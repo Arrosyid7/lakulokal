@@ -5,17 +5,20 @@ import { Suspense } from "react";
 import { PublicNavigation } from "@/components/public-navigation";
 import { SiteFooter } from "@/components/site-footer";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { absoluteUrl } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: { absolute: "Clip Video YouTube | LakuLokal" },
-  description: "Buat clip video YouTube lewat LakuLokal. Kirim tautan, pilih paket, lalu pantau pembayaran dan hasil dari satu akun.",
+  title: { absolute: "Layanan Clip Video YouTube | LakuLokal" },
+  description: "Layanan clip video YouTube LakuLokal membantu Anda mengirim tautan, memilih paket, dan memantau hasil dari satu akun.",
   alternates: { canonical: "/" },
+  robots: { index: true, follow: true },
   openGraph: {
-    title: "Clip Video YouTube | LakuLokal",
-    description: "Kelola order clip video YouTube, pembayaran QRIS, dan hasilnya melalui dashboard LakuLokal.",
-    type: "website"
+    title: "Layanan Clip Video YouTube | LakuLokal",
+    description: "Kirim tautan YouTube, pilih paket, lalu pantau pembayaran dan hasil clip dari akun LakuLokal.",
+    type: "website",
+    url: absoluteUrl("/")
   }
 };
 
@@ -125,8 +128,6 @@ function PricingLoading() {
 
 export default function HomePage() {
   const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
     mainEntity: questions.map(({ question, answer }) => ({
       "@type": "Question",
       name: question,
@@ -142,9 +143,9 @@ export default function HomePage() {
         <section className="container hero" id="beranda">
           <div className="hero-copy-column">
             <p className="hero-kicker">Untuk video yang layak ditonton lagi</p>
-            <h1>Kelola clip video YouTube dari tautan sampai hasil.</h1>
+            <h1>Layanan clip video YouTube dari tautan sampai hasil.</h1>
             <p className="hero-copy">
-              Buat clip video YouTube dengan mengirim tautan, memilih paket, lalu mengikuti pembayaran dan proses dari akun LakuLokal.
+              Gunakan layanan clip video YouTube LakuLokal untuk mengirim tautan, memilih paket, lalu memantau pembayaran dan hasil dari satu akun.
             </p>
             <div className="cta-row">
               <Link className="button button-accent" href="/register">Buat akun untuk mulai</Link>
@@ -169,7 +170,7 @@ export default function HomePage() {
           <div className="container process-layout">
             <div className="section-intro">
               <p className="section-kicker">Cara kerja</p>
-              <h2>Mulai dari sumber videomu.</h2>
+              <h2>Cara kerja layanan clip video YouTube.</h2>
               <p>Order, pembayaran, dan hasil clip terhubung ke akun yang sama supaya mudah ditinjau kembali.</p>
             </div>
             <ol className="process-steps">
@@ -195,10 +196,7 @@ export default function HomePage() {
 
         <section className="section pricing-section" id="harga">
           <div className="container pricing-layout">
-            <div className="section-intro">
-              <p className="section-kicker">Paket aktif</p>
-              <h2>Harga jelas, dihitung per clip.</h2>
-              <p>Lihat rata-rata biaya per clip dan total setiap paket aktif. Harga order dikonfirmasi kembali oleh server.</p>
+            <div className="pricing-visual">
               <Image
                 className="pricing-character"
                 src="/brand/characters/creator-coffee-video.png"
@@ -206,12 +204,19 @@ export default function HomePage() {
                 aria-hidden="true"
                 width={280}
                 height={377}
-                sizes="(max-width: 680px) 34vw, 180px"
+                sizes="(max-width: 680px) 58vw, (max-width: 920px) 30vw, 25vw"
               />
             </div>
-            <Suspense fallback={<PricingLoading />}>
-              <PricingList />
-            </Suspense>
+            <div className="pricing-content">
+              <div className="section-intro">
+                <p className="section-kicker">Paket aktif</p>
+                <h2>Harga layanan clip video YouTube.</h2>
+                <p>Lihat rata-rata biaya per clip dan total setiap paket aktif. Harga order dikonfirmasi kembali oleh server.</p>
+              </div>
+              <Suspense fallback={<PricingLoading />}>
+                <PricingList />
+              </Suspense>
+            </div>
           </div>
         </section>
 
@@ -228,6 +233,13 @@ export default function HomePage() {
                   <p>{answer}</p>
                 </details>
               ))}
+              <p className="faq-source">
+                Sebelum memproses video, baca juga{" "}
+                <a className="text-link" href="https://www.youtube.com/t/terms?hl=id" target="_blank" rel="noreferrer">
+                  Ketentuan Layanan YouTube
+                </a>{" "}
+                dan <Link className="text-link" href="/artikel/hak-cipta-clip-video">panduan hak cipta clip video</Link>.
+              </p>
             </div>
           </div>
         </section>
@@ -236,7 +248,43 @@ export default function HomePage() {
       <SiteFooter contactId="kontak" />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "Organization",
+                "@id": absoluteUrl("/#organization"),
+                name: "LakuLokal",
+                url: absoluteUrl("/"),
+                logo: {
+                  "@type": "ImageObject",
+                  url: absoluteUrl("/brand/lakulokal-icon.svg")
+                }
+              },
+              {
+                "@type": "WebSite",
+                "@id": absoluteUrl("/#website"),
+                name: "LakuLokal",
+                url: absoluteUrl("/"),
+                inLanguage: "id-ID",
+                publisher: { "@id": absoluteUrl("/#organization") }
+              },
+              {
+                "@type": "Service",
+                name: "Layanan clip video YouTube",
+                description: "Kirim tautan video, pilih paket aktif, lalu pantau pembayaran dan hasil clip dari akun LakuLokal.",
+                url: absoluteUrl("/"),
+                provider: { "@id": absoluteUrl("/#organization") }
+              },
+              {
+                "@type": "FAQPage",
+                ...structuredData,
+                inLanguage: "id-ID"
+              }
+            ]
+          }).replace(/</g, "\\u003c")
+        }}
       />
     </>
   );

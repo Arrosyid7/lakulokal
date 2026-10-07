@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/auth";
 import { RetryOrderButton } from "@/components/dashboard/retry-order-button";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Administrasi LakuLokal",
+  robots: { index: false, follow: true }
+};
 
 export default async function AdminPage() {
   const { supabase } = await requireAdmin();

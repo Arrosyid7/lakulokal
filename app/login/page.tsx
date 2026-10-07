@@ -4,7 +4,7 @@ import { AuthForm } from "@/components/auth/auth-form";
 export const metadata: Metadata = {
   title: "Masuk",
   description: "Masuk ke akun LakuLokal untuk mengelola order dan hasil clip.",
-  robots: { index: false, follow: false }
+  robots: { index: false, follow: true }
 };
 
 export default function LoginPage() {

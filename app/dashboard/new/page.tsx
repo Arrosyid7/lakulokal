@@ -26,7 +26,7 @@ export default async function NewOrderPage() {
               <li>Pastikan Anda memiliki hak atau izin untuk memproses dan menggunakan video.</li>
               <li>Video privat atau dibatasi usia dapat gagal diproses.</li>
             </ul>
-            <Link className="text-link" href="/artikel/hak-cipta-dan-izin-membuat-clip-video">Baca panduan hak penggunaan</Link>
+            <Link className="text-link" href="/artikel/hak-cipta-clip-video">Baca panduan hak penggunaan</Link>
           </aside>
         </div>
       )}
