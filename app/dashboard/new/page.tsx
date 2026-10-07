@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { OrderForm } from "@/components/orders/order-form";
 import { requireUser } from "@/lib/auth";
 
@@ -10,9 +11,25 @@ export default async function NewOrderPage() {
     .order("price");
   return (
     <main className="container app-main">
-      <h1 className="page-title">Buat order clip</h1>
-      <p className="page-lead">Harga dan jumlah clip diambil ulang dari paket aktif di database saat order dibuat.</p>
-      {error ? <p className="form-error" role="alert">Daftar paket gagal dimuat. Coba muat ulang halaman.</p> : <OrderForm packages={packages ?? []} />}
+      <header className="dashboard-page-heading">
+        <p className="section-kicker">Order baru</p>
+        <h1 className="page-title">Siapkan video untuk dibuat clip.</h1>
+        <p className="page-lead">Masukkan tautan YouTube dan pilih paket. Server memeriksa kembali harga paket aktif saat order dibuat.</p>
+      </header>
+      {error ? <p className="form-error" role="alert">Daftar paket gagal dimuat. Muat ulang halaman. Jika masalah berlanjut, hubungi <a href="mailto:halo@lakulokal.id">halo@lakulokal.id</a>.</p> : (
+        <div className="new-order-layout">
+          <OrderForm packages={packages ?? []} />
+          <aside className="profile-note">
+            <h2>Sebelum mengirim tautan</h2>
+            <ul>
+              <li>Pastikan tautan mengarah ke video yang benar dan dapat diakses.</li>
+              <li>Pastikan Anda memiliki hak atau izin untuk memproses dan menggunakan video.</li>
+              <li>Video privat atau dibatasi usia dapat gagal diproses.</li>
+            </ul>
+            <Link className="text-link" href="/artikel/hak-cipta-dan-izin-membuat-clip-video">Baca panduan hak penggunaan</Link>
+          </aside>
+        </div>
+      )}
     </main>
   );
 }

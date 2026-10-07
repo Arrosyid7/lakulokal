@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Kebijakan Privasi",
+  description: "Pelajari data akun dan order yang digunakan LakuLokal untuk menyediakan layanan clip video.",
+  alternates: { canonical: "/privacy" }
+};
 
 export default function PrivacyPage() {
   return (

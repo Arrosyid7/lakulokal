@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Syarat Layanan",
+  description: "Syarat penggunaan LakuLokal untuk order clip video YouTube dan pembayaran.",
+  alternates: { canonical: "/terms" }
+};
 
 export default function TermsPage() {
   return (

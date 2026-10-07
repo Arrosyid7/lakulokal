@@ -14,6 +14,8 @@ LakuLokal mengubah video YouTube menjadi clip siap upload. Aplikasi web mengguna
 
 Dokumentasi struktur route dan alur data tersedia di [docs/architecture.md](./docs/architecture.md). Worker dideploy terpisah sebagai Cloud Run Job dari folder `worker/`.
 
+Landing page publik memakai metadata Next.js, canonical URL, Open Graph, FAQ structured data, `robots.txt`, dan `sitemap.xml`. Panduan editorial tersedia di `/artikel`; daftar artikelnya didefinisikan di `lib/articles.ts`. Atur `NEXT_PUBLIC_SITE_URL` pada deployment agar canonical URL dan sitemap memakai domain publik yang benar.
+
 ## Menjalankan lokal
 
 1. Pasang Node.js versi 20 atau lebih baru.

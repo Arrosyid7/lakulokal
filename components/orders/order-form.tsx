@@ -50,7 +50,7 @@ export function OrderForm({ packages }: { packages: PackageOption[] }) {
         </select>
       </div>
       {error && <p className="form-error" role="alert">{error}</p>}
-      {packages.length === 0 && <p className="form-error">Belum ada paket yang aktif. Silakan hubungi pengelola.</p>}
+      {packages.length === 0 && <p className="form-error" role="status">Belum ada paket aktif. Hubungi <a className="text-link" href="mailto:halo@lakulokal.id">halo@lakulokal.id</a> untuk informasi.</p>}
       <button className="button button-accent" type="submit" disabled={busy || packages.length === 0}>
         {busy ? "Membuat order..." : "Buat order dan tampilkan QRIS"}
       </button>

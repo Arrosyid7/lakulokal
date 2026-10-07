@@ -28,22 +28,23 @@ export default async function DashboardPage() {
     <main className="container app-main">
       <div className="row">
         <div>
-          <h1 className="page-title">Halo, {profile?.full_name || user.email || "Pengguna"}</h1>
-          <p className="page-lead">Ringkasan order dan hasil clip untuk akun Anda.</p>
+          <p className="section-kicker">Ruang kerja Anda</p>
+          <h1 className="page-title">Halo, {profile?.full_name || user.email || "Pengguna"}.</h1>
+          <p className="page-lead">Lihat status order terakhir atau mulai menyiapkan video berikutnya.</p>
         </div>
-        <Link className="button button-accent" href="/dashboard/new">Buat order</Link>
+        <Link className="button button-accent" href="/dashboard/new">Buat clip</Link>
       </div>
       {failures.length > 0 ? (
         <section className="panel form-error" role="alert">Ringkasan dashboard gagal dimuat. Muat ulang halaman atau coba lagi nanti.</section>
       ) : (
         <>
-          <section className="stats-grid" aria-label="Statistik akun">
-            <article className="stat"><div className="stat-label">Total order</div><div className="stat-value">{totalCount ?? 0}</div></article>
-            <article className="stat"><div className="stat-label">Order selesai</div><div className="stat-value">{completedCount ?? 0}</div></article>
-            <article className="stat"><div className="stat-label">Sedang diproses</div><div className="stat-value">{processingCount ?? 0}</div></article>
-            <article className="stat"><div className="stat-label">Clip tersedia</div><div className="stat-value">{clipCount ?? 0}</div></article>
+          <section className="account-metrics" aria-label="Ringkasan jumlah order">
+            <article className="account-metric"><span>Total order</span><strong>{totalCount ?? 0}</strong></article>
+            <article className="account-metric"><span>Order selesai</span><strong>{completedCount ?? 0}</strong></article>
+            <article className="account-metric"><span>Sedang diproses</span><strong>{processingCount ?? 0}</strong></article>
+            <article className="account-metric"><span>Clip tersedia</span><strong>{clipCount ?? 0}</strong></article>
           </section>
-          <section className="panel" style={{ marginTop: 18 }}>
+          <section className="dashboard-summary">
             <div className="row">
               <div>
                 <h2 style={{ margin: 0 }}>Pembayaran terverifikasi</h2>
@@ -52,27 +53,30 @@ export default async function DashboardPage() {
               <strong>{money(paidTotal)}</strong>
             </div>
           </section>
-          <section className="panel" style={{ marginTop: 18 }}>
+          <section className="panel recent-orders">
             <div className="row">
               <h2 style={{ margin: 0 }}>Order terbaru</h2>
               <Link className="text-link" href="/dashboard/orders">Lihat riwayat</Link>
             </div>
             {!orders?.length ? (
-              <p className="empty-state">Belum ada order. Buat order untuk mulai menyimpan riwayat dan hasil clip.</p>
+              <div className="empty-state-block">
+                <p>Belum ada order. Setelah membuat order, status pembayaran dan hasil clip akan tampil di sini.</p>
+                <Link className="button" href="/dashboard/new">Buat order pertama</Link>
+              </div>
             ) : (
-              <div className="table-wrap">
-                <table className="data-table">
-                  <thead><tr><th>Order</th><th>Paket</th><th>Total</th><th>Pembayaran</th><th>Proses</th></tr></thead>
-                  <tbody>{orders.map((order) => (
-                    <tr key={order.id}>
-                      <td><Link className="text-link" href={`/dashboard/orders/${encodeURIComponent(order.order_code)}`}>{order.order_code}</Link></td>
-                      <td>{order.package_name}</td>
-                      <td>{money(Number(order.amount))}</td>
-                      <td><span className="status">{order.payment_status}</span></td>
-                      <td><span className="status">{order.processing_status}</span></td>
-                    </tr>
-                  ))}</tbody>
-                </table>
+              <div className="recent-order-list">
+                {orders.map((order) => (
+                  <article className="recent-order" key={order.id}>
+                    <div>
+                      <Link className="text-link" href={`/dashboard/orders/${encodeURIComponent(order.order_code)}`}>{order.order_code}</Link>
+                      <p>{order.package_name} · {money(Number(order.amount))}</p>
+                    </div>
+                    <div className="status-pair">
+                      <span className="status">{order.payment_status}</span>
+                      <span className="status">{order.processing_status}</span>
+                    </div>
+                  </article>
+                ))}
               </div>
             )}
           </section>

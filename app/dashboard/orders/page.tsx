@@ -34,34 +34,42 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
   const money = (amount: number, currency: string) => new Intl.NumberFormat("id-ID", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
   return (
     <main className="container app-main">
-      <h1 className="page-title">Riwayat order</h1>
-      <p className="page-lead">Halaman ini hanya menampilkan order milik akun Anda.</p>
-      <nav className="app-nav-links" aria-label="Filter riwayat order">
+      <div className="row">
+        <div>
+          <h1 className="page-title">Riwayat order</h1>
+          <p className="page-lead">Order dan status pembayaran untuk akun Anda.</p>
+        </div>
+        <Link className="button button-accent" href="/dashboard/new">Buat clip</Link>
+      </div>
+      <nav className="filter-nav" aria-label="Filter riwayat order">
         {Object.entries(filters).map(([key, filter]) => (
-          <Link key={key} className={active === key ? "text-link" : "muted"} href={key === "all" ? "/dashboard/orders" : `/dashboard/orders?status=${key}`} aria-current={active === key ? "page" : undefined}>
+          <Link key={key} href={key === "all" ? "/dashboard/orders" : `/dashboard/orders?status=${key}`} aria-current={active === key ? "page" : undefined}>
             {filter.label}
           </Link>
         ))}
       </nav>
-      <section className="panel" style={{ marginTop: 18 }}>
+      <section className="panel" aria-label="Order pada filter terpilih">
         {error ? <p className="form-error" role="alert">Riwayat order gagal dimuat. Coba muat ulang.</p> : !orders?.length ? (
-          <p className="empty-state">Tidak ada order untuk filter ini. Pilih filter lain atau buat order baru.</p>
+          <div className="empty-state-block">
+            <h2>{active === "all" ? "Belum ada order" : "Tidak ada order pada filter ini"}</h2>
+            <p>{active === "all" ? "Order clip yang Anda buat akan muncul di sini." : "Pilih filter lain untuk melihat order dengan status berbeda."}</p>
+            {active === "all" && <Link className="button" href="/dashboard/new">Buat order pertama</Link>}
+          </div>
         ) : (
-          <div className="table-wrap">
-            <table className="data-table">
-              <thead><tr><th>Order</th><th>Paket</th><th>Clip</th><th>Harga</th><th>Pembayaran</th><th>Proses</th><th>Tanggal</th></tr></thead>
-              <tbody>{orders.map((order) => (
-                <tr key={order.id}>
-                  <td><Link className="text-link" href={`/dashboard/orders/${encodeURIComponent(order.order_code)}`}>{order.order_code}</Link></td>
-                  <td>{order.package_name}</td>
-                  <td>{order.clip_count}</td>
-                  <td>{money(Number(order.amount), order.currency)}</td>
-                  <td>{order.payment_status}</td>
-                  <td>{order.processing_status}</td>
-                  <td><time dateTime={order.created_at}>{new Date(order.created_at).toLocaleString("id-ID")}</time></td>
-                </tr>
-              ))}</tbody>
-            </table>
+          <div className="order-list">
+            {orders.map((order) => (
+              <article className="order-row" key={order.id}>
+                <div className="order-field">
+                  <span className="order-field-label">Order</span>
+                  <Link className="text-link order-field-value" href={`/dashboard/orders/${encodeURIComponent(order.order_code)}`}>{order.order_code}</Link>
+                </div>
+                <div className="order-field"><span className="order-field-label">Paket</span><span className="order-field-value">{order.package_name} · {order.clip_count} clip</span></div>
+                <div className="order-field"><span className="order-field-label">Total</span><span className="order-field-value">{money(Number(order.amount), order.currency)}</span></div>
+                <div className="order-field"><span className="order-field-label">Pembayaran</span><span className="status">{order.payment_status}</span></div>
+                <div className="order-field"><span className="order-field-label">Proses</span><span className="status">{order.processing_status}</span></div>
+                <div className="order-field"><span className="order-field-label">Dibuat</span><time className="order-field-value" dateTime={order.created_at}>{new Date(order.created_at).toLocaleString("id-ID")}</time></div>
+              </article>
+            ))}
           </div>
         )}
       </section>
