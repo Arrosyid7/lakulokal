@@ -143,9 +143,9 @@ export default function HomePage() {
         <section className="container hero" id="beranda">
           <div className="hero-copy-column">
             <p className="hero-kicker">Untuk video yang layak ditonton lagi</p>
-            <h1>Layanan clip video YouTube dari tautan sampai hasil.</h1>
+            <h1>Ubah video YouTube jadi clip.</h1>
             <p className="hero-copy">
-              Gunakan layanan clip video YouTube LakuLokal untuk mengirim tautan, memilih paket, lalu memantau pembayaran dan hasil dari satu akun.
+              Buat akun, kirim tautan YouTube, lalu pilih paket. Bayar lewat QRIS, pantau proses di dashboard, dan unduh clip saat tersedia.
             </p>
             <div className="cta-row">
               <Link className="button button-accent" href="/register">Buat akun untuk mulai</Link>
