@@ -1,63 +1,25 @@
-# Arsitektur proyek final
+# Arsitektur LakuLokal
 
-## Tujuan
-Website publik menjadi UI utama dan satu-satunya entry point pengguna. Semua proses diproses melalui backend web Kubernetes-friendly yang konsisten dan siap dikembangkan lebih lanjut.
+Next.js App Router adalah aplikasi web utama. Vercel menyajikan halaman dan API; Supabase mengelola autentikasi, PostgreSQL, dan penyimpanan privat; Cloud Run Jobs menjalankan pemrosesan video setelah pembayaran diverifikasi.
 
-## Stack yang dipilih
-
-- Backend: Flask
-- Frontend: HTML, CSS, JavaScript di `landing/`
-- Video processing: FFmpeg + yt-dlp
-- AI/segmentasi: Groq + `groq_ai.py`
-- Database: Supabase
-- Payment: DOKU
-
-## Struktur utama
+## Struktur kode aktif
 
 ```text
-youtube-clipper/
-├─ app/
-│  ├─ __init__.py
-│  └─ routes.py
-├─ core/
-│  ├─ clipper_core_adapter.py
-│  ├─ processor.py
-│  └─ ...
-├─ services/
-│  ├─ doku_service.py
-│  ├─ supabase_service.py
-│  └─ jobs.py
-├─ landing/
-│  ├─ index.html
-│  ├─ coba.html
-│  ├─ main.js
-│  ├─ sukses.js
-│  └─ blog/
-├─ outputs/
-├─ server.py
-├─ clipper_core.py
-├─ groq_ai.py
-├─ supabase_schema.sql
-├─ .env
-├─ requirements.txt
-├─ README.md
-├─ PROJECT_STRUCTURE.md
-└─ docs/
-   └─ architecture.md
+app/                  Halaman Next.js dan route handler API
+components/           Form autentikasi, dashboard, order, dan pembayaran
+lib/                  Supabase, otorisasi, validasi, DANA, Cloud Run
+worker/               Worker Python, FFmpeg, yt-dlp, dan Dockerfile
+supabase_schema.sql   Schema, RLS, trigger, RPC, bucket, dan paket awal
+vercel.json           Framework dan jadwal cron Vercel
 ```
 
-## Flow utama
+## Alur request dan pemrosesan
 
-1. User membuka domain publik seperti `https://lakulokal.my.id`
-2. Form web menerima URL video dan mode processing
-3. Flask backend membuat `job_id`
-4. Worker memproses video di background thread
-5. Frontend polling ke `/api/status?id=<job_id>`
-6. Hasil klip ditampilkan di halaman web sebagai card dan tombol download premium
+1. Supabase Auth memverifikasi sesi. RLS dan pemeriksaan server membatasi data ke pemilik order atau admin.
+2. Route handler membuat order dengan harga dari database, lalu meminta QRIS ke DANA.
+3. Notifikasi DANA memicu pemeriksaan status pembayaran dari server sebelum order ditandai lunas.
+4. Job yang sudah dibayar dikirim ke Cloud Run. Worker memeriksa kembali status lunas sebelum memproses video.
+5. Worker menyimpan clip dan ZIP di bucket privat. API hanya mengeluarkan signed URL setelah memeriksa sesi, kepemilikan, dan status order.
+6. Cron merekonsiliasi pembayaran dan membersihkan hasil yang melewati masa simpan.
 
-## Prinsip
-- Web-first app
-- Backend centric
-- Frontend custom dan cepat
-- Database/payment bersifat tambahan untuk production, bukan syarat utama di local dev
-```
+Worker dibangun dan dideploy terpisah dari aplikasi Next.js. Jangan menaruh kredensial worker atau Supabase service role pada variabel `NEXT_PUBLIC_*`.

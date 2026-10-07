@@ -1,7 +1,14 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": null,
-  "installCommand": "",
-  "buildCommand": "",
-  "outputDirectory": "landing"
+  "framework": "nextjs",
+  "crons": [
+    {
+      "path": "/api/cron/reconcile-payments",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-results",
+      "schedule": "17 3 * * *"
+    }
+  ]
 }
