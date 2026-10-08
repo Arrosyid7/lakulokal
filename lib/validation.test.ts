@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { hasAdminRole, ownsOrder } from "@/lib/authorization";
-import { loginSchema, orderSchema, registerSchema } from "@/lib/validation";
+import { browserProcessingSchema, loginSchema, orderSchema, registerSchema } from "@/lib/validation";
 
 describe("registration validation", () => {
   it("accepts a valid account and normalizes email", () => {
@@ -55,21 +55,14 @@ describe("order authorization and validation", () => {
     expect(hasAdminRole(undefined)).toBe(false);
   });
 
-  it("accepts valid YouTube HTTPS URL and package identifier", () => {
-    expect(orderSchema.safeParse({
-      youtube_url: "https://youtu.be/abcdefghijk",
-      package_id: "five-clips"
-    }).success).toBe(true);
-  });
-
-  it("rejects non-YouTube and non-HTTPS URLs", () => {
-    expect(orderSchema.safeParse({ youtube_url: "https://example.com/watch?v=1", package_id: "five-clips" }).success).toBe(false);
-    expect(orderSchema.safeParse({ youtube_url: "http://youtube.com/watch?v=1", package_id: "five-clips" }).success).toBe(false);
+  it("creates an order from an active package without sending the video to the server", () => {
+    const result = orderSchema.safeParse({ package_id: "five-clips", youtube_url: "https://youtu.be/abcdefghijk" });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data).toEqual({ package_id: "five-clips" });
   });
 
   it("does not accept client-owned user or payment fields as part of the parsed order", () => {
     const result = orderSchema.safeParse({
-      youtube_url: "https://www.youtube.com/watch?v=abcdefghijk",
       package_id: "five-clips",
       user_id: "attacker",
       amount: 1,
@@ -81,5 +74,22 @@ describe("order authorization and validation", () => {
       expect(result.data).not.toHaveProperty("amount");
       expect(result.data).not.toHaveProperty("payment_status");
     }
+  });
+});
+
+describe("browser processing validation", () => {
+  it("accepts progress updates from the browser", () => {
+    expect(browserProcessingSchema.safeParse({ status: "PROCESSING", progress: 40 }).success).toBe(true);
+  });
+
+  it("accepts completed and failed states with bounded error messages", () => {
+    expect(browserProcessingSchema.safeParse({ status: "COMPLETED", progress: 100 }).success).toBe(true);
+    expect(browserProcessingSchema.safeParse({ status: "FAILED", progress: 0, error_message: "Video rusak" }).success).toBe(true);
+    expect(browserProcessingSchema.safeParse({ status: "FAILED", progress: 0, error_message: "x".repeat(401) }).success).toBe(false);
+  });
+
+  it("rejects unsupported states and invalid progress", () => {
+    expect(browserProcessingSchema.safeParse({ status: "PAID", progress: 100 }).success).toBe(false);
+    expect(browserProcessingSchema.safeParse({ status: "PROCESSING", progress: 101 }).success).toBe(false);
   });
 });

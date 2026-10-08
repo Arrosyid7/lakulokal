@@ -100,7 +100,7 @@ export const articles: Article[] = [
         heading: "Tinjau hasil sebelum dibagikan",
         paragraphs: [
           "Putar setiap clip pada perangkat yang akan digunakan untuk mengunggahnya. Pastikan gambar penting tetap terlihat, suara cukup jelas, dan clip tidak berakhir di tengah kalimat.",
-          "LakuLokal membuat order dari tautan YouTube yang dikirim melalui akun. Status pembayaran dan pemrosesan dapat dilihat di halaman order.",
+          "Pilih video dari perangkat untuk membuat order. Status pembayaran dan pemrosesan dapat dilihat di halaman order, sedangkan hasil clip diunduh langsung ke perangkat.",
           "Periksa pembingkaian gambar setelah dipotong. Pastikan wajah, papan tulis, atau benda yang sedang dibahas tidak berada terlalu dekat dengan tepi gambar.",
           "Jika Anda menambahkan teks saat mengedit lanjutan, baca kembali ejaan nama dan istilah. Teks sebaiknya membantu memahami isi, bukan menutupi bagian gambar yang penting.",
           "Hasil LakuLokal menggunakan bingkai vertikal. Periksa kembali posisi pembicara dan objek utama di setiap file sebelum mengunggahnya."
@@ -161,17 +161,17 @@ export const articles: Article[] = [
     slug: "video-untuk-clip-pendek",
     title: "Cara Menyiapkan Video untuk Clip Pendek",
     seoTitle: "Video untuk Clip Pendek: Cara Menyiapkan",
-    description: "Siapkan video untuk clip pendek dengan memeriksa tautan, topik, hak penggunaan, dan momen sebelum mengirim order.",
+    description: "Siapkan video untuk clip pendek dengan memeriksa file, topik, hak penggunaan, dan momen sebelum membuat order.",
     keyphrase: "video untuk clip pendek",
-    intro: "Menyiapkan video untuk clip pendek membantu Anda memeriksa sumber, menentukan tujuan, dan meninjau hasil. Mulai dengan memastikan tautan video benar dan hak penggunaannya sudah diperiksa.",
+    intro: "Menyiapkan video untuk clip pendek membantu Anda memeriksa sumber, menentukan tujuan, dan meninjau hasil. Mulai dengan memilih file video yang benar dan memeriksa hak penggunaannya.",
     relatedSlugs: ["memilih-momen-video-untuk-clip", "clip-video-youtube-yang-jelas"],
     sections: [
       {
-        heading: "Pastikan video untuk clip pendek dapat diakses",
+        heading: "Pastikan file video untuk clip pendek dapat dibuka",
         paragraphs: [
-          "Buka tautan sebelum mengirimkannya dan pastikan video yang tampil memang sumber yang akan diproses. Video privat, dibatasi usia, atau tidak tersedia untuk diunduh dapat gagal diproses.",
-          "Hindari menyalin tautan playlist atau halaman kanal jika yang dibutuhkan adalah satu video tertentu.",
-          "Jika tautan dibagikan oleh orang lain, tanyakan apakah videonya masih dapat dibuka dan apakah Anda memiliki izin untuk mengolahnya. Pemeriksaan singkat ini membantu menghindari order yang memakai sumber keliru."
+          "Putar file sebelum membuat order dan pastikan itu memang sumber yang ingin diproses. LakuLokal menerima MP4, MOV, M4V, dan WebM.",
+          "Pastikan file berada di perangkat yang digunakan untuk membuat order. Video diproses langsung di browser dan tidak diunggah ke server.",
+          "Jika video diberikan oleh orang lain, pastikan Anda memiliki izin untuk mengolahnya. Pemeriksaan singkat ini membantu menghindari order dengan sumber yang keliru."
         ]
       },
       {
@@ -189,15 +189,14 @@ export const articles: Article[] = [
       {
         heading: "Pahami alur order",
         paragraphs: [
-          "Di LakuLokal, pengguna masuk ke akun, mengirim tautan video dan memilih paket, lalu melihat status order di dashboard. Harga paket yang aktif diambil oleh server saat order dibuat.",
-          "Pembayaran menggunakan QRIS DANA. Server memeriksa status transaksi sebelum order ditandai lunas, dan hasil clip ditampilkan setelah pemrosesan selesai.",
-          "Simpan tautan order setelah dikirim agar Anda dapat kembali ke halaman detailnya. Dari sana, periksa status terbaru dan unduh hasil yang tersedia sebelum masa penyimpanan berakhir."
+          "Di LakuLokal, pengguna masuk ke akun, memilih file video dari perangkat dan memilih paket. Browser memproses file secara lokal setelah pembayaran QRIS DANA terverifikasi.",
+          "Status order dan pembayaran dapat dilihat di dashboard. Hasil clip diunduh langsung ke perangkat dan tidak disimpan di akun, jadi simpan file setelah proses selesai."
         ]
       },
       {
         heading: "Simpan hasil dengan tertib",
         paragraphs: [
-          "Setelah hasil tersedia, unduh file dan pindahkan ke penyimpanan yang Anda kelola. File hasil LakuLokal disimpan sementara sesuai konfigurasi layanan, jadi jangan mengandalkan tautan unduhan sebagai arsip jangka panjang.",
+          "Setelah clip selesai dibuat, unduh file ke perangkat dan pindahkan ke penyimpanan yang Anda kelola. Hasil tidak disimpan di akun, jadi jangan tutup halaman sebelum mengunduh semua clip.",
           "Gunakan nama file yang menjelaskan topik atau urutan clip. Simpan juga catatan singkat tentang tujuan tiap potongan agar file lebih mudah ditemukan ketika akan disunting atau diunggah.",
           "Pastikan file sudah dapat dibuka sebelum menutup halaman order. Jika ada kendala, catat kode order supaya lebih mudah meminta bantuan."
         ]

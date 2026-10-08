@@ -8,13 +8,15 @@
     "start": "next start",
     "lint": "eslint . --max-warnings=0 --ignore-pattern next-env.d.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "postinstall": "node scripts/copy-ffmpeg-assets.mjs"
   },
   "dependencies": {
+    "@ffmpeg/core": "^0.12.10",
+    "@ffmpeg/ffmpeg": "^0.12.15",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.57.0",
     "dana-node": "^2.2.2",
-    "google-auth-library": "^10.3.0",
     "next": "^15.5.2",
     "qrcode": "^1.5.4",
     "react": "^19.1.1",

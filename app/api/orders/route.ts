@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     .insert({
       order_code: orderCode,
       user_id: user.id,
-      youtube_url: parsed.data.youtube_url,
+      youtube_url: null,
       package_id: product.id,
       package_name: product.name,
       clip_count: product.clip_count,

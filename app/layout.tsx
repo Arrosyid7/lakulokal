@@ -4,17 +4,17 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Layanan Clip Video YouTube | LakuLokal",
+    default: "Layanan Clip Video | LakuLokal",
     template: "%s | LakuLokal"
   },
-  description: "Layanan clip video YouTube LakuLokal membantu Anda mengirim tautan, memilih paket, dan memantau hasil dari satu akun.",
+  description: "Pilih file video, bayar dengan QRIS, lalu buat clip langsung di browser.",
   metadataBase: new URL(siteUrl),
   applicationName: "LakuLokal",
   icons: { icon: "/brand/lakulokal-icon.svg" },
   robots: { index: true, follow: true },
   openGraph: {
-    title: "Layanan Clip Video YouTube | LakuLokal",
-    description: "Kirim tautan YouTube, pilih paket, lalu pantau pembayaran dan hasil clip dari akun LakuLokal.",
+    title: "Layanan Clip Video | LakuLokal",
+    description: "Pilih file video, bayar dengan QRIS, lalu buat clip langsung di browser.",
     siteName: "LakuLokal",
     locale: "id_ID",
     type: "website",

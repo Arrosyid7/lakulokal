@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { queryDanaPayment } from "@/lib/dana";
-import { dispatchPendingJobs } from "@/lib/cloud-run";
 import { isCronAuthorized } from "@/lib/cron-auth";
 
 export const runtime = "nodejs";
@@ -75,13 +74,5 @@ export async function GET(request: Request) {
     }
   }
 
-  try {
-    const executions = await dispatchPendingJobs(admin);
-    return NextResponse.json({ checked: pending?.length ?? 0, paid, expired, executions_started: executions.length });
-  } catch (cause) {
-    console.error("payment_reconciliation_dispatch_failed", {
-      message: cause instanceof Error ? cause.message : "unknown"
-    });
-    return NextResponse.json({ error: "Antrean pemrosesan belum dapat dijalankan.", checked: pending?.length ?? 0, paid, expired }, { status: 500 });
-  }
+  return NextResponse.json({ checked: pending?.length ?? 0, paid, expired });
 }

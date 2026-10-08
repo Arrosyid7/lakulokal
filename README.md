@@ -1,94 +1,61 @@
 # LakuLokal
 
-LakuLokal mengubah video YouTube menjadi clip siap upload. Aplikasi web menggunakan Next.js App Router, TypeScript, Tailwind CSS, Supabase Auth/PostgreSQL/Storage, DANA Dynamic QRIS, dan Google Cloud Run Jobs.
-
-## Arsitektur
-
-- Next.js menangani halaman web dan API server-side. Deploy target: Vercel.
-- Supabase Auth menangani password dan sesi. Password tidak disimpan di tabel aplikasi.
-- PostgreSQL menyimpan profil, paket, order, pembayaran, antrean kerja, hasil clip, dan audit.
-- Bucket `lakulokal-results` bersifat private. API hanya menerbitkan signed URL singkat setelah memeriksa sesi, kepemilikan order, dan status selesai.
-- DANA QRIS API order dibuat server-side. QRIS ditampilkan di halaman pembayaran agar pembeli dapat memindainya dengan aplikasi pembayaran yang mendukung QRIS. Finish Notify hanya menjadi pemicu rekonsiliasi; server mengambil status pembayaran dari API DANA dan mencocokkan referensi, merchant, dan jumlah sebelum menandai PAID.
-- Cloud Run Job mengunduh video dengan yt-dlp, menghasilkan lima clip vertikal dengan FFmpeg, lalu mengunggah clip dan ZIP ke Supabase Storage.
-- Scheduled routes merekonsiliasi pembayaran, mengirim antrean ke Cloud Run, dan menghapus hasil setelah masa simpan.
-
-Dokumentasi struktur route dan alur data tersedia di [docs/architecture.md](./docs/architecture.md). Worker dideploy terpisah sebagai Cloud Run Job dari folder `worker/`.
-
-Landing page publik memakai metadata Next.js, canonical URL, Open Graph, FAQ structured data, `robots.txt`, dan `sitemap.xml`. Panduan editorial tersedia di `/artikel`; daftar artikelnya didefinisikan di `lib/articles.ts`. Atur `NEXT_PUBLIC_SITE_URL` pada deployment agar canonical URL dan sitemap memakai domain publik yang benar.
+LakuLokal membuat klip video vertikal dari file yang dipilih pengguna. Pengguna memilih paket, membayar melalui QRIS DANA, lalu browser memproses video dan mengunduh klip langsung ke perangkat. Aplikasi tidak membutuhkan VPS atau Cloud Run untuk pemrosesan video.
 
 ## Menjalankan lokal
 
 1. Pasang Node.js versi 20 atau lebih baru.
-2. Salin `.env.example` menjadi `.env.local`, lalu isi Supabase.
-3. Terapkan `supabase_schema.sql` ke project Supabase.
-4. Atur URL callback Auth di Supabase ke `http://localhost:3000/auth/callback` dan `http://localhost:3000/reset-password`.
-5. Jalankan:
+2. Salin `.env.example` menjadi `.env.local`, lalu isi Supabase dan DANA.
+3. Jalankan `npm install`. Script `postinstall` menyalin FFmpeg WebAssembly ke `public/ffmpeg/`.
+4. Terapkan `supabase_schema.sql` pada database baru, atau jalankan migration untuk database yang sudah digunakan.
+5. Jalankan `npm run dev`.
 
-```bash
-npm install
-npm run dev
-```
-
-Order creation akan mengembalikan `503` sampai seluruh konfigurasi Supabase service-role dan DANA tersedia. Tidak ada status pembayaran simulasi.
+Order hanya dapat dibuat bila Supabase service role dan konfigurasi DANA tersedia. Tidak ada status pembayaran simulasi.
 
 ## Supabase
 
-Jalankan `supabase_schema.sql` pada SQL Editor atau melalui Supabase CLI. Jika schema sudah pernah diterapkan, jalankan migration yang dibutuhkan dari `supabase/migrations/`, termasuk `20260413000000_fix_confirm_paid_order_payment_reference.sql`, `20261007000000_add_dana_checkout_urls.sql`, `20261007010000_add_dana_partner_reference_no.sql`, `20261007020000_add_missing_order_columns.sql`, `20261007030000_make_legacy_order_url_nullable.sql`, `20261007040000_make_legacy_order_mode_nullable.sql`, `20261007050000_restore_missing_user_profiles.sql`, `20261007060000_fix_orders_user_profile_foreign_key.sql`, `20261007070000_add_dana_qris_code_columns.sql`, dan `20261007080000_recover_stale_cloud_run_dispatch.sql` agar klaim Cloud Run yang macet dapat dipulihkan.
+Jalankan `supabase_schema.sql` pada SQL Editor atau melalui Supabase CLI untuk instalasi baru. Untuk database lama, terapkan migration sesuai urutan yang belum pernah dijalankan:
 
-Setelah membuat serta memverifikasi akun administrator, ubah role melalui Supabase SQL Editor:
+- `20260413000000_fix_confirm_paid_order_payment_reference.sql`
+- `20261007000000_add_dana_checkout_urls.sql`
+- `20261007010000_add_dana_partner_reference_no.sql`
+- `20261007020000_add_missing_order_columns.sql`
+- `20261007030000_make_legacy_order_url_nullable.sql`
+- `20261007040000_make_legacy_order_mode_nullable.sql`
+- `20261007050000_restore_missing_user_profiles.sql`
+- `20261007060000_fix_orders_user_profile_foreign_key.sql`
+- `20261007070000_add_dana_qris_code_columns.sql`
+- `20261008000000_enable_browser_video_processing.sql`
 
-```sql
-update public.profiles set role = 'ADMIN' where email = 'alamat-admin-yang-sudah-diverifikasi@example.com';
-```
+Jangan memberikan akses `service_role` ke browser atau memberikan grant update untuk status pembayaran kepada pengguna.
 
-Jangan memberikan akses `service_role` ke browser. Jangan memberikan grant update untuk status order kepada user.
+## DANA
 
-## DANA dan batas kesiapan produksi
-
-Integrasi memakai SDK resmi `dana-node` untuk membuat Create Order API QRIS secara server-side, menampilkan payment code sebagai QR yang dapat dipindai, memeriksa status melalui Query Payment API, serta memverifikasi Finish Notify menggunakan signature SNAP dan public key DANA. `DANA_EXTERNAL_STORE_ID` dari External Shop ID DANA Sandbox dan MCC wajib dikonfigurasi. Aplikasi mengambil ulang status pembayaran dari DANA sebelum order dinyatakan lunas.
+Integrasi memakai SDK `dana-node` untuk membuat QRIS, memeriksa status pembayaran, dan memvalidasi Finish Notify. Lengkapi kredensial di `.env.example`. Daftarkan URL HTTPS berikut sebagai Finish Payment URL di Merchant Portal DANA:
 
 ```text
 https://domain-anda/api/payment/dana/notify
 ```
 
-Daftarkan URL HTTPS publik tersebut sebagai Finish Payment URL di Merchant Portal DANA. `DANA_CLIENT_ID`, `DANA_PRIVATE_KEY`, `DANA_MERCHANT_ID`, dan `DANA_MCC` dipakai untuk Create Order. SDK memakai public key sandbox bawaannya ketika `DANA_ENVIRONMENT=sandbox`; untuk production, isi `DANA_PUBLIC_KEY` dengan public key notifikasi DANA. `DANA_CLIENT_SECRET` diterbitkan portal tetapi tidak dipakai pada alur SNAP asymmetric-signature ini. Jangan aktifkan production sebelum callback, query, dan pembayaran diuji melalui UAT DANA.
+Jangan aktifkan production sebelum callback, query pembayaran, dan alur order diuji melalui UAT DANA.
 
-## Worker Cloud Run
+## Pemrosesan video di browser
 
-Deploy worker dari PowerShell dengan Google Cloud CLI yang sudah login dan project aktif. Sebelum deployment, aktifkan Cloud Run, Cloud Build, dan Artifact Registry APIs; buat secret `lakulokal-supabase-service-role` di Secret Manager dan berikan akses `Secret Manager Secret Accessor` pada service account worker.
+File video diproses secara lokal dengan FFmpeg WebAssembly. Format yang diterima: MP4, MOV, M4V, dan WebM. Ukuran maksimal 250 MB, durasi maksimal dua jam, dan setiap klip berdurasi hingga 60 detik. Klip dipilih berdasarkan jarak waktu merata, bukan deteksi highlight.
 
-```powershell
-.\worker\deploy.ps1 `
-  -ProjectId "google-cloud-project-id" `
-  -Region "asia-southeast2" `
-  -WorkerServiceAccount "lakulokal-worker@google-cloud-project-id.iam.gserviceaccount.com" `
-  -SupabaseUrl "https://your-project.supabase.co"
-```
+Video tidak diunggah ke server. Klip diunduh ke perangkat dan tidak disimpan di riwayat akun. Browser harus tetap terbuka selama pemrosesan; hasil dapat gagal jika perangkat kehabisan memori atau browser tidak mendukung WebAssembly. Aplikasi menyajikan file FFmpeg dari domain sendiri, bukan mengambilnya dari CDN saat pengguna membuat klip.
 
-Script membangun image worker ke Artifact Registry (membuat repository `lakulokal` jika belum ada), lalu deploy Cloud Run Job satu task dengan retry otomatis Cloud Run dimatikan agar status gagal tetap dapat ditangani aplikasi. Service account worker membaca key Supabase dari Secret Manager. Next.js mengirim `ORDER_ID` sebagai override saat pembayaran terverifikasi.
+Paket `@ffmpeg/core` menggunakan lisensi GPL-2.0-or-later. Lihat lisensi paket dan sumber FFmpeg sebelum mendistribusikan aplikasi.
 
-Di Vercel, `GOOGLE_CLOUD_PROJECT_ID`, `GOOGLE_CLOUD_REGION`, `CLOUD_RUN_JOB_NAME`, `GOOGLE_SERVICE_ACCOUNT_JSON`, dan `MAX_CONCURRENT_JOBS` harus cocok dengan deployment. Service account yang dipakai aplikasi Next.js untuk memanggil API Cloud Run adalah identitas terpisah dari service account worker; berikan hanya izin minimum untuk menjalankan Cloud Run Job dan memakai project. Jangan pernah menambahkan JSON akun layanan ke repository atau variable `NEXT_PUBLIC_*`.
+## Deploy aplikasi
 
-Worker memeriksa kembali status `PAID` sebelum mengunduh, membatasi video maksimal dua jam secara default, menghasilkan MP4 H.264/AAC berukuran 1080x1920, dan menyimpan segmen yang tersebar rata sepanjang video (maksimal 60 detik per klip). Pemilihan ini berbasis posisi waktu, bukan deteksi momen menarik atau subtitle otomatis. Pastikan hasil tersebut sesuai dengan paket yang dijual serta penggunaan video mematuhi hak cipta dan ketentuan YouTube.
+1. Deploy Next.js ke Vercel.
+2. Atur variabel Supabase dan DANA dari `.env.example`. Jangan menaruh secret di variable `NEXT_PUBLIC_*`.
+3. Pastikan `npm install`/`npm ci` menjalankan `postinstall`, sehingga aset FFmpeg tersedia di `public/ffmpeg/` saat build.
+4. Aktifkan Vercel Cron untuk rekonsiliasi pembayaran dan pembersihan hasil lama, lalu isi `CRON_SECRET`.
+5. Uji pembayaran QRIS sandbox, pemrosesan browser, unduhan, dan tampilan di perangkat mobile sebelum melayani order sungguhan.
 
-### Uji deployment
-
-1. Gunakan order uji sandbox DANA yang sudah berstatus `PAID`; jangan menjalankan ulang order pelanggan.
-2. Periksa eksekusi di Cloud Run dan log worker. Pastikan status order menjadi `COMPLETED`, jumlah clip sesuai paket, dan file clip serta ZIP muncul di bucket privat.
-3. Masuk sebagai pemilik order, unduh clip dan ZIP, lalu pastikan akun lain tidak dapat mengakses hasilnya.
-4. Uji video yang terlalu singkat/tidak tersedia dan pastikan order berakhir `FAILED` dengan pesan yang dapat ditindaklanjuti; gunakan aksi admin untuk mencoba ulang setelah penyebabnya diperbaiki.
-5. Uji penanganan klaim antrean macet dengan menerapkan migration `20261007080000_recover_stale_cloud_run_dispatch.sql` sebelum mengandalkan pemulihan otomatis.
-
-## Deploy Vercel
-
-1. Hubungkan repository ke Vercel dengan framework Next.js.
-2. Isi environment variables dari `.env.example` di Vercel, termasuk `DANA_EXTERNAL_STORE_ID` dari External Shop ID pada DANA Sandbox Submerchants. Jangan menaruh service-role key, private key, public verification key, atau service-account JSON pada variable `NEXT_PUBLIC_*`.
-3. Pasang migrations/schema ke Supabase dan deploy Cloud Run Job.
-4. Konfigurasikan Notification URL DANA dan public key Finish Notify sesuai environment sandbox atau production.
-5. Aktifkan Vercel Cron untuk `/api/cron/reconcile-payments` dan `/api/cron/cleanup-results`, serta set `CRON_SECRET`.
-6. Pastikan paket Vercel mendukung jadwal cron yang dipakai dan uji callback/payment query di sandbox sebelum beralih ke production.
-
-`GOOGLE_SERVICE_ACCOUNT_JSON` harus berisi credential service account server-side dengan izin minimum untuk menjalankan Cloud Run Job. Jika deployment Anda memakai Workload Identity Federation, ganti helper Cloud Run agar memakai penyedia identitas deployment tersebut.
+Vercel menyajikan aplikasi dan aset FFmpeg. Pemrosesan video menggunakan CPU serta memori perangkat pengguna, bukan server.
 
 ## Pemeriksaan
 
@@ -98,5 +65,3 @@ npm run lint
 npm test
 npm run build
 ```
-
-Integrasi live tetap membutuhkan project Supabase, akun merchant DANA, project Google Cloud, dan uji callback dari sandbox. Tidak ada credential tersebut di repository.

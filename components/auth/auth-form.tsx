@@ -90,14 +90,14 @@ export function AuthForm({ mode }: AuthFormProps) {
     reset: "Buat password baru"
   }[mode];
   const descriptions = {
-    login: "Masuk untuk mengelola order dan hasil clip Anda.",
+    login: "Masuk untuk mengelola order dan melihat status pembayaran.",
     register: "Gunakan email aktif untuk membuat dan melihat order.",
     forgot: "Masukkan email akun. Kami akan mengirim tautan pemulihan bila alamat terdaftar.",
     reset: "Gunakan password baru dengan panjang minimal 8 karakter."
   }[mode];
   const asideCopy = {
-    login: "Lanjutkan mengelola order, pembayaran, dan hasil clip dari akun Anda.",
-    register: "Buat akun untuk mengirim video dan menyimpan riwayat order clip.",
+    login: "Lanjutkan mengelola order dan pembayaran. File video dan clip tetap berada di perangkat Anda.",
+    register: "Buat akun untuk membuat order dan menyimpan riwayat pembayaran. Video diproses di perangkat Anda.",
     forgot: "Akses akun Anda kembali melalui instruksi pemulihan yang dikirim ke email.",
     reset: "Perbarui password untuk menjaga akses ke akun dan riwayat order."
   }[mode];
@@ -114,7 +114,7 @@ export function AuthForm({ mode }: AuthFormProps) {
               <h2>Video panjang jadi <em>clip</em> yang mudah dikelola.</h2>
               <p>{asideCopy}</p>
             </div>
-            <p className="auth-aside-foot">Order dan hasil clip tetap terhubung dengan akun Anda.</p>
+            <p className="auth-aside-foot">Akun menyimpan riwayat order. File video dan hasil clip tidak disimpan.</p>
           </aside>
           <section className="auth-card" aria-labelledby="auth-title">
             <Link className="text-link auth-back" href="/">Kembali ke beranda</Link>

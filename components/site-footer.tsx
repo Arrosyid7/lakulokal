@@ -9,7 +9,7 @@ export function SiteFooter({ contactId }: { contactId?: string }) {
           <Link className="brand brand-logo-link" href="/" aria-label="LakuLokal, beranda">
             <Image className="brand-logo" src="/brand/lakulokal-logo-dark.svg" alt="" width={420} height={156} />
           </Link>
-          <p>Kelola order clip YouTube dari satu akun.</p>
+          <p>Pilih video dari perangkat, lalu unduh clip yang dibuat di browser.</p>
           <a className="footer-contact" href="mailto:halo@lakulokal.id">halo@lakulokal.id</a>
         </div>
         <nav aria-label="Navigasi footer">

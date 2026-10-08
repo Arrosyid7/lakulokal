@@ -12,7 +12,7 @@ export function RetryOrderButton({ orderCode }: { orderCode: string }) {
       const response = await fetch(`/api/admin/orders/${encodeURIComponent(orderCode)}/retry`, { method: "POST" });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Job tidak dapat dijalankan ulang.");
-      setMessage("Job masuk antrean ulang.");
+      setMessage("Order siap. Minta pemiliknya membuka detail order dan memilih ulang video.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Job tidak dapat dijalankan ulang.");
     } finally {

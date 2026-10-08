@@ -10,13 +10,13 @@ import { absoluteUrl } from "@/lib/site";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: { absolute: "Layanan Clip Video YouTube | LakuLokal" },
-  description: "Layanan clip video YouTube LakuLokal membantu Anda mengirim tautan, memilih paket, dan memantau hasil dari satu akun.",
+  title: { absolute: "Layanan Clip Video | LakuLokal" },
+  description: "Pilih video dari perangkat, bayar dengan QRIS, lalu buat clip langsung di browser.",
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },
   openGraph: {
-    title: "Layanan Clip Video YouTube | LakuLokal",
-    description: "Kirim tautan YouTube, pilih paket, lalu pantau pembayaran dan hasil clip dari akun LakuLokal.",
+    title: "Layanan Clip Video | LakuLokal",
+    description: "Pilih video dari perangkat, bayar dengan QRIS, lalu buat clip langsung di browser.",
     type: "website",
     url: absoluteUrl("/")
   }
@@ -25,23 +25,23 @@ export const metadata: Metadata = {
 const questions = [
   {
     question: "Bagaimana cara membuat order clip?",
-    answer: "Masuk ke akun, buka menu Buat clip, kirim tautan video YouTube, lalu pilih paket yang aktif. Harga paket diperiksa server ketika order dibuat."
+    answer: "Masuk ke akun, pilih file video dan paket, lalu bayar menggunakan QRIS. Setelah pembayaran terverifikasi, browser membuat clip."
   },
   {
     question: "Bagaimana pembayaran diproses?",
     answer: "Pembayaran order menggunakan QRIS DANA. Server memeriksa status transaksi ke provider sebelum order ditandai lunas."
   },
   {
-    question: "Apakah semua video YouTube dapat diproses?",
-    answer: "Tidak selalu. Video privat, dibatasi usia, atau tidak tersedia untuk diunduh dapat gagal diproses. Pastikan tautan merujuk ke video yang dapat diakses."
+    question: "File video apa yang dapat diproses?",
+    answer: "Pilih file MP4, MOV, M4V, atau WebM berukuran maksimal 250 MB dan berdurasi tidak lebih dari dua jam."
   },
   {
-    question: "Apa yang perlu diperiksa sebelum mengirim video?",
+    question: "Apa yang perlu diperiksa sebelum memilih video?",
     answer: "Pastikan Anda memiliki hak atau izin yang diperlukan untuk memproses dan menggunakan video, serta mematuhi Ketentuan Layanan YouTube dan aturan yang berlaku."
   },
   {
-    question: "Di mana saya melihat hasil dan status order?",
-    answer: "Status pembayaran, proses, dan hasil unduhan tersedia pada dashboard akun serta halaman detail order."
+    question: "Apakah video dan hasilnya disimpan?",
+    answer: "Video diproses langsung di browser dan tidak diunggah ke server. Clip diunduh ke perangkat dan tidak tersimpan di riwayat akun."
   }
 ];
 
@@ -143,15 +143,15 @@ export default function HomePage() {
         <section className="container hero" id="beranda">
           <div className="hero-copy-column">
             <p className="hero-kicker">Untuk video yang layak ditonton lagi</p>
-            <h1>Ubah video YouTube jadi clip.</h1>
+            <h1>Ubah file video jadi clip.</h1>
             <p className="hero-copy">
-              Buat akun, kirim tautan YouTube, lalu pilih paket. Bayar lewat QRIS, pantau proses di dashboard, dan unduh clip saat tersedia.
+              Pilih video dari perangkat, bayar lewat QRIS, lalu buat clip langsung di browser. Video tidak dikirim ke server.
             </p>
             <div className="cta-row">
               <Link className="button button-accent" href="/register">Buat akun untuk mulai</Link>
               <Link className="text-link hero-secondary-link" href="#cara-kerja">Lihat cara kerja</Link>
             </div>
-            <p className="hero-note">Butuh akun untuk membuat order dan melihat hasil clip.</p>
+            <p className="hero-note">Hasil clip diunduh ke perangkat dan tidak tersimpan di akun.</p>
           </div>
           <div className="hero-character-stage">
             <Image
@@ -170,8 +170,8 @@ export default function HomePage() {
           <div className="container process-layout">
             <div className="section-intro">
               <p className="section-kicker">Cara kerja</p>
-              <h2>Cara kerja layanan clip video YouTube.</h2>
-              <p>Order, pembayaran, dan hasil clip terhubung ke akun yang sama supaya mudah ditinjau kembali.</p>
+              <h2>Cara kerja clip video.</h2>
+              <p>Akun mencatat order dan pembayaran. File video tetap berada di perangkat Anda.</p>
             </div>
             <ol className="process-steps">
               <li>
@@ -180,7 +180,7 @@ export default function HomePage() {
               </li>
               <li>
                 <Image className="process-step-character" src="/brand/characters/creator-camera.png" alt="" aria-hidden="true" width={312} height={355} />
-                <div className="process-step-copy"><span className="step-number">02</span><h3>Kirim URL dan pilih paket</h3><p>Server mengambil jumlah clip dan harga dari paket aktif saat order dibuat.</p></div>
+                <div className="process-step-copy"><span className="step-number">02</span><h3>Pilih file dan paket</h3><p>Pilih video dari perangkat. Browser membaca file secara lokal.</p></div>
               </li>
               <li>
                 <Image className="process-step-character" src="/brand/characters/creator-mobile-phone.png" alt="" aria-hidden="true" width={211} height={353} />
@@ -188,7 +188,7 @@ export default function HomePage() {
               </li>
               <li>
                 <Image className="process-step-character" src="/brand/characters/creator-seated-editor.png" alt="" aria-hidden="true" width={324} height={371} />
-                <div className="process-step-copy"><span className="step-number">04</span><h3>Pantau status dan unduh</h3><p>Buka detail order untuk melihat proses dan mengambil hasil saat tersedia.</p></div>
+                <div className="process-step-copy"><span className="step-number">04</span><h3>Buat dan unduh clip</h3><p>Biarkan halaman terbuka sampai clip siap diunduh ke perangkat.</p></div>
               </li>
             </ol>
           </div>
@@ -210,7 +210,7 @@ export default function HomePage() {
             <div className="pricing-content">
               <div className="section-intro">
                 <p className="section-kicker">Paket aktif</p>
-                <h2>Harga layanan clip video YouTube.</h2>
+                <h2>Harga layanan clip video.</h2>
                 <p>Lihat rata-rata biaya per clip dan total setiap paket aktif. Harga order dikonfirmasi kembali oleh server.</p>
               </div>
               <Suspense fallback={<PricingLoading />}>
@@ -272,8 +272,8 @@ export default function HomePage() {
               },
               {
                 "@type": "Service",
-                name: "Layanan clip video YouTube",
-                description: "Kirim tautan video, pilih paket aktif, lalu pantau pembayaran dan hasil clip dari akun LakuLokal.",
+                name: "Layanan clip video",
+                description: "Pilih file video, bayar dengan QRIS, lalu buat clip di browser.",
                 url: absoluteUrl("/"),
                 provider: { "@id": absoluteUrl("/#organization") }
               },

@@ -16,7 +16,7 @@ export default async function AdminPage() {
     { data: recentUsers, error: recentUsersError }
   ] = await Promise.all([
     supabase.rpc("admin_dashboard_stats").maybeSingle(),
-    supabase.from("orders").select("id,order_code,user_id,package_name,amount,payment_status,processing_status,created_at").order("created_at", { ascending: false }).limit(20),
+    supabase.from("orders").select("id,order_code,user_id,youtube_url,package_name,amount,payment_status,processing_status,created_at").order("created_at", { ascending: false }).limit(20),
     supabase.from("profiles").select("id,email,full_name,created_at").order("created_at", { ascending: false }).limit(8)
   ]);
   const error = statsError || ordersError || recentUsersError;
@@ -46,7 +46,7 @@ export default async function AdminPage() {
                 <table className="data-table">
                   <thead><tr><th>Order</th><th>User ID</th><th>Paket</th><th>Jumlah</th><th>Pembayaran</th><th>Proses</th><th>Aksi</th></tr></thead>
                   <tbody>{rows.map((order) => (
-                    <tr key={order.id}><td>{order.order_code}</td><td>{order.user_id}</td><td>{order.package_name}</td><td>{money.format(order.amount)}</td><td>{order.payment_status}</td><td>{order.processing_status}</td><td>{order.processing_status === "FAILED" && order.payment_status === "PAID" ? <RetryOrderButton orderCode={order.order_code} /> : "Tidak perlu"}</td></tr>
+                    <tr key={order.id}><td>{order.order_code}</td><td>{order.user_id}</td><td>{order.package_name}</td><td>{money.format(order.amount)}</td><td>{order.payment_status}</td><td>{order.processing_status}</td><td>{order.youtube_url === null && order.processing_status === "FAILED" && order.payment_status === "PAID" ? <RetryOrderButton orderCode={order.order_code} /> : "Tidak perlu"}</td></tr>
                   ))}</tbody>
                 </table>
               </div>

@@ -1,6 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { parseDanaWebhook, queryDanaPayment } from "@/lib/dana";
-import { dispatchPendingJobs } from "@/lib/cloud-run";
 import type { FinishNotifyRequest } from "dana-node/webhook/v1";
 import { NextResponse } from "next/server";
 
@@ -104,10 +103,7 @@ export async function POST(request: Request) {
       throw new Error("Konfirmasi pembayaran tidak dikembalikan oleh database.");
     }
 
-    let executionsStarted = 0;
     if (!confirmation.already_paid) {
-      const executions = await dispatchPendingJobs(admin);
-      executionsStarted = executions.length;
       const { error: auditError } = await admin.from("audit_logs").insert({
         action: "PAYMENT_CONFIRMED",
         entity_type: "order",
@@ -123,7 +119,6 @@ export async function POST(request: Request) {
     console.info("dana_finish_notify_processed", {
       orderCode: order.order_code,
       status: "PAID",
-      executionsStarted,
       alreadyPaid: confirmation.already_paid
     });
     return acknowledge();

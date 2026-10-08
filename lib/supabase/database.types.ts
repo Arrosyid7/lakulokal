@@ -41,7 +41,7 @@ type OrderRow = {
   id: string;
   order_code: string;
   user_id: string;
-  youtube_url: string;
+  youtube_url: string | null;
   package_id: string;
   package_name: string;
   clip_count: number;
@@ -89,7 +89,6 @@ type PaymentRow = {
 type ProcessingJobRow = {
   id: string;
   order_id: string;
-  cloud_run_execution: string | null;
   status: ProcessingStatus;
   progress: number;
   attempt_count: number;
@@ -157,7 +156,7 @@ export type Database = {
     Tables: {
       profiles: Table<ProfileRow, "id" | "email" | "full_name">;
       packages: Table<PackageRow, "id" | "name" | "clip_count" | "price">;
-      orders: Table<OrderRow, "order_code" | "user_id" | "youtube_url" | "package_id" | "package_name" | "clip_count" | "amount">;
+      orders: Table<OrderRow, "order_code" | "user_id" | "package_id" | "package_name" | "clip_count" | "amount">;
       payments: Table<PaymentRow, "order_id" | "provider_reference" | "partner_reference" | "amount">;
       processing_jobs: Table<ProcessingJobRow, "order_id">;
       clips: Table<ClipRow, "order_id" | "clip_number" | "storage_path" | "file_name" | "size_bytes">;
@@ -168,10 +167,6 @@ export type Database = {
     Views: { [_ in never]: never };
     Functions: {
       admin_dashboard_stats: { Args: Record<string, never>; Returns: AdminStats[] };
-      claim_next_processing_job: {
-        Args: { p_max_concurrent: number };
-        Returns: { claimed_job_id: string; claimed_order_id: string }[];
-      };
       confirm_paid_order: {
         Args: { p_order_id: string; p_provider_reference: string; p_amount: number };
         Returns: { confirmed_order_id: string; execution_job_id: string | null; already_paid: boolean }[];
@@ -179,6 +174,10 @@ export type Database = {
       consume_user_rate_limit: {
         Args: { p_user_id: string; p_action: string; p_limit: number; p_window_seconds: number };
         Returns: boolean;
+      };
+      update_browser_processing_status: {
+        Args: { p_order_id: string; p_status: string; p_progress: number; p_error_message: string | null };
+        Returns: undefined;
       };
     };
     Enums: {

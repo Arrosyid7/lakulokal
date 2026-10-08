@@ -42,7 +42,7 @@ export default async function DashboardPage() {
             <article className="account-metric"><span>Total order</span><strong>{totalCount ?? 0}</strong></article>
             <article className="account-metric"><span>Order selesai</span><strong>{completedCount ?? 0}</strong></article>
             <article className="account-metric"><span>Sedang diproses</span><strong>{processingCount ?? 0}</strong></article>
-            <article className="account-metric"><span>Clip tersedia</span><strong>{clipCount ?? 0}</strong></article>
+            <article className="account-metric"><span>File tersimpan</span><strong>{clipCount ?? 0}</strong></article>
           </section>
           <section className="dashboard-summary">
             <div className="row">
@@ -60,7 +60,7 @@ export default async function DashboardPage() {
             </div>
             {!orders?.length ? (
               <div className="empty-state-block">
-                <p>Belum ada order. Setelah membuat order, status pembayaran dan hasil clip akan tampil di sini.</p>
+                <p>Belum ada order. Riwayat pembayaran tampil di sini, sedangkan hasil clip diunduh langsung ke perangkat.</p>
                 <Link className="button" href="/dashboard/new">Buat order pertama</Link>
               </div>
             ) : (

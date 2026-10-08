@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { dispatchPendingJobs } from "@/lib/cloud-run";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { hasAdminRole } from "@/lib/authorization";
@@ -17,7 +16,7 @@ export async function POST(_request: Request, { params }: RouteContext) {
   const { orderCode } = await params;
   const admin = createSupabaseAdminClient();
   const { data: order, error: orderError } = await admin.from("orders")
-    .select("id,payment_status,processing_status")
+    .select("id,payment_status,processing_status,youtube_url")
     .eq("order_code", orderCode)
     .maybeSingle();
   if (orderError) return NextResponse.json({ error: "Order gagal diperiksa." }, { status: 500 });
@@ -25,9 +24,12 @@ export async function POST(_request: Request, { params }: RouteContext) {
   if (order.payment_status !== "PAID" || order.processing_status !== "FAILED") {
     return NextResponse.json({ error: "Hanya order PAID dengan proses FAILED yang dapat dicoba ulang." }, { status: 409 });
   }
+  if (order.youtube_url !== null) {
+    return NextResponse.json({ error: "Order video lama tidak dapat diproses di browser. Minta pengguna membuat order video baru." }, { status: 409 });
+  }
 
   const { data: job, error: jobError } = await admin.from("processing_jobs")
-    .update({ status: "QUEUED", progress: 0, error_message: null, cloud_run_execution: null, finished_at: null })
+    .update({ status: "QUEUED", progress: 0, error_message: null, finished_at: null })
     .eq("order_id", order.id)
     .eq("status", "FAILED")
     .select("id")
@@ -49,14 +51,5 @@ export async function POST(_request: Request, { params }: RouteContext) {
   });
   if (auditError) return NextResponse.json({ error: "Tindakan admin gagal dicatat." }, { status: 500 });
 
-  try {
-    const started = await dispatchPendingJobs(admin);
-    return NextResponse.json({ queued: true, executions_started: started.length });
-  } catch (error) {
-    console.error("admin_retry_dispatch_deferred", {
-      orderId: order.id,
-      message: error instanceof Error ? error.message : "unknown"
-    });
-    return NextResponse.json({ queued: true, executions_started: 0, message: "Job tersimpan dalam antrean dan akan dicoba scheduler." }, { status: 202 });
-  }
+  return NextResponse.json({ queued: true, message: "Pemilik order perlu memilih ulang file di detail order untuk memulai proses." });
 }

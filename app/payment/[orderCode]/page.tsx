@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PaymentStatus } from "@/components/orders/payment-status";
-import { PaymentQrCode } from "@/components/orders/payment-qr-code";
+import { BrowserCheckout } from "@/components/orders/browser-checkout";
 import { requireUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -16,27 +15,42 @@ export default async function PaymentPage({ params }: { params: Promise<{ orderC
   const { orderCode } = await params;
   const { data: order, error } = await supabase
     .from("orders")
-    .select("id,order_code,amount,currency,payment_status,processing_status,dana_qr_content")
+    .select("id,order_code,amount,currency,clip_count,payment_status,processing_status,dana_qr_content,youtube_url")
     .eq("order_code", orderCode)
     .maybeSingle();
   if (error) return <main className="container app-main"><p className="form-error">Informasi pembayaran gagal dimuat.</p></main>;
   if (!order) notFound();
-  const money = new Intl.NumberFormat("id-ID", { style: "currency", currency: order.currency, maximumFractionDigits: 0 }).format(order.amount);
   return (
     <main className="container app-main">
-      <h1 className="page-title">Pembayaran {order.order_code}</h1>
-      <p className="page-lead">Bayar sebesar {money} dengan memindai QRIS dari aplikasi pembayaran pilihan Anda. Status berubah setelah server memverifikasi pembayaran ke DANA.</p>
-      <section className="panel stack">
-        <p><strong>Total: {money}</strong></p>
-        {order.payment_status === "PENDING" && order.dana_qr_content && (
-          <PaymentQrCode value={order.dana_qr_content} amount={money} />
-        )}
-        {!order.dana_qr_content && order.payment_status === "PENDING" && (
-          <p className="form-error">Kode QRIS belum tersedia. Jangan transfer di luar halaman pembayaran ini. Hubungi pengelola.</p>
-        )}
-        <PaymentStatus orderCode={order.order_code} initialStatus={order.payment_status} />
+      <h1 className="page-title">Pembayaran order</h1>
+      <p className="page-lead">
+        {order.youtube_url === null
+          ? "Bayar dengan QRIS, lalu pilih ulang file video jika halaman order sebelumnya sudah ditutup."
+          : "Periksa informasi bantuan untuk order yang dibuat dengan alur lama."}
+      </p>
+      {order.youtube_url === null ? (
+        <BrowserCheckout
+          orderCode={order.order_code}
+          clipCount={order.clip_count}
+          amount={order.amount}
+          currency={order.currency}
+          qrContent={order.dana_qr_content}
+          initialPaymentStatus={order.payment_status}
+          initialProcessingStatus={order.processing_status}
+        />
+      ) : (
+        <section className="panel stack">
+          <p className="form-error" role="alert">
+            {order.payment_status === "PENDING"
+              ? "Order ini menggunakan alur video lama dan tidak dapat diproses di browser. Jangan lakukan pembayaran untuk order ini. Hubungi "
+              : "Order ini menggunakan alur video lama dan tidak dapat diproses di browser. Buka detail order untuk melihat hasil lama jika tersedia, atau hubungi "}
+            <a className="text-link" href="mailto:halo@lakulokal.id">halo@lakulokal.id</a> untuk bantuan.
+          </p>
+        </section>
+      )}
+      <p style={{ marginTop: 18 }}>
         <Link className="text-link" href={`/dashboard/orders/${encodeURIComponent(order.order_code)}`}>Buka detail order</Link>
-      </section>
+      </p>
     </main>
   );
 }

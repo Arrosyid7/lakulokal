@@ -56,7 +56,7 @@ create table if not exists public.orders (
   id uuid primary key default gen_random_uuid(),
   order_code text not null unique,
   user_id uuid not null references public.profiles(id) on delete restrict,
-  youtube_url text not null,
+  youtube_url text,
   package_id text not null references public.packages(id) on delete restrict,
   package_name text not null,
   clip_count integer not null check (clip_count > 0),
@@ -103,7 +103,6 @@ create table if not exists public.payments (
 create table if not exists public.processing_jobs (
   id uuid primary key default gen_random_uuid(),
   order_id uuid not null unique references public.orders(id) on delete restrict,
-  cloud_run_execution text unique,
   status public.processing_status not null default 'QUEUED',
   progress smallint not null default 0 check (progress between 0 and 100),
   attempt_count integer not null default 0 check (attempt_count >= 0),
@@ -164,6 +163,8 @@ alter table public.orders add column if not exists result_zip_path text;
 alter table public.orders add column if not exists error_message text;
 alter table public.orders add column if not exists metadata jsonb not null default '{}'::jsonb;
 alter table public.orders add column if not exists currency text not null default 'IDR';
+alter table public.orders alter column youtube_url drop not null;
+alter table public.processing_jobs drop column if exists cloud_run_execution;
 do $$ begin
   if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'orders' and column_name = 'url') then
     alter table public.orders alter column url drop not null;
@@ -555,59 +556,6 @@ $$;
 revoke all on function public.consume_user_rate_limit(uuid, text, integer, integer) from public, anon, authenticated;
 grant execute on function public.consume_user_rate_limit(uuid, text, integer, integer) to service_role;
 
-create or replace function public.claim_next_processing_job(p_max_concurrent integer)
-returns table (claimed_job_id uuid, claimed_order_id uuid)
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  active_count integer;
-  next_job public.processing_jobs%rowtype;
-begin
-  if coalesce(auth.jwt() ->> 'role', '') <> 'service_role' then
-    raise exception 'service role required' using errcode = '42501';
-  end if;
-  if p_max_concurrent < 1 then
-    raise exception 'invalid concurrency limit' using errcode = '22023';
-  end if;
-
-  perform pg_advisory_xact_lock(hashtext('lakulokal-cloud-run-dispatch'));
-  update public.processing_jobs
-  set cloud_run_execution = null,
-      error_message = 'Klaim dispatch Cloud Run kedaluwarsa sebelum execution tercatat.'
-  where status = 'QUEUED'
-    and cloud_run_execution = 'DISPATCHING'
-    and updated_at < now() - interval '15 minutes';
-
-  select count(*) into active_count
-  from public.processing_jobs
-  where status in ('QUEUED', 'DOWNLOADING', 'PROCESSING', 'UPLOADING')
-    and cloud_run_execution is not null;
-  if active_count >= p_max_concurrent then
-    return;
-  end if;
-
-  select * into next_job
-  from public.processing_jobs
-  where status = 'QUEUED' and cloud_run_execution is null
-  order by created_at
-  for update skip locked
-  limit 1;
-  if not found then
-    return;
-  end if;
-
-  update public.processing_jobs
-  set cloud_run_execution = 'DISPATCHING', attempt_count = attempt_count + 1
-  where id = next_job.id;
-  return query select next_job.id, next_job.order_id;
-end;
-$$;
-
-revoke all on function public.claim_next_processing_job(integer) from public, anon, authenticated;
-grant execute on function public.claim_next_processing_job(integer) to service_role;
-
 create or replace function public.confirm_paid_order(
   p_order_id uuid,
   p_provider_reference text,
@@ -677,6 +625,97 @@ $$;
 
 revoke all on function public.confirm_paid_order(uuid, text, integer) from public, anon, authenticated;
 grant execute on function public.confirm_paid_order(uuid, text, integer) to service_role;
+
+create or replace function public.update_browser_processing_status(
+  p_order_id uuid,
+  p_status text,
+  p_progress integer,
+  p_error_message text default null
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  order_row public.orders%rowtype;
+  job_row public.processing_jobs%rowtype;
+begin
+  if coalesce(auth.jwt() ->> 'role', '') <> 'service_role' then
+    raise exception 'service role required' using errcode = '42501';
+  end if;
+  if p_status is null or p_status not in ('PROCESSING', 'COMPLETED', 'FAILED')
+    or p_progress < 0 or p_progress > 100
+    or (p_status = 'PROCESSING' and p_progress = 100)
+    or (p_status = 'COMPLETED' and p_progress <> 100) then
+    raise exception 'invalid browser processing status' using errcode = '22023';
+  end if;
+
+  select * into order_row
+  from public.orders
+  where id = p_order_id
+  for update;
+  if not found or order_row.payment_status <> 'PAID' or order_row.youtube_url is not null then
+    raise exception 'paid browser order required' using errcode = '22023';
+  end if;
+
+  select * into job_row
+  from public.processing_jobs
+  where order_id = p_order_id
+  for update;
+  if not found then
+    raise exception 'processing job not found' using errcode = 'P0002';
+  end if;
+
+  if p_status = 'PROCESSING' then
+    if job_row.status not in ('QUEUED', 'FAILED', 'COMPLETED', 'PROCESSING') then
+      raise exception 'job cannot be processed' using errcode = '22023';
+    end if;
+    update public.processing_jobs
+    set status = 'PROCESSING',
+        progress = p_progress,
+        attempt_count = attempt_count + case when job_row.status = 'PROCESSING' then 0 else 1 end,
+        error_message = null,
+        started_at = case when job_row.status = 'PROCESSING' then coalesce(started_at, now()) else now() end,
+        finished_at = null
+    where id = job_row.id;
+    update public.orders
+    set processing_status = 'PROCESSING',
+        processing_started_at = now(),
+        processing_completed_at = null,
+        error_message = null
+    where id = p_order_id;
+  elsif p_status = 'COMPLETED' then
+    if job_row.status <> 'PROCESSING' then
+      raise exception 'job is not processing' using errcode = '22023';
+    end if;
+    update public.processing_jobs
+    set status = 'COMPLETED', progress = 100, error_message = null, finished_at = now()
+    where id = job_row.id;
+    update public.orders
+    set processing_status = 'COMPLETED',
+        processing_completed_at = now(),
+        error_message = null
+    where id = p_order_id;
+  else
+    if job_row.status <> 'PROCESSING' then
+      raise exception 'job is not processing' using errcode = '22023';
+    end if;
+    update public.processing_jobs
+    set status = 'FAILED', progress = p_progress,
+        error_message = left(coalesce(p_error_message, 'Pemrosesan browser gagal.'), 400),
+        finished_at = now()
+    where id = job_row.id;
+    update public.orders
+    set processing_status = 'FAILED',
+        error_message = left(coalesce(p_error_message, 'Pemrosesan browser gagal.'), 400)
+    where id = p_order_id;
+  end if;
+end;
+$$;
+
+revoke all on function public.update_browser_processing_status(uuid, text, integer, text) from public, anon, authenticated;
+grant execute on function public.update_browser_processing_status(uuid, text, integer, text) to service_role;
 
 create or replace function public.admin_dashboard_stats()
 returns table (

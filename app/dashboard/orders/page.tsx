@@ -52,7 +52,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
         {error ? <p className="form-error" role="alert">Riwayat order gagal dimuat. Coba muat ulang.</p> : !orders?.length ? (
           <div className="empty-state-block">
             <h2>{active === "all" ? "Belum ada order" : "Tidak ada order pada filter ini"}</h2>
-            <p>{active === "all" ? "Order clip yang Anda buat akan muncul di sini." : "Pilih filter lain untuk melihat order dengan status berbeda."}</p>
+            <p>{active === "all" ? "Riwayat order dan pembayaran muncul di sini. Hasil clip diunduh langsung ke perangkat." : "Pilih filter lain untuk melihat order dengan status berbeda."}</p>
             {active === "all" && <Link className="button" href="/dashboard/new">Buat order pertama</Link>}
           </div>
         ) : (
