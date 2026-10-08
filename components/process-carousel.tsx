@@ -5,41 +5,35 @@ import { useEffect, useState } from "react";
 
 const steps = [
   {
-    title: "Masuk atau buat akun",
-    description: "Gunakan akun untuk membuat order dan melihat riwayat pembayaran.",
     image: "/brand/characters/creator-hijab-phone.png",
     width: 207,
     height: 364
   },
   {
-    title: "Pilih file dan paket",
-    description: "Pilih video dari perangkat. Browser membaca file secara lokal.",
     image: "/brand/characters/creator-camera.png",
     width: 312,
     height: 355
   },
   {
-    title: "Selesaikan pembayaran",
-    description: "Pindai QRIS DANA. Order diproses setelah pembayaran diverifikasi.",
     image: "/brand/characters/creator-mobile-phone.png",
     width: 211,
     height: 353
   },
   {
-    title: "Buat dan unduh clip",
-    description: "Biarkan halaman terbuka sampai clip siap diunduh ke perangkat.",
     image: "/brand/characters/creator-seated-editor.png",
     width: 324,
     height: 371
   }
 ];
 
-export function ProcessCarousel() {
+export function ProcessCarousel({ content }: { content: { title: string; description: string }[] }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [autoAdvanceEnabled, setAutoAdvanceEnabled] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
   const [isFocusWithin, setIsFocusWithin] = useState(false);
-  const activeStep = steps[activeIndex];
+  const carouselSteps = steps.map((step, index) => ({ ...step, ...content[index] }));
+  const stepCount = carouselSteps.length;
+  const activeStep = carouselSteps[activeIndex];
 
   useEffect(() => {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -54,11 +48,11 @@ export function ProcessCarousel() {
     if (!autoAdvanceEnabled || isHovered || isFocusWithin) return;
 
     const timeout = window.setTimeout(() => {
-      setActiveIndex((index) => (index + 1) % steps.length);
+      setActiveIndex((index) => (index + 1) % stepCount);
     }, 6000);
 
     return () => window.clearTimeout(timeout);
-  }, [activeIndex, autoAdvanceEnabled, isHovered, isFocusWithin]);
+  }, [activeIndex, autoAdvanceEnabled, isHovered, isFocusWithin, stepCount]);
 
   const selectStep = (index: number) => {
     setActiveIndex(index);
@@ -90,7 +84,7 @@ export function ProcessCarousel() {
             height={activeStep.height}
           />
         </div>
-        <div className="process-carousel-copy" role="group" aria-roledescription="slide" aria-label={`Langkah ${activeIndex + 1} dari ${steps.length}`}>
+        <div className="process-carousel-copy" role="group" aria-roledescription="slide" aria-label={`Langkah ${activeIndex + 1} dari ${carouselSteps.length}`}>
           <span className="step-number">0{activeIndex + 1}</span>
           <h3>{activeStep.title}</h3>
           <p>{activeStep.description}</p>
@@ -98,7 +92,7 @@ export function ProcessCarousel() {
       </div>
       <div className="process-carousel-controls">
         <div className="process-carousel-step-list" role="group" aria-label="Pilih langkah">
-          {steps.map((step, index) => (
+          {carouselSteps.map((step, index) => (
             <button
               className="process-carousel-step"
               type="button"

@@ -13,19 +13,21 @@ export async function POST(_request: Request, { params }: RouteContext) {
   const admin = createSupabaseAdminClient();
   const { data: order, error } = await admin
     .from("orders")
-    .select("id,user_id,processing_status,processing_completed_at,result_zip_path")
+    .select("id,user_id,processing_status,processing_completed_at,result_expires_at,results_deleted_at,result_zip_path")
     .eq("order_code", orderCode)
     .maybeSingle();
   if (error) return NextResponse.json({ error: "Order gagal diperiksa." }, { status: 500 });
   if (!order || !ownsOrder(order.user_id, user.id)) return NextResponse.json({ error: "Order tidak ditemukan." }, { status: 404 });
   if (order.processing_status !== "COMPLETED") return NextResponse.json({ error: "Hasil belum tersedia." }, { status: 409 });
-  const expiryHours = Number.parseInt(process.env.RESULT_EXPIRATION_HOURS || "72", 10);
   const completedAt = order.processing_completed_at ? Date.parse(order.processing_completed_at) : NaN;
+  const expiresAt = order.result_expires_at
+    ? Date.parse(order.result_expires_at)
+    : completedAt + 24 * 60 * 60 * 1000;
   if (
-    !Number.isSafeInteger(expiryHours) ||
-    expiryHours < 1 ||
     !Number.isFinite(completedAt) ||
-    Date.now() - completedAt > expiryHours * 60 * 60 * 1000
+    !Number.isFinite(expiresAt) ||
+    order.results_deleted_at !== null ||
+    Date.now() >= expiresAt
   ) {
     return NextResponse.json({ error: "Masa penyimpanan hasil telah berakhir." }, { status: 410 });
   }

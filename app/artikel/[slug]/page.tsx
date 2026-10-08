@@ -3,20 +3,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PublicNavigation } from "@/components/public-navigation";
 import { SiteFooter } from "@/components/site-footer";
-import { articles, getArticle } from "@/lib/articles";
+import { getSiteArticles, getSocialLinks } from "@/lib/site-content";
 import { absoluteUrl } from "@/lib/site";
 
 type ArticlePageProps = { params: Promise<{ slug: string }> };
 
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return articles.map(({ slug }) => ({ slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
   const { slug } = await params;
-  const article = getArticle(slug);
+  const articles = await getSiteArticles();
+  const article = articles.find((item) => item.slug === slug);
   if (!article) return {};
 
   return {
@@ -37,10 +34,11 @@ export async function generateMetadata({ params }: ArticlePageProps): Promise<Me
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { slug } = await params;
-  const article = getArticle(slug);
+  const [articles, socialLinks] = await Promise.all([getSiteArticles(), getSocialLinks()]);
+  const article = articles.find((item) => item.slug === slug);
   if (!article) notFound();
   const relatedArticles = article.relatedSlugs
-    .map((relatedSlug) => getArticle(relatedSlug))
+    .map((relatedSlug) => articles.find((item) => item.slug === relatedSlug))
     .filter((relatedArticle) => relatedArticle !== undefined);
 
   const articleUrl = absoluteUrl(`/artikel/${article.slug}`);
@@ -126,7 +124,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           </nav>
         </article>
       </main>
-      <SiteFooter />
+      <SiteFooter socialLinks={socialLinks} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}

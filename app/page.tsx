@@ -7,44 +7,25 @@ import { ProcessCarousel } from "@/components/process-carousel";
 import { SiteFooter } from "@/components/site-footer";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { absoluteUrl } from "@/lib/site";
+import { getLandingContent, getSocialLinks } from "@/lib/site-content";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: { absolute: "Layanan Clip Video | LakuLokal" },
-  description: "Pilih video dari perangkat, bayar dengan QRIS, lalu buat clip langsung di browser.",
-  alternates: { canonical: "/" },
-  robots: { index: true, follow: true },
-  openGraph: {
-    title: "Layanan Clip Video | LakuLokal",
-    description: "Pilih video dari perangkat, bayar dengan QRIS, lalu buat clip langsung di browser.",
-    type: "website",
-    url: absoluteUrl("/")
-  }
-};
-
-const questions = [
-  {
-    question: "Bagaimana cara membuat order clip?",
-    answer: "Masuk ke akun, pilih file video dan paket, lalu bayar menggunakan QRIS. Setelah pembayaran terverifikasi, browser membuat clip."
-  },
-  {
-    question: "Bagaimana pembayaran diproses?",
-    answer: "Pembayaran order menggunakan QRIS DANA. Server memeriksa status transaksi ke provider sebelum order ditandai lunas."
-  },
-  {
-    question: "File video apa yang dapat diproses?",
-    answer: "Pilih file MP4, MOV, M4V, atau WebM berukuran maksimal 250 MB dan berdurasi tidak lebih dari dua jam."
-  },
-  {
-    question: "Apa yang perlu diperiksa sebelum memilih video?",
-    answer: "Pastikan Anda memiliki hak atau izin yang diperlukan untuk memproses dan menggunakan video, serta mematuhi Ketentuan Layanan YouTube dan aturan yang berlaku."
-  },
-  {
-    question: "Apakah video dan hasilnya disimpan?",
-    answer: "Video diproses langsung di browser dan tidak diunggah ke server. Clip diunduh ke perangkat dan tidak tersimpan di riwayat akun."
-  }
-];
+export async function generateMetadata(): Promise<Metadata> {
+  const content = await getLandingContent();
+  return {
+    title: { absolute: content.metaTitle },
+    description: content.metaDescription,
+    alternates: { canonical: "/" },
+    robots: { index: true, follow: true },
+    openGraph: {
+      title: content.metaTitle,
+      description: content.metaDescription,
+      type: "website",
+      url: absoluteUrl("/")
+    }
+  };
+}
 
 type Package = { id: string; name: string; clip_count: number; price: number; currency: string };
 
@@ -127,9 +108,11 @@ function PricingLoading() {
   );
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  const content = await getLandingContent();
+  const socialLinks = await getSocialLinks();
   const structuredData = {
-    mainEntity: questions.map(({ question, answer }) => ({
+    mainEntity: content.questions.map(({ question, answer }) => ({
       "@type": "Question",
       name: question,
       acceptedAnswer: { "@type": "Answer", text: answer }
@@ -143,16 +126,16 @@ export default function HomePage() {
       <main id="konten-utama">
         <section className="container hero" id="beranda">
           <div className="hero-copy-column">
-            <p className="hero-kicker">Untuk video yang layak ditonton lagi</p>
-            <h1>Ubah file video jadi clip.</h1>
+            <p className="hero-kicker">{content.heroKicker}</p>
+            <h1>{content.heroTitle}</h1>
             <p className="hero-copy">
-              Pilih video dari perangkat, bayar lewat QRIS, lalu buat clip langsung di browser. Video tidak dikirim ke server.
+              {content.heroDescription}
             </p>
             <div className="cta-row">
-              <Link className="button button-accent" href="/register">Buat akun untuk mulai</Link>
-              <Link className="text-link hero-secondary-link" href="#cara-kerja">Lihat cara kerja</Link>
+              <Link className="button button-accent" href="/register">{content.primaryCta}</Link>
+              <Link className="text-link hero-secondary-link" href="#cara-kerja">{content.secondaryCta}</Link>
             </div>
-            <p className="hero-note">Hasil clip diunduh ke perangkat dan tidak tersimpan di akun.</p>
+            <p className="hero-note">{content.heroNote}</p>
           </div>
           <div className="hero-character-stage">
             <Image
@@ -171,11 +154,11 @@ export default function HomePage() {
         <section className="section process-section" id="cara-kerja">
           <div className="container process-layout">
             <div className="section-intro">
-              <p className="section-kicker">Cara kerja</p>
-              <h2>Cara kerja clip video.</h2>
-              <p>Akun mencatat order dan pembayaran. File video tetap berada di perangkat Anda.</p>
+              <p className="section-kicker">{content.processKicker}</p>
+              <h2>{content.processTitle}</h2>
+              <p>{content.processDescription}</p>
             </div>
-            <ProcessCarousel />
+            <ProcessCarousel content={content.processSteps} />
           </div>
         </section>
         <div className="home-cut-divider container" aria-hidden="true"><span /></div>
@@ -195,9 +178,9 @@ export default function HomePage() {
             </div>
             <div className="pricing-content">
               <div className="section-intro">
-                <p className="section-kicker">Paket aktif</p>
-                <h2>Harga layanan clip video.</h2>
-                <p>Lihat rata-rata biaya per clip dan total setiap paket aktif. Harga order dikonfirmasi kembali oleh server.</p>
+                <p className="section-kicker">{content.pricingKicker}</p>
+                <h2>{content.pricingTitle}</h2>
+                <p>{content.pricingDescription}</p>
               </div>
               <Suspense fallback={<PricingLoading />}>
                 <PricingList />
@@ -210,11 +193,11 @@ export default function HomePage() {
         <section className="section faq-section" id="faq">
           <div className="container faq-layout">
             <div className="section-intro">
-              <p className="section-kicker">FAQ</p>
-              <h2>Yang perlu diketahui sebelum mulai.</h2>
+              <p className="section-kicker">{content.faqKicker}</p>
+              <h2>{content.faqTitle}</h2>
             </div>
             <div className="faq-list">
-              {questions.map(({ question, answer }) => (
+              {content.questions.map(({ question, answer }) => (
                 <details key={question}>
                   <summary>{question}</summary>
                   <p>{answer}</p>
@@ -233,7 +216,7 @@ export default function HomePage() {
         <div className="home-cut-divider container" aria-hidden="true"><span /></div>
       </main>
 
-      <SiteFooter contactId="kontak" />
+      <SiteFooter contactId="kontak" socialLinks={socialLinks} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 type RouteContext = { params: Promise<{ orderCode: string }> };
 
@@ -10,7 +11,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
   const { orderCode } = await params;
   const { data, error } = await supabase
     .from("orders")
-    .select("id,order_code,youtube_url,package_name,clip_count,amount,currency,payment_status,processing_status,created_at,paid_at,processing_started_at,processing_completed_at,error_message")
+    .select("id,order_code,youtube_url,package_name,clip_count,amount,currency,payment_status,processing_status,created_at,paid_at,processing_started_at,processing_completed_at,result_expires_at,error_message")
     .eq("order_code", orderCode)
     .maybeSingle();
   if (error) return NextResponse.json({ error: "Order gagal dimuat." }, { status: 500 });
@@ -21,10 +22,45 @@ export async function GET(_request: Request, { params }: RouteContext) {
     .eq("order_id", data.id)
     .maybeSingle();
   if (processingError) return NextResponse.json({ error: "Status pemrosesan gagal dimuat." }, { status: 500 });
-  const { data: clips, error: clipsError } = data.processing_status === "COMPLETED"
-    ? await supabase.from("clips").select("id,clip_number,file_name,size_bytes,duration_seconds").eq("order_id", data.id).order("clip_number")
+  const resultsExpired = data.result_expires_at !== null
+    ? Date.now() >= Date.parse(data.result_expires_at)
+    : data.processing_completed_at !== null && Date.now() >= Date.parse(data.processing_completed_at) + 24 * 60 * 60 * 1000;
+  const { data: clips, error: clipsError } = !resultsExpired && data.youtube_url === null
+    ? await supabase.from("clips")
+      .select("id,clip_number,file_name,size_bytes,duration_seconds,storage_path")
+      .eq("order_id", data.id)
+      .eq("upload_status", "READY")
+      .order("clip_number")
     : { data: [], error: null };
   if (clipsError) return NextResponse.json({ error: "Hasil clip gagal dimuat." }, { status: 500 });
+  let resultClips: { id: string; clip_number: number; file_name: string; size_bytes: number; duration_seconds: number | null; preview_url: string; download_url: string }[] = [];
+  if (clips?.length) {
+    const admin = createSupabaseAdminClient();
+    const urls = await Promise.all(clips.map(async (clip) => {
+      const storage = admin.storage.from("lakulokal-results");
+      const [{ data: preview, error: previewError }, { data: download, error: downloadError }] = await Promise.all([
+        storage.createSignedUrl(clip.storage_path, 300),
+        storage.createSignedUrl(clip.storage_path, 300, { download: clip.file_name })
+      ]);
+      if (previewError || downloadError || !preview?.signedUrl || !download?.signedUrl) {
+        console.error("browser_clip_signed_url_failed", { clipId: clip.id, previewError: previewError?.message, downloadError: downloadError?.message });
+        return null;
+      }
+      return {
+        id: clip.id,
+        clip_number: clip.clip_number,
+        file_name: clip.file_name,
+        size_bytes: clip.size_bytes,
+        duration_seconds: clip.duration_seconds,
+        preview_url: preview.signedUrl,
+        download_url: download.signedUrl
+      };
+    }));
+    resultClips = urls.filter((item): item is NonNullable<typeof item> => item !== null);
+    if (resultClips.length !== clips.length) {
+      return NextResponse.json({ error: "Tautan hasil clip gagal dibuat." }, { status: 500 });
+    }
+  }
   const { data: proof, error: proofError } = await supabase.from("payment_proofs")
     .select("review_status,ocr_amount,ocr_transaction_date,review_note")
     .eq("order_id", data.id)
@@ -36,6 +72,11 @@ export async function GET(_request: Request, { params }: RouteContext) {
     order: data,
     proof,
     progress: processing?.progress ?? 0,
-    clips: clips ?? []
+    clips: resultClips,
+    results_expire_at: data.result_expires_at ?? (
+      data.processing_completed_at
+        ? new Date(Date.parse(data.processing_completed_at) + 24 * 60 * 60 * 1000).toISOString()
+        : null
+    )
   });
 }

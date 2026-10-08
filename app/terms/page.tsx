@@ -41,7 +41,7 @@ export default function TermsPage() {
         </section>
         <section>
           <h2>Penyimpanan hasil</h2>
-          <p>Browser memproses video di perangkat pengguna. Video dan clip tidak diunggah atau disimpan di server LakuLokal. Pengguna perlu mengunduh dan menyimpan hasilnya sendiri.</p>
+          <p>Browser memproses video sumber di perangkat pengguna. File clip yang selesai dibuat disimpan secara privat dan dapat diakses dari riwayat order selama 24 jam sejak proses selesai. Setelah masa itu, sistem menghapus file hasil secara otomatis. Pengguna sebaiknya mengunduh hasil sebelum masa simpan berakhir.</p>
         </section>
         <section>
           <h2>Ketersediaan dan perubahan</h2>

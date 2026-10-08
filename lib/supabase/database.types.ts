@@ -61,6 +61,8 @@ type OrderRow = {
   processing_completed_at: string | null;
   result_url: string | null;
   result_zip_path: string | null;
+  result_expires_at: string | null;
+  results_deleted_at: string | null;
   error_message: string | null;
   created_at: string;
   updated_at: string;
@@ -108,6 +110,7 @@ type ClipRow = {
   content_type: string;
   size_bytes: number;
   duration_seconds: number | null;
+  upload_status: "UPLOADING" | "READY" | "FAILED";
   created_at: string;
 };
 
@@ -154,6 +157,28 @@ type RateLimitRow = {
   request_count: number;
 };
 
+type SiteConfigurationRow = {
+  id: string;
+  landing_content: Json;
+  instagram_url: string | null;
+  facebook_url: string | null;
+  tiktok_url: string | null;
+  updated_at: string;
+};
+
+type SiteArticleRow = {
+  slug: string;
+  title: string;
+  seo_title: string;
+  description: string;
+  keyphrase: string;
+  intro: string;
+  related_slugs: string[];
+  sections: Json;
+  published: boolean;
+  updated_at: string;
+};
+
 type AdminStats = {
   total_users: number;
   total_orders: number;
@@ -178,6 +203,8 @@ export type Database = {
       webhook_events: Table<WebhookEventRow, "provider" | "provider_event_id" | "event_type">;
       audit_logs: Table<AuditLogRow, "action" | "entity_type">;
       api_rate_limits: Table<RateLimitRow, "user_id" | "action" | "window_start">;
+      site_configuration: Table<SiteConfigurationRow, "id">;
+      site_articles: Table<SiteArticleRow, "slug" | "title" | "seo_title" | "description" | "keyphrase" | "intro">;
     };
     Views: { [_ in never]: never };
     Functions: {

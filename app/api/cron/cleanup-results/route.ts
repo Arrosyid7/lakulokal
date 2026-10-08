@@ -6,17 +6,14 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   if (!isCronAuthorized(request)) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  const hours = Number.parseInt(process.env.RESULT_EXPIRATION_HOURS || "72", 10);
-  if (!Number.isSafeInteger(hours) || hours < 1) {
-    return NextResponse.json({ error: "RESULT_EXPIRATION_HOURS tidak valid." }, { status: 503 });
-  }
   const admin = createSupabaseAdminClient();
-  const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+  const cutoff = new Date().toISOString();
   const { data: orders, error } = await admin.from("orders")
     .select("id,user_id,result_zip_path")
-    .eq("processing_status", "COMPLETED")
-    .not("result_zip_path", "is", null)
-    .lt("processing_completed_at", cutoff)
+    .in("processing_status", ["COMPLETED", "FAILED"])
+    .not("result_expires_at", "is", null)
+    .is("results_deleted_at", null)
+    .lt("result_expires_at", cutoff)
     .limit(200);
   if (error) {
     console.error("result_cleanup_query_failed", { code: error.code });
@@ -33,10 +30,12 @@ export async function GET(request: Request) {
       continue;
     }
     const paths = [...(clips ?? []).map((clip) => clip.storage_path), order.result_zip_path].filter((path): path is string => Boolean(path));
-    const { error: storageError } = await admin.storage.from("lakulokal-results").remove(paths);
-    if (storageError) {
-      console.error("result_cleanup_storage_failed", { orderId: order.id, message: storageError.message });
-      continue;
+    if (paths.length) {
+      const { error: storageError } = await admin.storage.from("lakulokal-results").remove(paths);
+      if (storageError) {
+        console.error("result_cleanup_storage_failed", { orderId: order.id, message: storageError.message });
+        continue;
+      }
     }
     const { error: clipDeleteError } = await admin.from("clips").delete().eq("order_id", order.id);
     if (clipDeleteError) {
@@ -44,7 +43,7 @@ export async function GET(request: Request) {
       continue;
     }
     const { error: orderUpdateError } = await admin.from("orders")
-      .update({ result_zip_path: null, result_url: null })
+      .update({ result_zip_path: null, result_url: null, results_deleted_at: new Date().toISOString() })
       .eq("id", order.id);
     if (orderUpdateError) {
       console.error("result_cleanup_order_update_failed", { orderId: order.id, code: orderUpdateError.code });
@@ -54,7 +53,7 @@ export async function GET(request: Request) {
       action: "RESULTS_EXPIRED",
       entity_type: "order",
       entity_id: order.id,
-      metadata: { expiration_hours: hours }
+      metadata: { retention_hours: 24 }
     });
     if (auditError) console.error("result_cleanup_audit_failed", { orderId: order.id, code: auditError.code });
     removed += 1;

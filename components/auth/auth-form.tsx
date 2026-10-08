@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
-import { SiteFooter } from "@/components/site-footer";
 
 type AuthFormProps = { mode: "login" | "register" | "forgot" | "reset" };
 
@@ -114,7 +113,7 @@ export function AuthForm({ mode }: AuthFormProps) {
               <h2>Video panjang jadi <em>clip</em> yang mudah dikelola.</h2>
               <p>{asideCopy}</p>
             </div>
-            <p className="auth-aside-foot">Akun menyimpan riwayat order. File video dan hasil clip tidak disimpan.</p>
+            <p className="auth-aside-foot">Akun menyimpan riwayat order. Clip hasil tersedia selama 24 jam setelah proses selesai.</p>
           </aside>
           <section className="auth-card" aria-labelledby="auth-title">
             <Link className="text-link auth-back" href="/">Kembali ke beranda</Link>
@@ -187,7 +186,6 @@ export function AuthForm({ mode }: AuthFormProps) {
           </section>
         </div>
       </main>
-      <SiteFooter />
     </>
   );
 }

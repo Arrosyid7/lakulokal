@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PublicNavigation } from "@/components/public-navigation";
 import { SiteFooter } from "@/components/site-footer";
-import { articles } from "@/lib/articles";
+import { getSiteArticles, getSocialLinks } from "@/lib/site-content";
 import { absoluteUrl } from "@/lib/site";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Artikel Clip Video YouTube",
@@ -20,7 +22,8 @@ export const metadata: Metadata = {
   }
 };
 
-export default function ArticlesPage() {
+export default async function ArticlesPage() {
+  const [articles, socialLinks] = await Promise.all([getSiteArticles(), getSocialLinks()]);
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -69,7 +72,7 @@ export default function ArticlesPage() {
           </a>.
         </p>
       </main>
-      <SiteFooter />
+      <SiteFooter socialLinks={socialLinks} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }}

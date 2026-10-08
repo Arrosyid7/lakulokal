@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { RetryOrderButton } from "@/components/dashboard/retry-order-button";
 import { ManualPaymentReview, type ManualPaymentReviewItem } from "@/components/admin/manual-payment-review";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -99,7 +100,10 @@ export default async function AdminPage() {
             )}
           </section>
           <section className="panel" style={{ marginTop: 18 }}>
-            <h2>Order terbaru</h2>
+            <div className="row">
+              <h2>Order terbaru</h2>
+              <Link className="text-link" href="/admin/transaksi">Lihat semua transaksi</Link>
+            </div>
             {!rows.length ? <p className="empty-state">Belum ada order.</p> : (
               <div className="table-wrap">
                 <table className="data-table">

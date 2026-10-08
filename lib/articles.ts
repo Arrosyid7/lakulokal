@@ -14,6 +14,7 @@ export type Article = {
   intro: string;
   relatedSlugs: string[];
   sections: ArticleSection[];
+  published?: boolean;
 };
 
 export const articles: Article[] = [
@@ -190,13 +191,13 @@ export const articles: Article[] = [
         heading: "Pahami alur order",
         paragraphs: [
           "Di LakuLokal, pengguna masuk ke akun, memilih file video dari perangkat dan memilih paket. Browser memproses file secara lokal setelah pembayaran QRIS DANA terverifikasi.",
-          "Status order dan pembayaran dapat dilihat di dashboard. Hasil clip diunduh langsung ke perangkat dan tidak disimpan di akun, jadi simpan file setelah proses selesai."
+          "Status order, pembayaran, dan clip dapat dilihat di dashboard. Clip hasil tersedia dari riwayat order selama 24 jam, lalu file dihapus otomatis."
         ]
       },
       {
         heading: "Simpan hasil dengan tertib",
         paragraphs: [
-          "Setelah clip selesai dibuat, unduh file ke perangkat dan pindahkan ke penyimpanan yang Anda kelola. Hasil tidak disimpan di akun, jadi jangan tutup halaman sebelum mengunduh semua clip.",
+          "Setelah clip selesai dibuat, unduh file ke perangkat dan pindahkan ke penyimpanan yang Anda kelola. Hasil tersedia selama 24 jam, jadi simpan file sebelum masa itu berakhir.",
           "Gunakan nama file yang menjelaskan topik atau urutan clip. Simpan juga catatan singkat tentang tujuan tiap potongan agar file lebih mudah ditemukan ketika akan disunting atau diunggah.",
           "Pastikan file sudah dapat dibuka sebelum menutup halaman order. Jika ada kendala, catat kode order supaya lebih mudah meminta bantuan."
         ]
