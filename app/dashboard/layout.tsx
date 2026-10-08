@@ -14,10 +14,11 @@ export default async function DashboardLayout({ children }: Readonly<{ children:
   const socialLinks = await getSocialLinks();
   const { data: profile } = await supabase.from("profiles").select("full_name,role").eq("id", user.id).maybeSingle();
   return (
-    <>
+    <div className="account-shell">
+      <a className="skip-link" href="#account-content">Lewati navigasi</a>
       <AppNavigation fullName={profile?.full_name || user.email || "Akun"} isAdmin={profile?.role === "ADMIN"} />
-      {children}
+      <div className="account-content">{children}</div>
       <SiteFooter socialLinks={socialLinks} />
-    </>
+    </div>
   );
 }

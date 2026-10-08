@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import type { PaymentStatus, ProcessingStatus } from "@/lib/supabase/database.types";
+import { getPaymentStatusLabel, getProcessingStatusLabel, getStatusClassName } from "@/lib/order-presentation";
 
 const filters: Record<string, {
   label: string;
@@ -33,14 +34,17 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
   const { data: orders, error } = await request;
   const money = (amount: number, currency: string) => new Intl.NumberFormat("id-ID", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
   return (
-    <main className="container app-main">
-      <div className="row">
+    <main id="account-content" className="container app-main">
+      <header className="dashboard-page-heading account-page-heading">
+        <div className="row">
         <div>
+          <p className="section-kicker">Aktivitas akun</p>
           <h1 className="page-title">Riwayat order</h1>
           <p className="page-lead">Order dan status pembayaran untuk akun Anda.</p>
         </div>
         <Link className="button button-accent" href="/dashboard/new">Buat clip</Link>
-      </div>
+        </div>
+      </header>
       <nav className="filter-nav" aria-label="Filter riwayat order">
         {Object.entries(filters).map(([key, filter]) => (
           <Link key={key} href={key === "all" ? "/dashboard/orders" : `/dashboard/orders?status=${key}`} aria-current={active === key ? "page" : undefined}>
@@ -65,8 +69,8 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
                 </div>
                 <div className="order-field"><span className="order-field-label">Paket</span><span className="order-field-value">{order.package_name} · {order.clip_count} clip</span></div>
                 <div className="order-field"><span className="order-field-label">Total</span><span className="order-field-value">{money(Number(order.amount), order.currency)}</span></div>
-                <div className="order-field"><span className="order-field-label">Pembayaran</span><span className="status">{order.payment_status}</span></div>
-                <div className="order-field"><span className="order-field-label">Proses</span><span className="status">{order.processing_status}</span></div>
+                <div className="order-field"><span className="order-field-label">Pembayaran</span><span className={getStatusClassName("payment", order.payment_status)}>{getPaymentStatusLabel(order.payment_status)}</span></div>
+                <div className="order-field"><span className="order-field-label">Proses</span><span className={getStatusClassName("processing", order.processing_status)}>{getProcessingStatusLabel(order.processing_status)}</span></div>
                 <div className="order-field"><span className="order-field-label">Dibuat</span><time className="order-field-value" dateTime={order.created_at}>{new Date(order.created_at).toLocaleString("id-ID")}</time></div>
               </article>
             ))}

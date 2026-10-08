@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { PaymentQrCode } from "@/components/orders/payment-qr-code";
 import { ReceiptProofForm } from "@/components/orders/receipt-proof-form";
+import { getPaymentStatusLabel, getProcessingStatusLabel, getStatusClassName } from "@/lib/order-presentation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import {
   getClipRanges,
@@ -330,9 +331,13 @@ export function BrowserCheckout({
   const canSelectFile = canUseOrder && !busy;
 
   return (
-    <section className="panel stack" aria-labelledby="checkout-title">
-      <h2 id="checkout-title">Order {orderCode}</h2>
-      <p><strong>Total: {money}</strong></p>
+    <section className="panel browser-checkout" aria-labelledby="checkout-title">
+      <div className="checkout-primary">
+        <header className="checkout-heading">
+          <p className="section-kicker">Pembayaran dan pemrosesan</p>
+          <h2 id="checkout-title">Order {orderCode}</h2>
+          <p className="checkout-total"><span>Total pembayaran</span><strong>{money}</strong></p>
+        </header>
       {paymentStatus === "PENDING" && (manualQris || (paymentProvider === "DANA" && qrContent)) && (
         <>
           <PaymentQrCode amount={money} value={manualQris ? null : qrContent} />
@@ -370,7 +375,9 @@ export function BrowserCheckout({
         <p className="form-error" role="alert">QR pembayaran lama tidak tersedia. Jangan membayar melalui QRIS lain. Hubungi pengelola.</p>
       )}
       {paymentStatus !== "PENDING" && (
-        <p aria-live="polite">Status pembayaran: <strong>{paymentStatus}</strong></p>
+        <p className="checkout-status-line" aria-live="polite">
+          Status pembayaran: <span className={getStatusClassName("payment", paymentStatus)}>{getPaymentStatusLabel(paymentStatus)}</span>
+        </p>
       )}
       {canUseOrder && (
         <div className="browser-clip-workspace">
@@ -426,6 +433,17 @@ export function BrowserCheckout({
         </div>
       )}
       {statusError && <p className="form-error" role="alert">{statusError}</p>}
+      </div>
+      <aside className="checkout-aside" aria-label="Ringkasan order">
+        <p className="section-kicker">Ringkasan</p>
+        <h3>Order ini mencakup</h3>
+        <dl className="checkout-facts">
+          <div><dt>Jumlah clip</dt><dd>{clipCount} clip</dd></div>
+          <div><dt>Pembayaran</dt><dd><span className={getStatusClassName("payment", paymentStatus)}>{getPaymentStatusLabel(paymentStatus)}</span></dd></div>
+          <div><dt>Status proses</dt><dd><span className={getStatusClassName("processing", processingStatus)}>{getProcessingStatusLabel(processingStatus)}</span></dd></div>
+        </dl>
+        <p>Video sumber diproses di perangkat ini. Clip hasil dapat ditonton dan diunduh dari riwayat order selama 24 jam.</p>
+      </aside>
     </section>
   );
 }

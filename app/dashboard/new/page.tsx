@@ -10,7 +10,7 @@ export default async function NewOrderPage() {
     .eq("active", true)
     .order("price");
   return (
-    <main className="container app-main">
+    <main id="account-content" className="container app-main">
       <header className="dashboard-page-heading">
         <p className="section-kicker">Order baru</p>
         <h1 className="page-title">Siapkan video untuk dibuat clip.</h1>

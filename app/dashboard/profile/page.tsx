@@ -5,7 +5,7 @@ export default async function ProfilePage() {
   const { supabase, user } = await requireUser();
   const { data: profile, error } = await supabase.from("profiles").select("full_name,email,avatar_url").eq("id", user.id).maybeSingle();
   return (
-    <main className="container app-main">
+    <main id="account-content" className="container app-main">
       <header className="dashboard-page-heading">
         <p className="section-kicker">Akun</p>
         <h1 className="page-title">Profil</h1>

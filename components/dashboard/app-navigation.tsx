@@ -41,6 +41,7 @@ export function AppNavigation({ fullName, isAdmin }: { fullName: string; isAdmin
         <Link className="brand brand-logo-link" href="/dashboard" aria-label="LakuLokal, dashboard">
           <Image className="brand-logo" src="/brand/lakulokal-logo-light.svg" alt="" width={420} height={156} priority />
         </Link>
+        <span className="account-user-name">{fullName}</span>
         <button
           className="app-menu-toggle"
           type="button"
@@ -60,7 +61,6 @@ export function AppNavigation({ fullName, isAdmin }: { fullName: string; isAdmin
           <Link className={linkClass("/dashboard/orders")} aria-current={linkClass("/dashboard/orders") ? "page" : undefined} href="/dashboard/orders" onClick={() => setOpen(false)}>Riwayat</Link>
           <Link className={linkClass("/dashboard/profile")} aria-current={linkClass("/dashboard/profile") ? "page" : undefined} href="/dashboard/profile" onClick={() => setOpen(false)}>Profil</Link>
           {isAdmin && <Link className={linkClass("/admin")} aria-current={linkClass("/admin") ? "page" : undefined} href="/admin" onClick={() => setOpen(false)}>Admin</Link>}
-          <span className="muted">{fullName}</span>
           <button className="button button-secondary" type="button" onClick={signOut}>Keluar</button>
         </nav>
         {logoutError && <p className="form-error" role="alert">{logoutError}</p>}

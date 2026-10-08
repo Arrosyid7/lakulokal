@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
+import { getPaymentStatusLabel, getProcessingStatusLabel, getStatusClassName } from "@/lib/order-presentation";
 
 export default async function DashboardPage() {
   const { supabase, user } = await requireUser();
@@ -25,24 +26,25 @@ export default async function DashboardPage() {
   const money = (amount: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount);
 
   return (
-    <main className="container app-main">
-      <div className="row">
-        <div>
+    <main id="account-content" className="container app-main">
+      <header className="account-welcome">
+        <div className="account-welcome-copy">
           <p className="section-kicker">Ruang kerja Anda</p>
           <h1 className="page-title">Halo, {profile?.full_name || user.email || "Pengguna"}.</h1>
           <p className="page-lead">Lihat status order terakhir atau mulai menyiapkan video berikutnya.</p>
         </div>
-        <Link className="button button-accent" href="/dashboard/new">Buat clip</Link>
-      </div>
+        <Link className="button button-accent" href="/dashboard/new">Buat clip baru</Link>
+        <span className="account-cut-mark" aria-hidden="true" />
+      </header>
       {failures.length > 0 ? (
         <section className="panel form-error" role="alert">Ringkasan dashboard gagal dimuat. Muat ulang halaman atau coba lagi nanti.</section>
       ) : (
         <>
           <section className="account-metrics" aria-label="Ringkasan jumlah order">
-            <article className="account-metric"><span>Total order</span><strong>{totalCount ?? 0}</strong></article>
-            <article className="account-metric"><span>Order selesai</span><strong>{completedCount ?? 0}</strong></article>
-            <article className="account-metric"><span>Sedang diproses</span><strong>{processingCount ?? 0}</strong></article>
-            <article className="account-metric"><span>File tersimpan</span><strong>{clipCount ?? 0}</strong></article>
+            <article className="account-metric"><span>Total order</span><strong>{totalCount ?? 0}</strong><small>Semua order akun</small></article>
+            <article className="account-metric"><span>Order selesai</span><strong>{completedCount ?? 0}</strong><small>Berhasil diproses</small></article>
+            <article className="account-metric"><span>Sedang diproses</span><strong>{processingCount ?? 0}</strong><small>Masih berjalan</small></article>
+            <article className="account-metric"><span>File tersimpan</span><strong>{clipCount ?? 0}</strong><small>Tersedia di riwayat</small></article>
           </section>
           <section className="dashboard-summary">
             <div className="row">
@@ -54,8 +56,11 @@ export default async function DashboardPage() {
             </div>
           </section>
           <section className="panel recent-orders">
-            <div className="row">
-              <h2 style={{ margin: 0 }}>Order terbaru</h2>
+            <div className="row recent-orders-heading">
+              <div>
+                <p className="section-kicker">Aktivitas</p>
+                <h2 style={{ margin: 0 }}>Order terbaru</h2>
+              </div>
               <Link className="text-link" href="/dashboard/orders">Lihat riwayat</Link>
             </div>
             {!orders?.length ? (
@@ -72,8 +77,8 @@ export default async function DashboardPage() {
                       <p>{order.package_name} · {money(Number(order.amount))}</p>
                     </div>
                     <div className="status-pair">
-                      <span className="status">{order.payment_status}</span>
-                      <span className="status">{order.processing_status}</span>
+                      <span className={getStatusClassName("payment", order.payment_status)}>{getPaymentStatusLabel(order.payment_status)}</span>
+                      <span className={getStatusClassName("processing", order.processing_status)}>{getProcessingStatusLabel(order.processing_status)}</span>
                     </div>
                   </article>
                 ))}
