@@ -14,7 +14,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
   if (error) return <main id="account-content" className="container app-main"><p className="form-error">Detail order gagal dimuat.</p></main>;
   if (!order) notFound();
   const { data: payment, error: paymentError } = await supabase.from("payments")
-    .select("provider,qr_content")
+    .select("provider")
     .eq("order_id", order.id)
     .maybeSingle();
   if (paymentError) return <main id="account-content" className="container app-main"><p className="form-error">Metode pembayaran gagal dimuat.</p></main>;
@@ -38,7 +38,6 @@ export default async function OrderDetailPage({ params }: PageProps) {
           currency={order.currency}
           orderCreatedAt={order.created_at}
           paymentProvider={payment?.provider ?? "UNKNOWN"}
-          qrContent={payment?.qr_content ?? order.dana_qr_content}
           initialPaymentStatus={order.payment_status}
           initialProcessingStatus={order.processing_status}
         />

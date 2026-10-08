@@ -28,8 +28,14 @@ export default async function AdminPage() {
       .order("submitted_at", { ascending: true })
       .limit(50)
   ]);
-  const error = statsError || ordersError || recentUsersError;
   const rows = orders ?? [];
+  const rowOrderIds = rows.map((order) => order.id);
+  const { data: autoApprovedProofs, error: autoApprovalError } = rowOrderIds.length
+    ? await supabase.from("payment_proofs").select("order_id")
+      .eq("review_status", "APPROVED").is("reviewed_by", null).in("order_id", rowOrderIds)
+    : { data: [], error: null };
+  const autoApprovedOrderIds = new Set((autoApprovedProofs ?? []).map((proof) => proof.order_id));
+  const error = statsError || ordersError || recentUsersError || autoApprovalError;
   const stats = totals;
   let paymentReviewError = proofsError !== null;
   let reviewItems: ManualPaymentReviewItem[] = [];
@@ -90,7 +96,7 @@ export default async function AdminPage() {
             <div className="admin-overview-metrics">
               <Metric label="Total order" value={stats?.total_orders ?? 0} />
               <Metric label="Total user" value={stats?.total_users ?? 0} />
-              <Metric label="Pembayaran PAID" value={stats?.paid_orders ?? 0} />
+              <Metric label="Pembayaran terverifikasi" value={stats?.paid_orders ?? 0} />
               <Metric label="Sedang diproses" value={stats?.processing_orders ?? 0} />
               <Metric label="Selesai" value={stats?.completed_orders ?? 0} />
               <Metric label="Gagal" value={stats?.failed_orders ?? 0} />
@@ -101,12 +107,12 @@ export default async function AdminPage() {
             <div className="admin-section-heading">
               <div>
                 <p className="section-kicker">PEMBAYARAN</p>
-                <h2>Bukti QRIS menunggu pemeriksaan</h2>
+                <h2>Bukti QRIS lama menunggu pemeriksaan</h2>
               </div>
               {!paymentReviewError && <span className="admin-count">{reviewItems.length} menunggu</span>}
             </div>
             <p className="admin-section-description">
-              Periksa mutasi rekening atau aplikasi merchant secara terpisah sebelum mengonfirmasi. OCR hanya menyaring teks pada gambar. Pengguna dapat mengunduh clip sebelum pemeriksaan selesai.
+            Bukti baru disetujui otomatis saat OCR mencocokkan nominal dan tanggal. OCR tidak memverifikasi dana masuk. Tabel ini hanya menampilkan bukti lama yang masih menunggu pemeriksaan.
             </p>
             {paymentReviewError ? (
               <p className="form-error" role="alert">Bukti pembayaran gagal dimuat. Periksa migrasi bukti QRIS, storage privat, dan konfigurasi server.</p>
@@ -127,7 +133,7 @@ export default async function AdminPage() {
                 <table className="data-table">
                   <thead><tr><th>Order</th><th>User ID</th><th>Paket</th><th>Jumlah</th><th>Pembayaran</th><th>Proses</th><th>Aksi</th></tr></thead>
                   <tbody>{rows.map((order) => (
-                    <tr key={order.id}><td>{order.order_code}</td><td>{order.user_id}</td><td>{order.package_name}</td><td>{money.format(order.amount)}</td><td>{order.payment_status}</td><td>{order.processing_status}</td><td>{order.youtube_url === null && order.processing_status === "FAILED" && order.payment_status === "PAID" ? <RetryOrderButton orderCode={order.order_code} /> : "Tidak perlu"}</td></tr>
+                    <tr key={order.id}><td>{order.order_code}</td><td>{order.user_id}</td><td>{order.package_name}</td><td>{money.format(order.amount)}</td><td>{autoApprovedOrderIds.has(order.id) ? "Disetujui otomatis (OCR)" : order.payment_status}</td><td>{order.processing_status}</td><td>{order.youtube_url === null && order.processing_status === "FAILED" && order.payment_status === "PAID" ? <RetryOrderButton orderCode={order.order_code} /> : "Tidak perlu"}</td></tr>
                   ))}</tbody>
                 </table>
               </div>

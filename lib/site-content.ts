@@ -51,7 +51,7 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
   processSteps: [
     { title: "Masuk atau buat akun", description: "Gunakan akun untuk membuat order dan melihat riwayat pembayaran." },
     { title: "Pilih file dan paket", description: "Pilih video dari perangkat. Browser membaca file secara lokal." },
-    { title: "Selesaikan pembayaran", description: "Pindai QRIS DANA. Order diproses setelah pembayaran diverifikasi." },
+    { title: "Selesaikan pembayaran", description: "Bayar dengan QRIS dan unggah bukti. Order disetujui otomatis jika OCR mencocokkan nominal dan tanggal." },
     { title: "Buat dan unduh clip", description: "Setiap clip tampil saat selesai. Hasil tersimpan di riwayat selama 24 jam." }
   ],
   pricingKicker: "Paket aktif",
@@ -62,11 +62,11 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
   questions: [
     {
       question: "Bagaimana cara membuat order clip?",
-      answer: "Masuk ke akun, pilih file video dan paket, lalu bayar menggunakan QRIS. Setelah pembayaran terverifikasi, browser membuat clip."
+      answer: "Masuk ke akun, pilih file video dan paket, lalu bayar menggunakan QRIS. Order disetujui otomatis jika OCR mencocokkan nominal dan tanggal bukti. OCR tidak memastikan dana masuk."
     },
     {
       question: "Bagaimana pembayaran diproses?",
-      answer: "Pembayaran order menggunakan QRIS DANA. Server memeriksa status transaksi ke provider sebelum order ditandai lunas."
+      answer: "Unggah bukti QRIS. Order disetujui otomatis jika nominal dan tanggal pada bukti cocok menurut OCR. Pemeriksaan ini tidak memverifikasi dana diterima, jadi bukti palsu dapat memberi akses ke layanan."
     },
     {
       question: "File video apa yang dapat diproses?",

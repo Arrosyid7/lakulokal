@@ -1,13 +1,13 @@
 # LakuLokal
 
-LakuLokal membuat klip video vertikal dari file yang dipilih pengguna. Pengguna memilih paket, membayar lewat QRIS statis, mengunggah bukti untuk penyaringan OCR dan pemeriksaan admin, lalu browser memproses video. Setiap clip muncul saat selesai dan disimpan privat agar dapat diakses dari riwayat order selama 24 jam. Aplikasi tidak membutuhkan VPS atau Cloud Run untuk pemrosesan video.
+LakuLokal membuat klip video vertikal dari file yang dipilih pengguna. Pengguna memilih paket, membayar lewat QRIS statis, lalu mengunggah bukti. Jika OCR mencocokkan nominal dan tanggal, aplikasi otomatis menyetujui order dan browser memproses video. Persetujuan OCR tidak memverifikasi dana masuk. Setiap clip muncul saat selesai dan disimpan privat agar dapat diakses dari riwayat order selama 24 jam. Aplikasi tidak membutuhkan VPS atau Cloud Run untuk pemrosesan video.
 
 ## Menjalankan lokal
 
 1. Pasang Node.js versi 20 atau lebih baru.
 2. Salin `.env.example` menjadi `.env.local`, lalu isi Supabase.
 3. Jalankan `npm install`. Script `postinstall` menyalin FFmpeg WebAssembly ke `public/ffmpeg/`.
-4. Untuk database baru, terapkan `supabase_schema.sql`, lalu migration QRIS di bawah. Untuk database yang sudah digunakan, terapkan migration sesuai urutan.
+4. Untuk database baru, terapkan `supabase_schema.sql`, lalu migration `20261008085000_manual_qris_payment_proofs.sql` dan semua migration setelahnya secara berurutan. Untuk database yang sudah digunakan, terapkan migration yang belum pernah dijalankan.
 5. Jalankan `npm run dev`.
 
 Order hanya dapat dibuat bila Supabase service role dan migration QRIS sudah tersedia. Gambar `public/payment/qris-lakulokal.png` adalah QRIS statis yang ditampilkan kepada pengguna.
@@ -29,6 +29,9 @@ Jalankan `supabase_schema.sql` pada SQL Editor atau melalui Supabase CLI untuk i
 - `20261008085000_manual_qris_payment_proofs.sql`
 - `20261008100000_store_browser_clips.sql`
 - `20261008110000_admin_content_management.sql`
+- `20261008120000_single_admin_account.sql`
+- `20261008130000_fix_browser_processing_with_payment_proof.sql`
+- `20261008140000_auto_approve_manual_qris_proofs.sql`
 
 Jangan memberikan akses `service_role` ke browser atau memberikan grant update untuk status pembayaran kepada pengguna.
 
@@ -36,11 +39,11 @@ Buat bucket Storage privat bernama `lakulokal-results` untuk file clip. Unggahan
 
 ## Pembayaran QRIS dan bukti transfer
 
-Order baru menampilkan QRIS statis dari `public/payment/qris-lakulokal.png`. Pengguna memasukkan nominal order, mengunggah gambar bukti, lalu OCR di browser menyaring nominal dan tanggal transaksi sebelum bukti disimpan dalam bucket privat Supabase Storage. Admin tetap harus mencocokkan transaksi secara terpisah pada rekening atau aplikasi merchant.
+Order baru menampilkan QRIS statis dari `public/payment/qris-lakulokal.png`. Pengguna memasukkan nominal order dan mengunggah gambar bukti. OCR di browser mencocokkan nominal dan tanggal transaksi, lalu order otomatis berubah menjadi lunas dan bukti ditandai disetujui.
 
-Setelah OCR cocok, pengguna boleh memproses dan mengunduh clip sebelum admin mengonfirmasi pembayaran. Artinya bukti palsu atau transfer yang tidak ditemukan dapat menyebabkan layanan sudah diberikan tanpa dana diterima. OCR bukan verifikasi transaksi dan tidak boleh dianggap sebagai konfirmasi pembayaran.
+Peringatan: aplikasi tidak menghubungi bank atau penyedia pembayaran untuk memeriksa transfer. OCR hanya membaca teks dan hasilnya berasal dari browser, sehingga bukti palsu atau manipulasi permintaan dapat memberi akses layanan tanpa dana diterima. Audit log mencatat persetujuan otomatis sebagai `MANUAL_QRIS_AUTO_APPROVED`; dashboard admin tidak memasukkan order tersebut sebagai pendapatan terverifikasi.
 
-Integrasi DANA dan Finish Notify dipertahankan untuk order lama. Kredensial DANA hanya diperlukan selama order lama masih membutuhkan callback atau rekonsiliasi.
+Integrasi DANA, callback, dan rekonsiliasi otomatis sudah dihapus. Kolom serta migration historis DANA dipertahankan agar skema database lama dan riwayat order tidak rusak. Order DANA lama yang masih menunggu pembayaran tidak lagi dapat dibayar melalui aplikasi.
 
 ## Pemrosesan video di browser
 
@@ -57,7 +60,7 @@ Paket `@ffmpeg/core` menggunakan lisensi GPL-2.0-or-later. Lihat lisensi paket d
 1. Deploy Next.js ke Vercel.
 2. Atur variabel Supabase dari `.env.example`. Jangan menaruh secret di variable `NEXT_PUBLIC_*`.
 3. Pastikan `npm install`/`npm ci` menjalankan `postinstall`, sehingga aset FFmpeg tersedia di `public/ffmpeg/` saat build.
-4. Aktifkan Vercel Cron untuk rekonsiliasi pembayaran dan pembersihan hasil lama, lalu isi `CRON_SECRET`. Kedua cron berjalan sekali sehari agar sesuai dengan batas jadwal plan Vercel Hobby.
+4. Aktifkan Vercel Cron untuk pembersihan hasil lama, lalu isi `CRON_SECRET`.
 5. Terapkan migration baru, pastikan bucket `payment-proofs` dan `lakulokal-results` privat, dan verifikasi file QRIS yang dipasang sebelum melayani order.
 6. Buat user Auth admin di Supabase Dashboard, lalu jalankan SQL berikut dengan email yang dipakai admin:
 

@@ -14,7 +14,7 @@ export default async function NewOrderPage() {
       <header className="dashboard-page-heading">
         <p className="section-kicker">Order baru</p>
         <h1 className="page-title">Siapkan video untuk dibuat clip.</h1>
-        <p className="page-lead">Pilih file video dan paket. Setelah pembayaran QRIS terverifikasi, browser membuat klip tanpa mengunggah video ke server.</p>
+        <p className="page-lead">Pilih file video dan paket. Setelah OCR mencocokkan nominal serta tanggal bukti QRIS, order disetujui otomatis. OCR tidak memverifikasi dana masuk.</p>
       </header>
       {error ? <p className="form-error" role="alert">Daftar paket gagal dimuat. Muat ulang halaman. Jika masalah berlanjut, hubungi <a href="mailto:halo@lakulokal.id">halo@lakulokal.id</a>.</p> : (
         <div className="new-order-layout">

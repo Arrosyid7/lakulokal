@@ -20,7 +20,6 @@ type Props = {
   currency: string;
   orderCreatedAt: string;
   paymentProvider?: string;
-  qrContent?: string | null;
   initialPaymentStatus: string;
   initialProcessingStatus: string;
   initialFile?: File | null;
@@ -33,7 +32,6 @@ export function BrowserCheckout({
   currency,
   orderCreatedAt,
   paymentProvider = "MANUAL_QRIS",
-  qrContent = null,
   initialPaymentStatus,
   initialProcessingStatus,
   initialFile = null
@@ -341,54 +339,49 @@ export function BrowserCheckout({
           <h2 id="checkout-title">Order {orderCode}</h2>
           <p className="checkout-total"><span>Total pembayaran</span><strong>{money}</strong></p>
         </header>
-      {paymentStatus === "PENDING" && (manualQris || (paymentProvider === "DANA" && qrContent)) && (
+      {paymentStatus === "PENDING" && manualQris && (
         <>
-          <PaymentQrCode amount={money} value={manualQris ? null : qrContent} />
-          {manualQris ? <p>Bayar tepat sesuai nominal order ini. Setelah membayar, unggah bukti transaksi untuk pemeriksaan OCR.</p> : (
-            <p aria-live="polite">Menunggu pembayaran QRIS. Halaman ini memeriksa status transaksi secara otomatis.</p>
+          <PaymentQrCode amount={money} />
+          <p>Bayar tepat sesuai nominal order ini, lalu unggah bukti transaksi. Nominal dan tanggal yang cocok menurut OCR akan menyetujui order secara otomatis.</p>
+          {proofStatus === "SUBMITTED" && (
+            <p className="form-success" role="status">Bukti sebelumnya menunggu pemeriksaan admin. Anda tetap dapat memproses clip, tetapi OCR tidak memastikan dana masuk.</p>
           )}
-          {manualQris && proofStatus === "SUBMITTED" ? (
-            <p className="form-success" role="status">
-              Bukti sudah lolos penyaringan OCR dan menunggu pemeriksaan admin. Status pembayaran tetap menunggu konfirmasi.
-            </p>
-          ) : manualQris && proofStatus === "REJECTED" ? (
+          {proofStatus === "REJECTED" && (
             <div className="form-error" role="status">
               <p>Bukti sebelumnya ditolak oleh admin. Periksa catatan, lalu unggah bukti pembayaran yang benar.</p>
               {proofNote && <p>Catatan admin: {proofNote}</p>}
             </div>
-          ) : manualQris ? (
+          )}
+          {proofStatus !== "SUBMITTED" && (
             <ReceiptProofForm
               orderCode={orderCode}
               amount={amount}
               orderCreatedAt={orderCreatedAt}
-              onSubmitted={(proof) => setProofStatus(proof.status)}
-            />
-          ) : null}
-          {manualQris && proofStatus === "REJECTED" && (
-            <ReceiptProofForm
-              orderCode={orderCode}
-              amount={amount}
-              orderCreatedAt={orderCreatedAt}
-              onSubmitted={(proof) => setProofStatus(proof.status)}
+              onSubmitted={(proof) => {
+                setProofStatus(proof.status);
+                setPaymentStatus(proof.paymentStatus);
+              }}
             />
           )}
         </>
       )}
-      {paymentStatus === "PENDING" && paymentProvider === "DANA" && !qrContent && (
-        <p className="form-error" role="alert">QR pembayaran lama tidak tersedia. Jangan membayar melalui QRIS lain. Hubungi pengelola.</p>
+      {paymentStatus === "PENDING" && !manualQris && (
+        <p className="form-error" role="alert">Metode pembayaran order lama sudah dihentikan. Jangan membayar untuk order ini. Hubungi pengelola untuk bantuan.</p>
       )}
       {paymentStatus !== "PENDING" && (
         <p className="checkout-status-line" aria-live="polite">
-          Status pembayaran: <span className={getStatusClassName("payment", paymentStatus)}>{getPaymentStatusLabel(paymentStatus)}</span>
+          Status pembayaran: <span className={getStatusClassName("payment", paymentStatus)}>{getPaymentStatusLabel(paymentStatus, manualQris && proofStatus === "APPROVED")}</span>
         </p>
       )}
       {canUseOrder && (
         <div className="browser-clip-workspace">
-          {paymentStatus === "PAID" ? (
-            <p>Pembayaran sudah dikonfirmasi admin. Pilih file video untuk dibuat menjadi {clipCount} klip. Video sumber diproses di perangkat Anda, sedangkan clip hasil disimpan di riwayat order selama 24 jam.</p>
+          {paymentStatus === "PAID" && manualQris && proofStatus === "APPROVED" ? (
+            <p>Order disetujui otomatis setelah OCR mencocokkan nominal dan tanggal bukti. OCR tidak memastikan dana masuk. Pilih file video untuk dibuat menjadi {clipCount} klip. Video sumber diproses di perangkat Anda, sedangkan clip hasil disimpan di riwayat order selama 24 jam.</p>
+          ) : paymentStatus === "PAID" ? (
+            <p>Pembayaran sudah dikonfirmasi. Pilih file video untuk dibuat menjadi {clipCount} klip. Video sumber diproses di perangkat Anda, sedangkan clip hasil disimpan di riwayat order selama 24 jam.</p>
           ) : (
             <p className="form-error" role="status">
-              Pembayaran belum dikonfirmasi admin. Kamu tetap dapat memproses dan mengunduh clip sekarang. OCR hanya membaca gambar, bukan memastikan dana masuk; jika bukti palsu atau transfer tidak ditemukan, layanan sudah terpakai sebelum pembayaran dikonfirmasi.
+              Bukti QRIS belum disetujui admin. Anda tetap dapat memproses dan mengunduh clip sekarang. OCR hanya membaca gambar, bukan memastikan dana masuk.
             </p>
           )}
           {showClipRun && (
@@ -477,7 +470,7 @@ export function BrowserCheckout({
         <h3>Order ini mencakup</h3>
         <dl className="checkout-facts">
           <div><dt>Jumlah clip</dt><dd>{clipCount} clip</dd></div>
-          <div><dt>Pembayaran</dt><dd><span className={getStatusClassName("payment", paymentStatus)}>{getPaymentStatusLabel(paymentStatus)}</span></dd></div>
+          <div><dt>Pembayaran</dt><dd><span className={getStatusClassName("payment", paymentStatus)}>{getPaymentStatusLabel(paymentStatus, manualQris && proofStatus === "APPROVED")}</span></dd></div>
           <div><dt>Status proses</dt><dd><span className={getStatusClassName("processing", processingStatus)}>{getProcessingStatusLabel(processingStatus)}</span></dd></div>
         </dl>
         <p>Video sumber diproses di perangkat ini. Clip hasil dapat ditonton dan diunduh dari riwayat order selama 24 jam.</p>

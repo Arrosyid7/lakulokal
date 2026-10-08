@@ -144,5 +144,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ ord
     return NextResponse.json({ error: "Bukti pembayaran gagal dicatat." }, { status: 500 });
   }
 
-  return NextResponse.json({ proof }, { status: 201 });
+  const { data: confirmation, error: confirmationError } = await admin.rpc("auto_approve_manual_qris_proof", {
+    p_proof_id: proof.id
+  }).maybeSingle();
+  if (confirmationError || !confirmation) {
+    console.error("manual_qris_auto_approval_failed", {
+      orderId: order.id,
+      proofId: proof.id,
+      code: confirmationError?.code
+    });
+    return NextResponse.json({
+      error: "Bukti tersimpan, tetapi persetujuan otomatis gagal. Muat ulang halaman atau hubungi admin."
+    }, { status: 500 });
+  }
+
+  return NextResponse.json({
+    proof: { ...proof, review_status: "APPROVED" },
+    payment_status: "PAID"
+  }, { status: 201 });
 }

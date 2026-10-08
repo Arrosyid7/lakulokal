@@ -27,18 +27,22 @@ export default async function AdminTransactionsPage({ searchParams }: PageProps)
   const { data: orders, count, error } = await query;
   const userIds = [...new Set((orders ?? []).map((order) => order.user_id))];
   const orderIds = (orders ?? []).map((order) => order.id);
-  const [{ data: profiles, error: profilesError }, { data: payments, error: paymentsError }] = await Promise.all([
+  const [{ data: profiles, error: profilesError }, { data: payments, error: paymentsError }, { data: autoApprovedProofs, error: proofError }] = await Promise.all([
     userIds.length
       ? supabase.from("profiles").select("id,email").in("id", userIds)
       : Promise.resolve({ data: [], error: null }),
     orderIds.length
       ? supabase.from("payments").select("order_id,provider,provider_reference,status,paid_at").in("order_id", orderIds)
+      : Promise.resolve({ data: [], error: null }),
+    orderIds.length
+      ? supabase.from("payment_proofs").select("order_id").eq("review_status", "APPROVED").is("reviewed_by", null).in("order_id", orderIds)
       : Promise.resolve({ data: [], error: null })
   ]);
 
-  const failed = Boolean(error || profilesError || paymentsError);
+  const failed = Boolean(error || profilesError || paymentsError || proofError);
   const emails = new Map((profiles ?? []).map((profile) => [profile.id, profile.email]));
   const paymentsByOrder = new Map((payments ?? []).map((payment) => [payment.order_id, payment]));
+  const autoApprovedOrderIds = new Set((autoApprovedProofs ?? []).map((proof) => proof.order_id));
   const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
   const money = (amount: number, currency: string) =>
     new Intl.NumberFormat("id-ID", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
@@ -88,7 +92,7 @@ export default async function AdminTransactionsPage({ searchParams }: PageProps)
                       <td>{emails.get(order.user_id) ?? "Email tidak tersedia"}</td>
                       <td>{order.package_name}</td>
                       <td>{money(order.amount, order.currency)}</td>
-                      <td>{order.payment_status}</td>
+                      <td>{autoApprovedOrderIds.has(order.id) ? "Disetujui otomatis (OCR)" : order.payment_status}</td>
                       <td>{payment ? `${payment.provider}: ${payment.provider_reference}` : "Belum tercatat"}</td>
                       <td>{order.processing_status}</td>
                       <td><time dateTime={order.created_at}>{new Date(order.created_at).toLocaleString("id-ID")}</time></td>

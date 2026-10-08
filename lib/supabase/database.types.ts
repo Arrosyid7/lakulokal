@@ -213,6 +213,10 @@ export type Database = {
         Args: { p_order_id: string; p_provider_reference: string; p_amount: number };
         Returns: { confirmed_order_id: string; execution_job_id: string | null; already_paid: boolean }[];
       };
+      auto_approve_manual_qris_proof: {
+        Args: { p_proof_id: string };
+        Returns: { confirmed_order_id: string; already_paid: boolean }[];
+      };
       consume_user_rate_limit: {
         Args: { p_user_id: string; p_action: string; p_limit: number; p_window_seconds: number };
         Returns: boolean;

@@ -32,6 +32,12 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
     request = request.in("processing_status", selected.processingStatuses);
   }
   const { data: orders, error } = await request;
+  const orderIds = orders?.map((order) => order.id) ?? [];
+  const { data: autoApprovedProofs, error: autoApprovalError } = orderIds.length
+    ? await supabase.from("payment_proofs").select("order_id")
+      .eq("review_status", "APPROVED").is("reviewed_by", null).in("order_id", orderIds)
+    : { data: [], error: null };
+  const autoApprovedOrderIds = new Set((autoApprovedProofs ?? []).map((proof) => proof.order_id));
   const money = (amount: number, currency: string) => new Intl.NumberFormat("id-ID", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
   return (
     <main id="account-content" className="container app-main">
@@ -53,7 +59,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
         ))}
       </nav>
       <section className="panel" aria-label="Order pada filter terpilih">
-        {error ? <p className="form-error" role="alert">Riwayat order gagal dimuat. Coba muat ulang.</p> : !orders?.length ? (
+        {error || autoApprovalError ? <p className="form-error" role="alert">Riwayat order gagal dimuat. Coba muat ulang.</p> : !orders?.length ? (
           <div className="empty-state-block">
             <h2>{active === "all" ? "Belum ada order" : "Tidak ada order pada filter ini"}</h2>
             <p>{active === "all" ? "Riwayat order dan pembayaran muncul di sini. Hasil clip diunduh langsung ke perangkat." : "Pilih filter lain untuk melihat order dengan status berbeda."}</p>
@@ -69,7 +75,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
                 </div>
                 <div className="order-field"><span className="order-field-label">Paket</span><span className="order-field-value">{order.package_name} · {order.clip_count} clip</span></div>
                 <div className="order-field"><span className="order-field-label">Total</span><span className="order-field-value">{money(Number(order.amount), order.currency)}</span></div>
-                <div className="order-field"><span className="order-field-label">Pembayaran</span><span className={getStatusClassName("payment", order.payment_status)}>{getPaymentStatusLabel(order.payment_status)}</span></div>
+                <div className="order-field"><span className="order-field-label">Pembayaran</span><span className={getStatusClassName("payment", order.payment_status)}>{getPaymentStatusLabel(order.payment_status, autoApprovedOrderIds.has(order.id))}</span></div>
                 <div className="order-field"><span className="order-field-label">Proses</span><span className={getStatusClassName("processing", order.processing_status)}>{getProcessingStatusLabel(order.processing_status)}</span></div>
                 <div className="order-field"><span className="order-field-label">Dibuat</span><time className="order-field-value" dateTime={order.created_at}>{new Date(order.created_at).toLocaleString("id-ID")}</time></div>
               </article>

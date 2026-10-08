@@ -18,7 +18,8 @@ const processingLabels: Record<ProcessingStatus, string> = {
   FAILED: "Proses gagal"
 };
 
-export function getPaymentStatusLabel(status: string): string {
+export function getPaymentStatusLabel(status: string, autoApproved = false): string {
+  if (autoApproved) return "Disetujui otomatis (OCR)";
   return paymentLabels[status as PaymentStatus] ?? status;
 }
 

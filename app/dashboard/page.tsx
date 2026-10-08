@@ -19,10 +19,17 @@ export default async function DashboardPage() {
     supabase.from("orders").select("id", { count: "exact", head: true }).eq("processing_status", "COMPLETED"),
     supabase.from("orders").select("id", { count: "exact", head: true }).in("processing_status", ["QUEUED", "DOWNLOADING", "PROCESSING", "UPLOADING"]),
     supabase.from("clips").select("id", { count: "exact", head: true }),
-    supabase.from("orders").select("amount").eq("payment_status", "PAID")
+    supabase.from("orders").select("id,amount").eq("payment_status", "PAID")
   ]);
-  const failures = [profileError, totalError, orderError, completedError, processingError, clipError, paidError].filter(Boolean);
-  const paidTotal = paidOrders?.reduce((total, row) => total + Number(row.amount), 0) ?? 0;
+  const paidOrderIds = paidOrders?.map((order) => order.id) ?? [];
+  const { data: autoApprovedProofs, error: autoProofError } = paidOrderIds.length
+    ? await supabase.from("payment_proofs").select("order_id")
+      .eq("review_status", "APPROVED").is("reviewed_by", null).in("order_id", paidOrderIds)
+    : { data: [], error: null };
+  const autoApprovedOrderIds = new Set((autoApprovedProofs ?? []).map((proof) => proof.order_id));
+  const failures = [profileError, totalError, orderError, completedError, processingError, clipError, paidError, autoProofError].filter(Boolean);
+  const paidTotal = paidOrders?.filter((order) => !autoApprovedOrderIds.has(order.id))
+    .reduce((total, row) => total + Number(row.amount), 0) ?? 0;
   const money = (amount: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount);
 
   return (
@@ -77,7 +84,7 @@ export default async function DashboardPage() {
                       <p>{order.package_name} · {money(Number(order.amount))}</p>
                     </div>
                     <div className="status-pair">
-                      <span className={getStatusClassName("payment", order.payment_status)}>{getPaymentStatusLabel(order.payment_status)}</span>
+                      <span className={getStatusClassName("payment", order.payment_status)}>{getPaymentStatusLabel(order.payment_status, autoApprovedOrderIds.has(order.id))}</span>
                       <span className={getStatusClassName("processing", order.processing_status)}>{getProcessingStatusLabel(order.processing_status)}</span>
                     </div>
                   </article>

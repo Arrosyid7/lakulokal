@@ -12,7 +12,7 @@ type Props = {
   orderCode: string;
   amount: number;
   orderCreatedAt: string;
-  onSubmitted: (proof: { status: string; amount: number; date: string }) => void;
+  onSubmitted: (proof: { status: string; amount: number; date: string; paymentStatus: string }) => void;
 };
 
 const MAX_RECEIPT_SIZE = 5 * 1024 * 1024;
@@ -73,10 +73,11 @@ export function ReceiptProofForm({ orderCode, amount, orderCreatedAt, onSubmitte
       onSubmitted({
         status: result.proof.review_status,
         amount: result.proof.ocr_amount,
-        date: result.proof.ocr_transaction_date
+        date: result.proof.ocr_transaction_date,
+        paymentStatus: result.payment_status
       });
       form.reset();
-      setMessage("OCR cocok. Bukti masuk antrean pemeriksaan admin.");
+      setMessage("Nominal dan tanggal cocok menurut OCR. Order disetujui otomatis. OCR tidak memverifikasi dana masuk.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Bukti pembayaran gagal diperiksa.");
       setMessage("");
@@ -100,13 +101,13 @@ export function ReceiptProofForm({ orderCode, amount, orderCreatedAt, onSubmitte
           aria-describedby={`receipt-help-${orderCode}`}
         />
         <small id={`receipt-help-${orderCode}`}>
-          JPG, PNG, atau WebP maksimal 5 MB. OCR membaca nominal dan tanggal di browser; gambar bukti dikirim secara privat agar admin dapat memeriksanya.
+          JPG, PNG, atau WebP maksimal 5 MB. OCR mencocokkan nominal dan tanggal, lalu order disetujui otomatis. Pemeriksaan ini tidak memastikan dana diterima.
         </small>
       </div>
       {message && <p className="muted" role="status" aria-live="polite">{message}</p>}
       {error && <p className="form-error" role="alert">{error}</p>}
       <button className="button button-accent" type="submit" disabled={busy}>
-        {busy ? "Memeriksa bukti..." : "Periksa dan kirim bukti"}
+        {busy ? "Memeriksa bukti..." : "Periksa bukti dan setujui order"}
       </button>
     </form>
   );
