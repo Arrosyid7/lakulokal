@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { orderSchema, validationMessage } from "@/lib/validation";
-import { createDanaCheckout } from "@/lib/dana";
 
 export const runtime = "nodejs";
 
@@ -26,16 +25,7 @@ export async function POST(request: Request) {
   const parsed = orderSchema.safeParse(json);
   if (!parsed.success) return NextResponse.json({ error: validationMessage(parsed.error) }, { status: 400 });
 
-  const paymentReady = Boolean(
-    process.env.DANA_PRIVATE_KEY &&
-    process.env.DANA_MERCHANT_ID &&
-    process.env.DANA_CLIENT_ID &&
-    process.env.DANA_MCC &&
-    process.env.DANA_EXTERNAL_STORE_ID &&
-    process.env.NEXT_PUBLIC_SITE_URL &&
-    ((process.env.DANA_ENVIRONMENT || process.env.DANA_ENV || "sandbox") !== "production" || process.env.DANA_PUBLIC_KEY)
-  );
-  if (!paymentReady || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Pembuatan order belum tersedia. Admin perlu melengkapi konfigurasi pembayaran." }, { status: 503 });
   }
 
@@ -64,7 +54,6 @@ export async function POST(request: Request) {
   const now = new Date();
   const datePart = now.toISOString().slice(0, 10).replaceAll("-", "");
   const orderCode = `LL-${datePart}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
-  const partnerReference = orderCode;
   const { data: order, error: insertError } = await admin
     .from("orders")
     .insert({
@@ -75,53 +64,40 @@ export async function POST(request: Request) {
       package_name: product.name,
       clip_count: product.clip_count,
       amount: product.price,
-      currency: product.currency,
-      dana_partner_reference_no: partnerReference
+      currency: product.currency
     })
-    .select("id,order_code,amount,currency,package_name,clip_count")
+    .select("id,order_code,amount,currency,package_name,clip_count,created_at")
     .single();
   if (insertError || !order) {
     console.error("order_create_failed", { userId: user.id, code: insertError?.code });
     return NextResponse.json({ error: "Order tidak berhasil dibuat." }, { status: 500 });
   }
 
-  try {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-    if (!siteUrl) throw new Error("NEXT_PUBLIC_SITE_URL belum dikonfigurasi.");
-    const payment = await createDanaCheckout({
-      orderCode,
-      amount: order.amount,
-      description: `${order.package_name} LakuLokal`,
-      returnUrl: `${siteUrl.replace(/\/$/, "")}/payment/${encodeURIComponent(orderCode)}`
-    });
-    const { error: paymentError } = await admin.from("payments").insert({
-      order_id: order.id,
-      provider: "DANA",
-      provider_reference: payment.providerReference,
-      partner_reference: partnerReference,
-      amount: order.amount,
-      currency: order.currency,
-      qr_content: payment.qrContent,
-      expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
-    });
-    if (paymentError) throw new Error("Data pembayaran gagal disimpan.");
-    const { error: updateError } = await admin.from("orders").update({
-      dana_reference_no: payment.providerReference,
-      dana_qr_content: payment.qrContent
-    }).eq("id", order.id);
-    if (updateError) throw new Error("QR pembayaran gagal disimpan.");
-
-    return NextResponse.json({
-      order: { order_code: order.order_code, amount: order.amount, currency: order.currency },
-      payment: { qr_content: payment.qrContent }
-    }, { status: 201 });
-  } catch (error) {
+  const { error: paymentError } = await admin.from("payments").insert({
+    order_id: order.id,
+    provider: "MANUAL_QRIS",
+    provider_reference: `MANUAL_QRIS-${crypto.randomUUID()}`,
+    partner_reference: orderCode,
+    amount: order.amount,
+    currency: order.currency
+  });
+  if (paymentError) {
     const { error: updateError } = await admin.from("orders").update({
       payment_status: "FAILED",
-      error_message: "Pembuatan QR pembayaran gagal."
+      error_message: "Data pembayaran QRIS gagal disimpan."
     }).eq("id", order.id);
     if (updateError) console.error("order_payment_failure_update_failed", { orderId: order.id, code: updateError.code });
-    console.error("dana_qr_creation_failed", { orderId: order.id, message: error instanceof Error ? error.message : "unknown" });
+    console.error("manual_qris_payment_create_failed", { orderId: order.id, code: paymentError.code });
     return NextResponse.json({ error: "QR pembayaran gagal dibuat. Order tidak dapat dibayar." }, { status: 502 });
   }
+
+  return NextResponse.json({
+    order: {
+      order_code: order.order_code,
+      amount: order.amount,
+      currency: order.currency,
+      clip_count: order.clip_count,
+      created_at: order.created_at
+    }
+  }, { status: 201 });
 }

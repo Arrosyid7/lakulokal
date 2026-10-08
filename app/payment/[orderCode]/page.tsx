@@ -15,11 +15,16 @@ export default async function PaymentPage({ params }: { params: Promise<{ orderC
   const { orderCode } = await params;
   const { data: order, error } = await supabase
     .from("orders")
-    .select("id,order_code,amount,currency,clip_count,payment_status,processing_status,dana_qr_content,youtube_url")
+    .select("id,order_code,amount,currency,clip_count,payment_status,processing_status,created_at,dana_qr_content,youtube_url")
     .eq("order_code", orderCode)
     .maybeSingle();
   if (error) return <main className="container app-main"><p className="form-error">Informasi pembayaran gagal dimuat.</p></main>;
   if (!order) notFound();
+  const { data: payment, error: paymentError } = await supabase.from("payments")
+    .select("provider,qr_content")
+    .eq("order_id", order.id)
+    .maybeSingle();
+  if (paymentError) return <main className="container app-main"><p className="form-error">Metode pembayaran gagal dimuat.</p></main>;
   return (
     <main className="container app-main">
       <h1 className="page-title">Pembayaran order</h1>
@@ -34,7 +39,9 @@ export default async function PaymentPage({ params }: { params: Promise<{ orderC
           clipCount={order.clip_count}
           amount={order.amount}
           currency={order.currency}
-          qrContent={order.dana_qr_content}
+          orderCreatedAt={order.created_at}
+          paymentProvider={payment?.provider ?? "UNKNOWN"}
+          qrContent={payment?.qr_content ?? order.dana_qr_content}
           initialPaymentStatus={order.payment_status}
           initialProcessingStatus={order.processing_status}
         />

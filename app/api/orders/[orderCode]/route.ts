@@ -25,5 +25,17 @@ export async function GET(_request: Request, { params }: RouteContext) {
     ? await supabase.from("clips").select("id,clip_number,file_name,size_bytes,duration_seconds").eq("order_id", data.id).order("clip_number")
     : { data: [], error: null };
   if (clipsError) return NextResponse.json({ error: "Hasil clip gagal dimuat." }, { status: 500 });
-  return NextResponse.json({ order: data, progress: processing?.progress ?? 0, clips: clips ?? [] });
+  const { data: proof, error: proofError } = await supabase.from("payment_proofs")
+    .select("review_status,ocr_amount,ocr_transaction_date,review_note")
+    .eq("order_id", data.id)
+    .order("submitted_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (proofError) return NextResponse.json({ error: "Status bukti pembayaran gagal dimuat." }, { status: 500 });
+  return NextResponse.json({
+    order: data,
+    proof,
+    progress: processing?.progress ?? 0,
+    clips: clips ?? []
+  });
 }

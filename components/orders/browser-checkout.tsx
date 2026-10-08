@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { PaymentQrCode } from "@/components/orders/payment-qr-code";
+import { ReceiptProofForm } from "@/components/orders/receipt-proof-form";
 import {
   getClipRanges,
   MAX_BROWSER_VIDEO_DURATION_SECONDS,
@@ -16,7 +17,9 @@ type Props = {
   clipCount: number;
   amount: number;
   currency: string;
-  qrContent: string | null;
+  orderCreatedAt: string;
+  paymentProvider?: string;
+  qrContent?: string | null;
   initialPaymentStatus: string;
   initialProcessingStatus: string;
   initialFile?: File | null;
@@ -27,12 +30,16 @@ export function BrowserCheckout({
   clipCount,
   amount,
   currency,
-  qrContent,
+  orderCreatedAt,
+  paymentProvider = "MANUAL_QRIS",
+  qrContent = null,
   initialPaymentStatus,
   initialProcessingStatus,
   initialFile = null
 }: Props) {
   const [paymentStatus, setPaymentStatus] = useState(initialPaymentStatus);
+  const [proofStatus, setProofStatus] = useState<string | null>(null);
+  const [proofNote, setProofNote] = useState<string | null>(null);
   const [processingStatus, setProcessingStatus] = useState(initialProcessingStatus);
   const [file, setFile] = useState<File | null>(initialFile);
   const [duration, setDuration] = useState<number | null>(null);
@@ -56,6 +63,8 @@ export function BrowserCheckout({
         if (active) {
           setPaymentStatus(result.order.payment_status);
           setProcessingStatus(result.order.processing_status);
+          setProofStatus(result.proof?.review_status ?? null);
+          setProofNote(result.proof?.review_note ?? null);
           setStatusError("");
         }
       } catch (error) {
@@ -239,27 +248,62 @@ export function BrowserCheckout({
   }
 
   const money = new Intl.NumberFormat("id-ID", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
-  const canSelectFile = paymentStatus === "PAID" && !busy;
+  const manualQris = paymentProvider === "MANUAL_QRIS";
+  const canUseOrder = paymentStatus === "PAID" || (manualQris && (proofStatus === "SUBMITTED" || proofStatus === "REJECTED"));
+  const canSelectFile = canUseOrder && !busy;
 
   return (
     <section className="panel stack" aria-labelledby="checkout-title">
       <h2 id="checkout-title">Order {orderCode}</h2>
       <p><strong>Total: {money}</strong></p>
-      {paymentStatus === "PENDING" && qrContent && (
+      {paymentStatus === "PENDING" && (manualQris || (paymentProvider === "DANA" && qrContent)) && (
         <>
-          <PaymentQrCode value={qrContent} amount={money} />
-          <p aria-live="polite">Menunggu pembayaran QRIS. Halaman ini memeriksa status secara otomatis.</p>
+          <PaymentQrCode amount={money} value={manualQris ? null : qrContent} />
+          {manualQris ? <p>Bayar tepat sesuai nominal order ini. Setelah membayar, unggah bukti transaksi untuk pemeriksaan OCR.</p> : (
+            <p aria-live="polite">Menunggu pembayaran QRIS. Halaman ini memeriksa status transaksi secara otomatis.</p>
+          )}
+          {manualQris && proofStatus === "SUBMITTED" ? (
+            <p className="form-success" role="status">
+              Bukti sudah lolos penyaringan OCR dan menunggu pemeriksaan admin. Status pembayaran tetap menunggu konfirmasi.
+            </p>
+          ) : manualQris && proofStatus === "REJECTED" ? (
+            <div className="form-error" role="status">
+              <p>Bukti sebelumnya ditolak oleh admin. Periksa catatan, lalu unggah bukti pembayaran yang benar.</p>
+              {proofNote && <p>Catatan admin: {proofNote}</p>}
+            </div>
+          ) : manualQris ? (
+            <ReceiptProofForm
+              orderCode={orderCode}
+              amount={amount}
+              orderCreatedAt={orderCreatedAt}
+              onSubmitted={(proof) => setProofStatus(proof.status)}
+            />
+          ) : null}
+          {manualQris && proofStatus === "REJECTED" && (
+            <ReceiptProofForm
+              orderCode={orderCode}
+              amount={amount}
+              orderCreatedAt={orderCreatedAt}
+              onSubmitted={(proof) => setProofStatus(proof.status)}
+            />
+          )}
         </>
       )}
-      {paymentStatus === "PENDING" && !qrContent && (
-        <p className="form-error" role="alert">QRIS belum tersedia. Jangan membayar di luar halaman ini. Hubungi pengelola.</p>
+      {paymentStatus === "PENDING" && paymentProvider === "DANA" && !qrContent && (
+        <p className="form-error" role="alert">QR pembayaran lama tidak tersedia. Jangan membayar melalui QRIS lain. Hubungi pengelola.</p>
       )}
       {paymentStatus !== "PENDING" && (
         <p aria-live="polite">Status pembayaran: <strong>{paymentStatus}</strong></p>
       )}
-      {paymentStatus === "PAID" && (
+      {canUseOrder && (
         <div className="browser-clip-workspace">
-          <p>Pembayaran terverifikasi. Pilih file video untuk dibuat menjadi {clipCount} klip. File diproses di perangkat Anda dan tidak diunggah.</p>
+          {paymentStatus === "PAID" ? (
+            <p>Pembayaran sudah dikonfirmasi admin. Pilih file video untuk dibuat menjadi {clipCount} klip. File diproses di perangkat Anda dan tidak diunggah.</p>
+          ) : (
+            <p className="form-error" role="status">
+              Pembayaran belum dikonfirmasi admin. Kamu tetap dapat memproses dan mengunduh clip sekarang. OCR hanya membaca gambar, bukan memastikan dana masuk; jika bukti palsu atau transfer tidak ditemukan, layanan sudah terpakai sebelum pembayaran dikonfirmasi.
+            </p>
+          )}
           {processingStatus === "COMPLETED" && (
             <p className="form-success" role="status">Order ini sudah selesai. Hasil sebelumnya hanya tersimpan di perangkat saat itu. Pilih ulang video untuk membuat klip lagi tanpa membayar kembali.</p>
           )}

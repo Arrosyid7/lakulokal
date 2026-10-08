@@ -21,7 +21,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   const { orderCode } = await params;
   const { data: order, error: orderError } = await current.supabase
     .from("orders")
-    .select("id,payment_status,youtube_url")
+    .select("id,amount,payment_status,youtube_url")
     .eq("order_code", orderCode)
     .maybeSingle();
   if (orderError) {
@@ -30,7 +30,22 @@ export async function POST(request: Request, { params }: RouteContext) {
   }
   if (!order) return NextResponse.json({ error: "Order tidak ditemukan." }, { status: 404 });
   if (order.payment_status !== "PAID") {
-    return NextResponse.json({ error: "Pemrosesan hanya tersedia setelah pembayaran terverifikasi." }, { status: 409 });
+    const admin = createSupabaseAdminClient();
+    const { data: proof, error: proofError } = await admin.from("payment_proofs")
+      .select("id")
+      .eq("order_id", order.id)
+      .eq("ocr_amount", order.amount)
+      .in("review_status", ["SUBMITTED", "REJECTED"])
+      .order("submitted_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (proofError) {
+      console.error("browser_processing_proof_query_failed", { code: proofError.code });
+      return NextResponse.json({ error: "Status bukti pembayaran gagal diperiksa." }, { status: 500 });
+    }
+    if (!proof) {
+      return NextResponse.json({ error: "Kirim bukti pembayaran yang lolos penyaringan OCR sebelum memproses clip." }, { status: 409 });
+    }
   }
   if (order.youtube_url !== null) {
     return NextResponse.json({ error: "Order ini bukan order pemrosesan lokal." }, { status: 409 });

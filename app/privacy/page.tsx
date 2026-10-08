@@ -22,28 +22,28 @@ export default function PrivacyPage() {
     <main className="container app-main">
       <Link className="text-link" href="/">Kembali ke beranda</Link>
       <h1 className="page-title" style={{ marginTop: 18 }}>Kebijakan Privasi LakuLokal</h1>
-      <p className="page-lead">Kebijakan Privasi LakuLokal menjelaskan data akun, order, dan permintaan pengguna yang terkait dengan layanan clip video.</p>
-      <p className="page-lead">Terakhir diperbarui 7 Oktober 2026.</p>
+      <p className="page-lead">Kebijakan Privasi LakuLokal menjelaskan data akun, order, bukti pembayaran, dan permintaan pengguna yang terkait dengan layanan clip video.</p>
+      <p className="page-lead">Terakhir diperbarui 8 Oktober 2026.</p>
       <article className="panel stack">
         <section>
           <h2>Data yang digunakan</h2>
-          <p>LakuLokal menyimpan nama dan email akun, paket dan harga order, status pembayaran, referensi transaksi provider, serta status pemrosesan. File video dan clip tidak dikirim ke server LakuLokal.</p>
+          <p>LakuLokal menyimpan nama dan email akun, paket dan harga order, status pembayaran, referensi transaksi, status pemrosesan, serta gambar bukti pembayaran yang diunggah. File video dan clip tidak dikirim ke server LakuLokal.</p>
         </section>
         <section>
           <h2>Tujuan penggunaan</h2>
-          <p>Data digunakan untuk mengelola sesi akun, membuat dan menampilkan order milik pengguna, memverifikasi pembayaran, mencatat status proses browser, menjaga keamanan, dan menangani permintaan bantuan. Browser mengolah file pada perangkat pengguna.</p>
+          <p>Data digunakan untuk mengelola sesi akun, membuat dan menampilkan order milik pengguna, menyaring serta memeriksa bukti pembayaran, mencatat status proses browser, menjaga keamanan, dan menangani permintaan bantuan. Browser mengolah file video dan menjalankan OCR bukti pembayaran pada perangkat pengguna.</p>
         </section>
         <section>
           <h2>Penyedia layanan</h2>
           <p>
-            <a className="text-link" href="https://supabase.com/privacy" target="_blank" rel="noreferrer">Supabase</a> menyediakan autentikasi dan database. DANA memproses pembayaran QRIS.{" "}
+            <a className="text-link" href="https://supabase.com/privacy" target="_blank" rel="noreferrer">Supabase</a> menyediakan autentikasi, database, dan penyimpanan privat untuk bukti pembayaran. OCR berjalan di browser; gambar bukti kemudian dikirim ke Supabase agar admin dapat memeriksanya.{" "}
             <a className="text-link" href="https://vercel.com/legal/privacy-notice" target="_blank" rel="noreferrer">Vercel</a> menyajikan aplikasi web. Setiap penyedia menerima data yang diperlukan untuk menjalankan layanannya.
           </p>
-          <p>Password akun dikelola Supabase Auth dan tidak disimpan pada tabel aplikasi LakuLokal. Informasi pembayaran seperti nomor kartu atau kredensial dompet ditangani oleh provider pembayaran. LakuLokal menyimpan jumlah dan referensi transaksi untuk mencocokkan pembayaran dengan order.</p>
+          <p>Password akun dikelola Supabase Auth dan tidak disimpan pada tabel aplikasi LakuLokal. LakuLokal menggunakan QRIS statis dan pemeriksaan bukti oleh admin. Hasil OCR hanya membaca teks pada gambar dan bukan konfirmasi bahwa dana telah diterima.</p>
         </section>
         <section>
           <h2>Masa penyimpanan</h2>
-          <p>Riwayat akun dan order disimpan agar pengguna dapat mengakses dashboard. File video dan clip hanya berada di perangkat selama proses dan tidak tersedia kembali setelah halaman ditutup. Pengguna bertanggung jawab menyimpan file hasil unduhan.</p>
+          <p>Riwayat akun dan order disimpan agar pengguna dapat mengakses dashboard. Bukti pembayaran disimpan privat untuk pemeriksaan dan pencatatan transaksi. File video dan clip hanya berada di perangkat selama proses dan tidak tersedia kembali setelah halaman ditutup. Pengguna bertanggung jawab menyimpan file hasil unduhan.</p>
         </section>
         <section>
           <h2>Kontrol akses dan permintaan data</h2>

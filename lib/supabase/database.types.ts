@@ -133,6 +133,20 @@ type AuditLogRow = {
   created_at: string;
 };
 
+type PaymentProofRow = {
+  id: string;
+  payment_id: string;
+  order_id: string;
+  storage_path: string;
+  ocr_amount: number;
+  ocr_transaction_date: string;
+  review_status: "SUBMITTED" | "APPROVED" | "REJECTED";
+  submitted_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  review_note: string | null;
+};
+
 type RateLimitRow = {
   user_id: string;
   action: string;
@@ -160,6 +174,7 @@ export type Database = {
       payments: Table<PaymentRow, "order_id" | "provider_reference" | "partner_reference" | "amount">;
       processing_jobs: Table<ProcessingJobRow, "order_id">;
       clips: Table<ClipRow, "order_id" | "clip_number" | "storage_path" | "file_name" | "size_bytes">;
+      payment_proofs: Table<PaymentProofRow, "payment_id" | "order_id" | "storage_path" | "ocr_amount" | "ocr_transaction_date">;
       webhook_events: Table<WebhookEventRow, "provider" | "provider_event_id" | "event_type">;
       audit_logs: Table<AuditLogRow, "action" | "entity_type">;
       api_rate_limits: Table<RateLimitRow, "user_id" | "action" | "window_start">;
@@ -177,6 +192,10 @@ export type Database = {
       };
       update_browser_processing_status: {
         Args: { p_order_id: string; p_status: string; p_progress: number; p_error_message: string | null };
+        Returns: undefined;
+      };
+      review_manual_qris_payment: {
+        Args: { p_proof_id: string; p_decision: string; p_admin_user_id: string; p_note: string | null };
         Returns: undefined;
       };
     };

@@ -14,7 +14,7 @@ type CheckoutOrder = {
   clipCount: number;
   amount: number;
   currency: string;
-  qrContent: string;
+  createdAt: string;
 };
 
 export function OrderForm({ packages }: { packages: PackageOption[] }) {
@@ -82,7 +82,7 @@ export function OrderForm({ packages }: { packages: PackageOption[] }) {
         clipCount: result.order.clip_count,
         amount: result.order.amount,
         currency: result.order.currency,
-        qrContent: result.payment.qr_content
+        createdAt: result.order.created_at
       });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Order tidak dapat dibuat.");
@@ -98,7 +98,7 @@ export function OrderForm({ packages }: { packages: PackageOption[] }) {
         clipCount={checkout.clipCount}
         amount={checkout.amount}
         currency={checkout.currency}
-        qrContent={checkout.qrContent}
+        orderCreatedAt={checkout.createdAt}
         initialPaymentStatus="PENDING"
         initialProcessingStatus="WAITING_PAYMENT"
         initialFile={file}

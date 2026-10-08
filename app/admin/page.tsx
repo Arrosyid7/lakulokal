@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/auth";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { RetryOrderButton } from "@/components/dashboard/retry-order-button";
+import { ManualPaymentReview, type ManualPaymentReviewItem } from "@/components/admin/manual-payment-review";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -13,15 +15,61 @@ export default async function AdminPage() {
   const [
     { data: totals, error: statsError },
     { data: orders, error: ordersError },
-    { data: recentUsers, error: recentUsersError }
+    { data: recentUsers, error: recentUsersError },
+    { data: proofs, error: proofsError }
   ] = await Promise.all([
     supabase.rpc("admin_dashboard_stats").maybeSingle(),
     supabase.from("orders").select("id,order_code,user_id,youtube_url,package_name,amount,payment_status,processing_status,created_at").order("created_at", { ascending: false }).limit(20),
-    supabase.from("profiles").select("id,email,full_name,created_at").order("created_at", { ascending: false }).limit(8)
+    supabase.from("profiles").select("id,email,full_name,created_at").order("created_at", { ascending: false }).limit(8),
+    supabase.from("payment_proofs")
+      .select("id,order_id,storage_path,ocr_amount,ocr_transaction_date,submitted_at")
+      .eq("review_status", "SUBMITTED")
+      .order("submitted_at", { ascending: true })
+      .limit(50)
   ]);
   const error = statsError || ordersError || recentUsersError;
   const rows = orders ?? [];
   const stats = totals;
+  let paymentReviewError = proofsError !== null;
+  let reviewItems: ManualPaymentReviewItem[] = [];
+  if (proofs?.length) {
+    const orderIds = [...new Set(proofs.map((proof) => proof.order_id))];
+    const { data: proofOrders, error: proofOrdersError } = await supabase.from("orders")
+      .select("id,order_code,user_id,package_name,amount,currency")
+      .in("id", orderIds);
+    if (proofOrdersError) {
+      paymentReviewError = true;
+      console.error("admin_payment_proof_orders_load_failed", { code: proofOrdersError.code });
+    } else if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      paymentReviewError = true;
+    } else {
+      const ordersById = new Map((proofOrders ?? []).map((order) => [order.id, order]));
+      const storage = createSupabaseAdminClient().storage.from("payment-proofs");
+      const signedProofs = await Promise.all(proofs.map(async (proof) => {
+        const order = ordersById.get(proof.order_id);
+        if (!order) return null;
+        const { data: signed, error: signedError } = await storage.createSignedUrl(proof.storage_path, 120);
+        if (signedError || !signed?.signedUrl) {
+          console.error("admin_payment_proof_sign_failed", { proofId: proof.id, message: signedError?.message });
+          return null;
+        }
+        return {
+          id: proof.id,
+          orderCode: order.order_code,
+          userId: order.user_id,
+          packageName: order.package_name,
+          amount: order.amount,
+          currency: order.currency,
+          ocrAmount: proof.ocr_amount,
+          transactionDate: proof.ocr_transaction_date,
+          submittedAt: proof.submitted_at,
+          imageUrl: signed.signedUrl
+        };
+      }));
+      reviewItems = signedProofs.filter((item): item is ManualPaymentReviewItem => item !== null);
+      if (reviewItems.length !== proofs.length) paymentReviewError = true;
+    }
+  }
   const money = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
   return (
     <main className="container app-main">
@@ -38,6 +86,17 @@ export default async function AdminPage() {
             <Metric label="Gagal" value={stats?.failed_orders ?? 0} />
             <Metric label="Total clip" value={stats?.total_clips ?? 0} />
             <Metric label="Pendapatan terverifikasi" value={money.format(Number(stats?.revenue_idr ?? 0))} />
+          </section>
+          <section className="panel" style={{ marginTop: 18 }}>
+            <h2>Bukti QRIS menunggu pemeriksaan</h2>
+            <p className="page-lead">
+              Periksa mutasi rekening atau aplikasi merchant secara terpisah sebelum mengonfirmasi. OCR hanya menyaring teks pada gambar. Pengguna dapat mengunduh clip sebelum pemeriksaan selesai.
+            </p>
+            {paymentReviewError ? (
+              <p className="form-error" role="alert">Bukti pembayaran gagal dimuat. Periksa migrasi bukti QRIS, storage privat, dan konfigurasi server.</p>
+            ) : (
+              <ManualPaymentReview initialItems={reviewItems} />
+            )}
           </section>
           <section className="panel" style={{ marginTop: 18 }}>
             <h2>Order terbaru</h2>

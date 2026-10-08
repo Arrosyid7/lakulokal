@@ -12,6 +12,11 @@ export default async function OrderDetailPage({ params }: PageProps) {
   const { data: order, error } = await supabase.from("orders").select("*").eq("order_code", orderCode).maybeSingle();
   if (error) return <main className="container app-main"><p className="form-error">Detail order gagal dimuat.</p></main>;
   if (!order) notFound();
+  const { data: payment, error: paymentError } = await supabase.from("payments")
+    .select("provider,qr_content")
+    .eq("order_id", order.id)
+    .maybeSingle();
+  if (paymentError) return <main className="container app-main"><p className="form-error">Metode pembayaran gagal dimuat.</p></main>;
   const { data: clips, error: clipsError } = order.processing_status === "COMPLETED"
     ? await supabase.from("clips").select("id,clip_number,file_name,size_bytes,duration_seconds").eq("order_id", order.id).order("clip_number")
     : { data: [], error: null };
@@ -27,7 +32,9 @@ export default async function OrderDetailPage({ params }: PageProps) {
           clipCount={order.clip_count}
           amount={order.amount}
           currency={order.currency}
-          qrContent={order.dana_qr_content}
+          orderCreatedAt={order.created_at}
+          paymentProvider={payment?.provider ?? "UNKNOWN"}
+          qrContent={payment?.qr_content ?? order.dana_qr_content}
           initialPaymentStatus={order.payment_status}
           initialProcessingStatus={order.processing_status}
         />

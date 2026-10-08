@@ -23,7 +23,7 @@ export default function TermsPage() {
       <Link className="text-link" href="/">Kembali ke beranda</Link>
       <h1 className="page-title" style={{ marginTop: 18 }}>Syarat Layanan LakuLokal</h1>
       <p className="page-lead">Syarat Layanan LakuLokal menjelaskan order clip video, pembayaran, tanggung jawab pengguna, dan penyimpanan hasil.</p>
-      <p className="page-lead">Berlaku mulai 7 Oktober 2026.</p>
+      <p className="page-lead">Berlaku mulai 8 Oktober 2026.</p>
       <article className="panel stack">
         <section>
           <h2>Tentang layanan</h2>
@@ -31,7 +31,8 @@ export default function TermsPage() {
         </section>
         <section>
           <h2>Order dan pembayaran</h2>
-          <p>Paket dan harga yang berlaku ditampilkan saat membuat order. Server mengambil harga dari paket aktif di database. Pembayaran menggunakan QRIS DANA dan hanya diproses setelah server memverifikasi status transaksi dari provider.</p>
+          <p>Paket dan harga yang berlaku ditampilkan saat membuat order. Server mengambil harga dari paket aktif di database. Pembayaran dilakukan melalui QRIS statis. Pengguna mengunggah gambar bukti, OCR menyaring nominal dan tanggal, lalu admin memeriksa dana masuk secara terpisah. OCR tidak memastikan transaksi berhasil.</p>
+          <p>Setelah bukti lolos penyaringan OCR, pengguna dapat memproses dan mengunduh clip sebelum pemeriksaan admin selesai. Jika dana tidak diterima atau bukti ditolak, layanan mungkin sudah digunakan. Status pembayaran baru menjadi lunas setelah admin mengonfirmasi transaksi.</p>
           <p>Jika pembayaran berhasil tetapi hasil tidak dapat disediakan karena kesalahan sistem, permintaan pengembalian dana dapat diajukan dalam 24 jam melalui <a className="text-link" href="mailto:halo@lakulokal.id">halo@lakulokal.id</a>. Pengajuan akan diperiksa berdasarkan catatan transaksi.</p>
         </section>
         <section>

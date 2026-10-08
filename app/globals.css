@@ -304,6 +304,14 @@ button { color: inherit; }
 .browser-downloads { display: flex; flex-wrap: wrap; gap: 10px; }
 .browser-downloads h3 { width: 100%; margin: 0; color: var(--purple-deep); font-family: var(--font-display); font-size: 1.2rem; }
 .browser-downloads .button { min-height: 44px; }
+.payment-review-list { display: grid; gap: 24px; }
+.payment-review-item { display: grid; grid-template-columns: minmax(200px, .7fr) minmax(0, 1.3fr); gap: 24px; border-top: 1px solid var(--line); padding-top: 22px; }
+.payment-review-evidence { align-self: start; border: 1px solid var(--line); border-radius: 8px; padding: 8px; background: var(--soft); }
+.payment-review-evidence img { display: block; width: 100%; height: auto; }
+.payment-review-item h3, .payment-review-item p { margin: 0; }
+.payment-review-item .form-error p + p { margin-top: 8px; }
+.payment-review-item .row { justify-content: flex-start; }
+.payment-review-item .button { min-height: 44px; }
 
 @media (max-width: 920px) {
   .hero { grid-template-columns: minmax(0, 1fr) minmax(270px, .72fr); gap: 42px; }
@@ -330,6 +338,7 @@ button { color: inherit; }
   .app-nav-links.app-nav-links-open { display: flex; }
   .app-nav-links > a, .app-nav-links > button { justify-content: flex-start; }
   .order-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .payment-review-item { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 18px; }
 }
 @media (max-width: 680px) {
   .container { width: min(100% - 32px, 1160px); }
@@ -375,6 +384,10 @@ button { color: inherit; }
   .form-grid { grid-template-columns: 1fr; }
   .form-grid .wide { grid-column: auto; }
   .order-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .payment-review-item { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .payment-review-evidence { width: min(100%, 360px); }
+  .payment-review-item .row { align-items: stretch; flex-direction: column; }
+  .payment-review-item .button { width: 100%; }
   .profile-layout, .new-order-layout { grid-template-columns: 1fr; }
   .profile-note { margin-top: 8px; }
   .recent-order { align-items: flex-start; flex-direction: column; }
