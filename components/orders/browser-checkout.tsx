@@ -343,9 +343,6 @@ export function BrowserCheckout({
         <>
           <PaymentQrCode amount={money} />
           <p>Bayar tepat sesuai nominal order ini, lalu unggah bukti transaksi. Nominal dan tanggal yang cocok menurut OCR akan menyetujui order secara otomatis.</p>
-          {proofStatus === "SUBMITTED" && (
-            <p className="form-success" role="status">Bukti sebelumnya menunggu pemeriksaan admin. Anda tetap dapat memproses clip, tetapi OCR tidak memastikan dana masuk.</p>
-          )}
           {proofStatus === "REJECTED" && (
             <div className="form-error" role="status">
               <p>Bukti sebelumnya ditolak oleh admin. Periksa catatan, lalu unggah bukti pembayaran yang benar.</p>
@@ -380,8 +377,8 @@ export function BrowserCheckout({
           ) : paymentStatus === "PAID" ? (
             <p>Pembayaran sudah dikonfirmasi. Pilih file video untuk dibuat menjadi {clipCount} klip. Video sumber diproses di perangkat Anda, sedangkan clip hasil disimpan di riwayat order selama 24 jam.</p>
           ) : (
-            <p className="form-error" role="status">
-              Bukti QRIS belum disetujui admin. Anda tetap dapat memproses dan mengunduh clip sekarang. OCR hanya membaca gambar, bukan memastikan dana masuk.
+            <p className="checkout-status-line" role="status">
+              Anda tetap dapat memproses dan mengunduh clip sekarang. OCR mencocokkan nominal dan tanggal pada bukti, tetapi tidak memastikan dana masuk.
             </p>
           )}
           {showClipRun && (

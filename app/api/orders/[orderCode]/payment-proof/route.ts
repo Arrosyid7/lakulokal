@@ -99,7 +99,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ ord
     return NextResponse.json({ error: "Status bukti sebelumnya gagal diperiksa." }, { status: 500 });
   }
   if (previousProof?.review_status === "SUBMITTED") {
-    return NextResponse.json({ error: "Bukti pembayaran sudah menunggu pemeriksaan admin." }, { status: 409 });
+    return NextResponse.json({ error: "Bukti pembayaran untuk order ini sudah tercatat." }, { status: 409 });
   }
 
   const orderDate = formatJakartaDate(new Date(order.created_at));
