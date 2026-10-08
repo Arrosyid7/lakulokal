@@ -48,7 +48,7 @@ File video diproses secara lokal dengan FFmpeg WebAssembly. Format yang diterima
 
 Video sumber tidak diunggah ke server. Setiap clip ditampilkan segera setelah selesai, lalu file clip disimpan di Supabase Storage privat dan catatannya di database sampai 24 jam setelah pemrosesan berakhir. Endpoint hasil menolak akses setelah batas 24 jam. Vercel Cron menghapus file serta catatan yang kedaluwarsa setiap hari; penghapusan fisik dapat menyusul hingga sekitar 24 jam setelah hasil tidak lagi bisa diakses. Browser harus tetap terbuka selama pemrosesan; hasil dapat gagal jika perangkat kehabisan memori atau browser tidak mendukung WebAssembly. Aplikasi menyajikan file FFmpeg dari domain sendiri, bukan mengambilnya dari CDN saat pengguna membuat klip.
 
-Panel admin tersedia untuk akun dengan role `ADMIN` di `profiles`. Panel ini mengelola teks dan metadata landing page, artikel beserta checklist SEO bergaya Yoast, tautan Instagram/Facebook/TikTok, serta daftar transaksi. Checklist SEO dibuat di aplikasi, bukan integrasi plugin Yoast WordPress.
+Panel admin dibuka dari `/admin` dan memakai halaman masuk khusus di `/admin-login`, terpisah dari login serta pendaftaran pengguna. Buat satu akun admin dari Supabase Dashboard pada Authentication > Users, lalu tetapkan role `ADMIN` untuk profil akun tersebut melalui SQL Editor. Database membatasi hanya satu profil admin; aplikasi tidak menyediakan pendaftaran admin. Admin menggunakan email dan password yang ditetapkan saat akun Auth dibuat. Panel mengelola teks dan metadata landing page, artikel beserta checklist SEO bergaya Yoast, tautan Instagram/Facebook/TikTok, serta daftar transaksi. Checklist SEO dibuat di aplikasi, bukan integrasi plugin Yoast WordPress.
 
 Paket `@ffmpeg/core` menggunakan lisensi GPL-2.0-or-later. Lihat lisensi paket dan sumber FFmpeg sebelum mendistribusikan aplikasi.
 
@@ -59,7 +59,18 @@ Paket `@ffmpeg/core` menggunakan lisensi GPL-2.0-or-later. Lihat lisensi paket d
 3. Pastikan `npm install`/`npm ci` menjalankan `postinstall`, sehingga aset FFmpeg tersedia di `public/ffmpeg/` saat build.
 4. Aktifkan Vercel Cron untuk rekonsiliasi pembayaran dan pembersihan hasil lama, lalu isi `CRON_SECRET`. Kedua cron berjalan sekali sehari agar sesuai dengan batas jadwal plan Vercel Hobby.
 5. Terapkan migration baru, pastikan bucket `payment-proofs` dan `lakulokal-results` privat, dan verifikasi file QRIS yang dipasang sebelum melayani order.
-6. Uji unggah bukti, penyaringan OCR, pemeriksaan admin, pemrosesan browser, pratinjau clip bertahap, penghapusan setelah masa simpan, panel admin, dan tampilan mobile.
+6. Buat user Auth admin di Supabase Dashboard, lalu jalankan SQL berikut dengan email yang dipakai admin:
+
+   ```sql
+   update public.profiles p
+   set role = 'ADMIN'
+   from auth.users u
+   where p.id = u.id
+     and lower(u.email) = lower('email-admin@example.com');
+   ```
+
+   Pastikan query memperbarui satu profil. Buka `/admin` dan masuk dengan email serta password akun Auth tersebut. Jangan buat admin kedua.
+7. Uji unggah bukti, penyaringan OCR, pemeriksaan admin, pemrosesan browser, pratinjau clip bertahap, penghapusan setelah masa simpan, panel admin, dan tampilan mobile.
 
 Vercel menyajikan aplikasi dan aset FFmpeg. Pemrosesan video menggunakan CPU serta memori perangkat pengguna, bukan server.
 

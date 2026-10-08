@@ -6,7 +6,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
-type AuthFormProps = { mode: "login" | "register" | "forgot" | "reset" };
+type AuthFormProps = { mode: "login" | "admin" | "register" | "forgot" | "reset" };
 
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
@@ -55,6 +55,30 @@ export function AuthForm({ mode }: AuthFormProps) {
         const safeNext = next?.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
         router.replace(safeNext);
         router.refresh();
+      } else if (mode === "admin") {
+        if (!email || !password) throw new Error("Email dan password wajib diisi.");
+        const supabase = createSupabaseBrowserClient();
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw new Error("Email atau password admin tidak cocok.");
+        let response: Response;
+        try {
+          response = await fetch("/api/auth/admin-access", { method: "POST" });
+        } catch (error) {
+          await supabase.auth.signOut();
+          throw error;
+        }
+        if (!response.ok) {
+          await supabase.auth.signOut();
+          throw new Error(response.status === 403
+            ? "Akun ini tidak memiliki akses admin."
+            : "Akses admin gagal diverifikasi. Silakan coba lagi.");
+        }
+        const next = new URLSearchParams(window.location.search).get("next");
+        const safeNext = next === "/admin" || next?.startsWith("/admin/")
+          ? next
+          : "/admin";
+        router.replace(safeNext);
+        router.refresh();
       } else if (mode === "forgot") {
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Masukkan alamat email yang valid.");
         const supabase = createSupabaseBrowserClient();
@@ -84,18 +108,21 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   const title = {
     login: "Masuk ke akun",
+    admin: "Masuk admin",
     register: "Buat akun LakuLokal",
     forgot: "Pulihkan akses akun",
     reset: "Buat password baru"
   }[mode];
   const descriptions = {
     login: "Masuk untuk mengelola order dan melihat status pembayaran.",
+    admin: "Gunakan email dan password khusus administrator.",
     register: "Gunakan email aktif untuk membuat dan melihat order.",
     forgot: "Masukkan email akun. Kami akan mengirim tautan pemulihan bila alamat terdaftar.",
     reset: "Gunakan password baru dengan panjang minimal 8 karakter."
   }[mode];
   const asideCopy = {
     login: "Lanjutkan mengelola order dan pembayaran. File video dan clip tetap berada di perangkat Anda.",
+    admin: "Kelola transaksi, konten landing page, artikel, dan pengaturan sosial.",
     register: "Buat akun untuk membuat order dan menyimpan riwayat pembayaran. Video diproses di perangkat Anda.",
     forgot: "Akses akun Anda kembali melalui instruksi pemulihan yang dikirim ke email.",
     reset: "Perbarui password untuk menjaga akses ke akun dan riwayat order."
@@ -113,7 +140,11 @@ export function AuthForm({ mode }: AuthFormProps) {
               <h2>Video panjang jadi <em>clip</em> yang mudah dikelola.</h2>
               <p>{asideCopy}</p>
             </div>
-            <p className="auth-aside-foot">Akun menyimpan riwayat order. Clip hasil tersedia selama 24 jam setelah proses selesai.</p>
+            <p className="auth-aside-foot">
+              {mode === "admin"
+                ? "Akses ini hanya untuk akun admin yang dibuat oleh pemilik proyek."
+                : "Akun menyimpan riwayat order. Clip hasil tersedia selama 24 jam setelah proses selesai."}
+            </p>
           </aside>
           <section className="auth-card" aria-labelledby="auth-title">
             <Link className="text-link auth-back" href="/">Kembali ke beranda</Link>
@@ -126,22 +157,22 @@ export function AuthForm({ mode }: AuthFormProps) {
                   <input id="full_name" name="full_name" autoComplete="name" required maxLength={120} />
                 </div>
               )}
-              {(mode === "register" || mode === "login" || mode === "forgot") && (
+              {(mode === "register" || mode === "login" || mode === "admin" || mode === "forgot") && (
                 <div className="field">
                   <label htmlFor="email">Email</label>
                   <input id="email" name="email" type="email" autoComplete="email" required />
                 </div>
               )}
-              {(mode === "login" || mode === "register" || mode === "reset") && (
+              {(mode === "login" || mode === "admin" || mode === "register" || mode === "reset") && (
                 <div className="field">
                   <label htmlFor="password">Password</label>
                   <input
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    autoComplete={mode === "login" ? "current-password" : "new-password"}
+                    autoComplete={mode === "login" || mode === "admin" ? "current-password" : "new-password"}
                     required
-                    minLength={mode === "login" ? undefined : 8}
+                    minLength={mode === "login" || mode === "admin" ? undefined : 8}
                   />
                   <button
                     className="text-link"
@@ -171,6 +202,7 @@ export function AuthForm({ mode }: AuthFormProps) {
               <button className="button" type="submit" disabled={busy}>
                 {busy ? "Memproses..." : ({
                   login: "Masuk",
+                  admin: "Masuk ke panel admin",
                   register: "Buat akun",
                   forgot: "Kirim tautan pemulihan",
                   reset: "Simpan password baru"
@@ -179,6 +211,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             </form>
             <div className="auth-foot">
               {mode === "login" && <>Belum punya akun? <Link className="text-link" href="/register">Buat akun</Link><br /><Link className="text-link" href="/forgot-password">Lupa password?</Link></>}
+              {mode === "admin" && <>Kredensial admin dikelola terpisah dari akun pengguna.</>}
               {mode === "register" && <>Sudah punya akun? <Link className="text-link" href="/login">Masuk</Link><br />Dengan mendaftar, Anda menyetujui <Link className="text-link" href="/terms">Syarat Layanan</Link> dan <Link className="text-link" href="/privacy">Kebijakan Privasi</Link>.</>}
               {mode === "forgot" && <Link className="text-link" href="/login">Kembali ke halaman masuk</Link>}
               {mode === "reset" && <Link className="text-link" href="/login">Kembali ke halaman masuk</Link>}
