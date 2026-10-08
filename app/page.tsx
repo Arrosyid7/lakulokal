@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Suspense } from "react";
 import { PublicNavigation } from "@/components/public-navigation";
+import { ProcessCarousel } from "@/components/process-carousel";
 import { SiteFooter } from "@/components/site-footer";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { absoluteUrl } from "@/lib/site";
@@ -165,6 +166,7 @@ export default function HomePage() {
             />
           </div>
         </section>
+        <div className="home-cut-divider container" aria-hidden="true"><span /></div>
 
         <section className="section process-section" id="cara-kerja">
           <div className="container process-layout">
@@ -173,26 +175,10 @@ export default function HomePage() {
               <h2>Cara kerja clip video.</h2>
               <p>Akun mencatat order dan pembayaran. File video tetap berada di perangkat Anda.</p>
             </div>
-            <ol className="process-steps">
-              <li>
-                <Image className="process-step-character" src="/brand/characters/creator-hijab-phone.png" alt="" aria-hidden="true" width={207} height={364} />
-                <div className="process-step-copy"><span className="step-number">01</span><h3>Masuk atau buat akun</h3><p>Gunakan akun untuk membuat order dan menyimpan riwayat pribadi.</p></div>
-              </li>
-              <li>
-                <Image className="process-step-character" src="/brand/characters/creator-camera.png" alt="" aria-hidden="true" width={312} height={355} />
-                <div className="process-step-copy"><span className="step-number">02</span><h3>Pilih file dan paket</h3><p>Pilih video dari perangkat. Browser membaca file secara lokal.</p></div>
-              </li>
-              <li>
-                <Image className="process-step-character" src="/brand/characters/creator-mobile-phone.png" alt="" aria-hidden="true" width={211} height={353} />
-                <div className="process-step-copy"><span className="step-number">03</span><h3>Selesaikan pembayaran</h3><p>Pindai QRIS DANA. Order diproses setelah pembayaran diverifikasi.</p></div>
-              </li>
-              <li>
-                <Image className="process-step-character" src="/brand/characters/creator-seated-editor.png" alt="" aria-hidden="true" width={324} height={371} />
-                <div className="process-step-copy"><span className="step-number">04</span><h3>Buat dan unduh clip</h3><p>Biarkan halaman terbuka sampai clip siap diunduh ke perangkat.</p></div>
-              </li>
-            </ol>
+            <ProcessCarousel />
           </div>
         </section>
+        <div className="home-cut-divider container" aria-hidden="true"><span /></div>
 
         <section className="section pricing-section" id="harga">
           <div className="container pricing-layout">
@@ -219,6 +205,7 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+        <div className="home-cut-divider container" aria-hidden="true"><span /></div>
 
         <section className="section faq-section" id="faq">
           <div className="container faq-layout">
@@ -243,6 +230,7 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+        <div className="home-cut-divider container" aria-hidden="true"><span /></div>
       </main>
 
       <SiteFooter contactId="kontak" />
