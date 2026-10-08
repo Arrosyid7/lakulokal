@@ -74,23 +74,38 @@ export default async function AdminPage() {
   const money = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 });
   return (
     <main className="container app-main">
-      <h1 className="page-title">Admin LakuLokal</h1>
-      <p className="page-lead">Ringkasan ini hanya tersedia untuk akun dengan role ADMIN yang tersimpan di profiles.</p>
+      <div className="admin-page-heading">
+        <p className="section-kicker">RINGKASAN</p>
+        <h1 className="page-title">Admin LakuLokal</h1>
+        <p className="page-lead">Pantau order, pembayaran, dan aktivitas terbaru dari satu tempat.</p>
+      </div>
       {error ? <p className="form-error" role="alert">Data admin gagal dimuat.</p> : (
         <>
-          <section className="stats-grid" aria-label="Statistik admin">
-            <Metric label="Total user" value={stats?.total_users ?? 0} />
-            <Metric label="Total order" value={stats?.total_orders ?? 0} />
-            <Metric label="Pembayaran PAID" value={stats?.paid_orders ?? 0} />
-            <Metric label="Sedang diproses" value={stats?.processing_orders ?? 0} />
-            <Metric label="Selesai" value={stats?.completed_orders ?? 0} />
-            <Metric label="Gagal" value={stats?.failed_orders ?? 0} />
-            <Metric label="Total clip" value={stats?.total_clips ?? 0} />
-            <Metric label="Pendapatan terverifikasi" value={money.format(Number(stats?.revenue_idr ?? 0))} />
+          <section className="admin-overview" aria-label="Statistik admin">
+            <article className="admin-revenue">
+              <p>Pendapatan terverifikasi</p>
+              <strong>{money.format(Number(stats?.revenue_idr ?? 0))}</strong>
+              <span>Dari pembayaran yang sudah dikonfirmasi</span>
+            </article>
+            <div className="admin-overview-metrics">
+              <Metric label="Total order" value={stats?.total_orders ?? 0} />
+              <Metric label="Total user" value={stats?.total_users ?? 0} />
+              <Metric label="Pembayaran PAID" value={stats?.paid_orders ?? 0} />
+              <Metric label="Sedang diproses" value={stats?.processing_orders ?? 0} />
+              <Metric label="Selesai" value={stats?.completed_orders ?? 0} />
+              <Metric label="Gagal" value={stats?.failed_orders ?? 0} />
+              <Metric label="Total clip" value={stats?.total_clips ?? 0} />
+            </div>
           </section>
-          <section className="panel" style={{ marginTop: 18 }}>
-            <h2>Bukti QRIS menunggu pemeriksaan</h2>
-            <p className="page-lead">
+          <section className="panel admin-content-panel">
+            <div className="admin-section-heading">
+              <div>
+                <p className="section-kicker">PEMBAYARAN</p>
+                <h2>Bukti QRIS menunggu pemeriksaan</h2>
+              </div>
+              {!paymentReviewError && <span className="admin-count">{reviewItems.length} menunggu</span>}
+            </div>
+            <p className="admin-section-description">
               Periksa mutasi rekening atau aplikasi merchant secara terpisah sebelum mengonfirmasi. OCR hanya menyaring teks pada gambar. Pengguna dapat mengunduh clip sebelum pemeriksaan selesai.
             </p>
             {paymentReviewError ? (
@@ -99,9 +114,12 @@ export default async function AdminPage() {
               <ManualPaymentReview initialItems={reviewItems} />
             )}
           </section>
-          <section className="panel" style={{ marginTop: 18 }}>
+          <section className="panel admin-content-panel">
             <div className="row">
-              <h2>Order terbaru</h2>
+              <div>
+                <p className="section-kicker">AKTIVITAS</p>
+                <h2>Order terbaru</h2>
+              </div>
               <Link className="text-link" href="/admin/transaksi">Lihat semua transaksi</Link>
             </div>
             {!rows.length ? <p className="empty-state">Belum ada order.</p> : (
@@ -115,8 +133,11 @@ export default async function AdminPage() {
               </div>
             )}
           </section>
-          <section className="panel" style={{ marginTop: 18 }}>
-            <h2>User terbaru</h2>
+          <section className="panel admin-content-panel">
+            <div>
+              <p className="section-kicker">AKUN</p>
+              <h2>User terbaru</h2>
+            </div>
             {!recentUsers?.length ? <p className="empty-state">Belum ada user.</p> : (
               <div className="table-wrap">
                 <table className="data-table">
@@ -135,5 +156,5 @@ export default async function AdminPage() {
 }
 
 function Metric({ label, value }: { label: string; value: string | number }) {
-  return <article className="stat"><div className="stat-label">{label}</div><div className="stat-value">{value}</div></article>;
+  return <article className="admin-overview-metric"><div>{label}</div><strong>{value}</strong></article>;
 }
