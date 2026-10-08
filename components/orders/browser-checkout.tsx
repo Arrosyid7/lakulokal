@@ -204,9 +204,11 @@ export function BrowserCheckout({
     setDownloads([]);
     progressRef.current = 0;
     let ffmpeg: import("@ffmpeg/ffmpeg").FFmpeg | null = null;
+    let processingStarted = false;
 
     try {
       await updateServerStatus("PROCESSING", 1);
+      processingStarted = true;
       setStage("Memuat pemroses video...");
       const { FFmpeg } = await import("@ffmpeg/ffmpeg");
       ffmpeg = new FFmpeg();
@@ -305,12 +307,16 @@ export function BrowserCheckout({
     } catch (error) {
       const message = (error instanceof Error ? error.message : "Pemrosesan video gagal.").slice(0, 400);
       setStage("");
-      try {
-        await updateServerStatus("FAILED", progress, message);
+      if (!processingStarted) {
         setStatusError(message);
-      } catch (statusError) {
-        const saveError = statusError instanceof Error ? statusError.message : "Status gagal disimpan.";
-        setStatusError(`${message} ${saveError}`);
+      } else {
+        try {
+          await updateServerStatus("FAILED", progress, message);
+          setStatusError(message);
+        } catch (statusError) {
+          const saveError = statusError instanceof Error ? statusError.message : "Status gagal disimpan.";
+          setStatusError(message === saveError ? message : `${message} ${saveError}`);
+        }
       }
     } finally {
       ffmpeg?.terminate();

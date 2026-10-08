@@ -1,24 +1,3 @@
-alter table public.orders
-  add column if not exists result_expires_at timestamptz,
-  add column if not exists results_deleted_at timestamptz;
-
-alter table public.processing_jobs
-  add column if not exists finished_at timestamptz,
-  add column if not exists updated_at timestamptz not null default now();
-
-update public.orders
-set result_expires_at = processing_completed_at + interval '24 hours'
-where processing_status = 'COMPLETED'
-  and processing_completed_at is not null
-  and result_expires_at is null;
-
-alter table public.clips
-  add column if not exists upload_status text not null default 'READY'
-  check (upload_status in ('UPLOADING', 'READY', 'FAILED'));
-
-create unique index if not exists clips_order_clip_number_unique
-  on public.clips (order_id, clip_number);
-
 create or replace function public.update_browser_processing_status(
   p_order_id uuid,
   p_status text,
