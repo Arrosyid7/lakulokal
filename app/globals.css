@@ -317,7 +317,8 @@ button { color: inherit; }
 .seo-check-pending span:first-child { color: var(--error); }
 .admin-publish-toggle { width: fit-content; min-height: 44px; display: inline-flex; align-items: center; gap: 10px; font-weight: 700; }
 .admin-publish-toggle input { width: 20px; height: 20px; }
-.admin-transaction-filters { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(180px, .7fr) auto; align-items: end; gap: 14px; margin-bottom: 22px; }
+.admin-transaction-filters { display: grid; grid-template-columns: minmax(190px, 1.2fr) minmax(150px, .85fr) minmax(160px, .85fr) minmax(145px, .65fr) minmax(145px, .65fr) auto; align-items: end; gap: 14px; margin-bottom: 22px; }
+.admin-proof-filters { grid-template-columns: repeat(3, minmax(0, 1fr)) auto; }
 .admin-pagination { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding-top: 20px; }
 .admin-pagination > span { color: var(--muted); text-align: center; }
 .profile-layout, .new-order-layout { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(240px, .8fr); align-items: start; gap: 22px; }
@@ -836,6 +837,9 @@ button { color: inherit; }
   .admin-shell-content > .app-main { width: min(100% - 44px, 1360px); }
   .admin-overview { grid-template-columns: minmax(200px, .75fr) minmax(0, 1.6fr); }
   .admin-overview-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-transaction-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-transaction-filters .button { grid-column: 1 / -1; }
+  .admin-proof-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 760px) {
   .admin-shell { display: block; }

@@ -3,8 +3,10 @@ import { requireAdmin } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { RetryOrderButton } from "@/components/dashboard/retry-order-button";
 import { ManualPaymentReview, type ManualPaymentReviewItem } from "@/components/admin/manual-payment-review";
+import { AdminDateFilterFields } from "@/components/admin/admin-date-filter-fields";
 import Link from "next/link";
 import { isCreditClipRun, isCreditPurchase } from "@/lib/credits";
+import { adminDatePeriods, resolveAdminDateRange } from "@/lib/admin-date-range";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -12,9 +14,26 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true }
 };
 
-export default async function AdminPage() {
+type PageProps = {
+  searchParams: Promise<{ period?: string; from?: string; to?: string }>;
+};
+
+export default async function AdminPage({ searchParams }: PageProps) {
   const { supabase } = await requireAdmin();
   const admin = createSupabaseAdminClient();
+  const search = await searchParams;
+  const periodFilter = adminDatePeriods.find((period) => period === search.period) ?? "all";
+  const fromDate = search.from ?? "";
+  const toDate = search.to ?? "";
+  const dateResult = resolveAdminDateRange(periodFilter, fromDate, toDate);
+  let proofsQuery = admin.from("payment_proofs")
+    .select("id,order_id,storage_path,ocr_amount,ocr_transaction_date,submitted_at")
+    .eq("review_status", "SUBMITTED")
+    .order("submitted_at", { ascending: false })
+    .limit(50);
+  if (dateResult.range) {
+    proofsQuery = proofsQuery.gte("submitted_at", dateResult.range.from).lt("submitted_at", dateResult.range.to);
+  }
   const [
     { data: totals, error: statsError },
     { data: orders, error: ordersError },
@@ -24,11 +43,7 @@ export default async function AdminPage() {
     supabase.rpc("admin_dashboard_stats").maybeSingle(),
     admin.from("orders").select("id,order_code,user_id,youtube_url,package_name,clip_count,amount,payment_status,processing_status,created_at,metadata").order("created_at", { ascending: false }).limit(20),
     admin.from("profiles").select("id,email,full_name,created_at").order("created_at", { ascending: false }).limit(8),
-    admin.from("payment_proofs")
-      .select("id,order_id,storage_path,ocr_amount,ocr_transaction_date,submitted_at")
-      .eq("review_status", "SUBMITTED")
-      .order("submitted_at", { ascending: true })
-      .limit(50)
+    dateResult.error ? Promise.resolve({ data: null, error: null }) : proofsQuery
   ]);
   const rows = orders ?? [];
   const rowOrderIds = rows.map((order) => order.id);
@@ -39,7 +54,7 @@ export default async function AdminPage() {
   const autoApprovedOrderIds = new Set((autoApprovedProofs ?? []).map((proof) => proof.order_id));
   const error = ordersError || recentUsersError || autoApprovalError;
   const stats = totals;
-  let paymentReviewError = proofsError !== null;
+  let paymentReviewError = dateResult.error !== null || proofsError !== null;
   let reviewItems: ManualPaymentReviewItem[] = [];
   if (proofs?.length) {
     const orderIds = [...new Set(proofs.map((proof) => proof.order_id))];
@@ -115,10 +130,22 @@ export default async function AdminPage() {
               {!paymentReviewError && <span className="admin-count">{reviewItems.length} menunggu</span>}
             </div>
             <p className="admin-section-description">
-            Cocokkan setiap bukti dengan transaksi pada rekening atau aplikasi merchant. Kredit baru masuk ke saldo pengguna setelah pembayaran disetujui.
+              Bukti terbaru berada di urutan atas. Cocokkan dengan transaksi pada rekening atau aplikasi merchant sebelum menyetujui.
             </p>
+            <form className="admin-transaction-filters admin-proof-filters" action="/admin" aria-label="Filter tanggal bukti pembayaran">
+              <AdminDateFilterFields
+                idPrefix="payment-proof"
+                period={periodFilter}
+                fromDate={fromDate}
+                toDate={toDate}
+                periodLabel="Tanggal bukti dikirim"
+              />
+              <button className="button button-accent" type="submit">Tampilkan bukti</button>
+            </form>
             {paymentReviewError ? (
-              <p className="form-error" role="alert">Bukti pembayaran gagal dimuat. Periksa migrasi bukti QRIS, storage privat, dan konfigurasi server.</p>
+              <p className="form-error" role="alert">
+                {dateResult.error ?? "Bukti pembayaran gagal dimuat. Periksa migrasi bukti QRIS, storage privat, dan konfigurasi server."}
+              </p>
             ) : (
               <ManualPaymentReview initialItems={reviewItems} />
             )}

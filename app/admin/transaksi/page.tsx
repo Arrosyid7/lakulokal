@@ -2,6 +2,8 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { isCreditClipRun, isCreditPurchase } from "@/lib/credits";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { adminDatePeriods, resolveAdminDateRange } from "@/lib/admin-date-range";
+import { AdminDateFilterFields } from "@/components/admin/admin-date-filter-fields";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +11,7 @@ const pageSize = 50;
 const paymentStatuses = ["PENDING", "PAID", "FAILED", "EXPIRED", "CANCELLED"] as const;
 
 type PageProps = {
-  searchParams: Promise<{ page?: string; q?: string; payment?: string }>;
+  searchParams: Promise<{ page?: string; q?: string; payment?: string; period?: string; from?: string; to?: string }>;
 };
 
 export default async function AdminTransactionsPage({ searchParams }: PageProps) {
@@ -20,14 +22,23 @@ export default async function AdminTransactionsPage({ searchParams }: PageProps)
   const page = Number.isSafeInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1;
   const queryText = (search.q ?? "").trim().slice(0, 80);
   const paymentFilter = paymentStatuses.find((status) => status === search.payment);
+  const periodFilter = adminDatePeriods.find((period) => period === search.period) ?? "all";
+  const fromDate = search.from ?? "";
+  const toDate = search.to ?? "";
+  const dateResult = resolveAdminDateRange(periodFilter, fromDate, toDate);
   let query = admin.from("orders")
     .select("id,order_code,user_id,package_name,clip_count,amount,currency,payment_status,processing_status,created_at,metadata", { count: "exact" })
     .order("created_at", { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1);
   if (queryText) query = query.ilike("order_code", `%${queryText}%`);
   if (paymentFilter) query = query.eq("payment_status", paymentFilter);
+  if (dateResult.range) {
+    query = query.gte("created_at", dateResult.range.from).lt("created_at", dateResult.range.to);
+  }
 
-  const { data: orders, count, error } = await query;
+  const { data: orders, count, error } = dateResult.error
+    ? { data: null, count: null, error: null }
+    : await query;
   const userIds = [...new Set((orders ?? []).map((order) => order.user_id))];
   const orderIds = (orders ?? []).map((order) => order.id);
   const [{ data: profiles, error: profilesError }, { data: payments, error: paymentsError }, { data: autoApprovedProofs, error: proofError }] = await Promise.all([
@@ -54,13 +65,18 @@ export default async function AdminTransactionsPage({ searchParams }: PageProps)
     params.set("page", String(nextPage));
     if (queryText) params.set("q", queryText);
     if (paymentFilter) params.set("payment", paymentFilter);
+    if (periodFilter !== "all") params.set("period", periodFilter);
+    if (periodFilter === "custom") {
+      params.set("from", fromDate);
+      params.set("to", toDate);
+    }
     return `/admin/transaksi?${params.toString()}`;
   };
 
   return (
     <main className="container app-main">
       <h1 className="page-title">Transaksi dan order</h1>
-      <p className="page-lead">Cari order berdasarkan kode dan saring menurut status pembayaran. Tabel memuat hingga {pageSize} baris per halaman.</p>
+      <p className="page-lead">Order terbaru tampil lebih dulu. Saring menurut status pembayaran atau tanggal order. Tabel memuat hingga {pageSize} baris per halaman.</p>
       <form className="admin-transaction-filters" action="/admin/transaksi">
         <div className="field">
           <label htmlFor="transaction-search">Kode order</label>
@@ -73,9 +89,18 @@ export default async function AdminTransactionsPage({ searchParams }: PageProps)
             {paymentStatuses.map((status) => <option key={status} value={status}>{status}</option>)}
           </select>
         </div>
+        <AdminDateFilterFields
+          idPrefix="transaction"
+          period={periodFilter}
+          fromDate={fromDate}
+          toDate={toDate}
+          periodLabel="Periode tanggal order"
+        />
         <button className="button button-accent" type="submit">Tampilkan transaksi</button>
       </form>
-      {failed ? (
+      {dateResult.error ? (
+        <p className="form-error" role="alert">{dateResult.error}</p>
+      ) : failed ? (
         <p className="form-error" role="alert">Daftar transaksi gagal dimuat. Muat ulang halaman atau periksa izin database admin.</p>
       ) : orders?.length ? (
         <>
@@ -112,7 +137,7 @@ export default async function AdminTransactionsPage({ searchParams }: PageProps)
           </nav>
         </>
       ) : (
-        <p className="empty-state">Tidak ada order yang cocok. Hapus kata pencarian atau pilih status pembayaran lain.</p>
+        <p className="empty-state">Tidak ada order yang cocok. Perluas rentang tanggal atau ubah kata pencarian dan status pembayaran.</p>
       )}
     </main>
   );
