@@ -37,6 +37,21 @@ type PackageRow = {
   updated_at: string;
 };
 
+type UserCreditBalanceRow = {
+  user_id: string;
+  balance: number;
+  updated_at: string;
+};
+
+type CreditTransactionRow = {
+  id: string;
+  user_id: string;
+  order_id: string;
+  entry_type: "PURCHASE" | "CLIP_RUN" | "CLIP_RUN_REFUND";
+  amount: number;
+  created_at: string;
+};
+
 type OrderRow = {
   id: string;
   order_code: string;
@@ -195,6 +210,8 @@ export type Database = {
     Tables: {
       profiles: Table<ProfileRow, "id" | "email" | "full_name">;
       packages: Table<PackageRow, "id" | "name" | "clip_count" | "price">;
+      user_credit_balances: Table<UserCreditBalanceRow, "user_id">;
+      credit_transactions: Table<CreditTransactionRow, "user_id" | "order_id" | "entry_type" | "amount">;
       orders: Table<OrderRow, "order_code" | "user_id" | "package_id" | "package_name" | "clip_count" | "amount">;
       payments: Table<PaymentRow, "order_id" | "provider_reference" | "partner_reference" | "amount">;
       processing_jobs: Table<ProcessingJobRow, "order_id">;
@@ -213,10 +230,6 @@ export type Database = {
         Args: { p_order_id: string; p_provider_reference: string; p_amount: number };
         Returns: { confirmed_order_id: string; execution_job_id: string | null; already_paid: boolean }[];
       };
-      auto_approve_manual_qris_proof: {
-        Args: { p_proof_id: string };
-        Returns: { confirmed_order_id: string; already_paid: boolean }[];
-      };
       consume_user_rate_limit: {
         Args: { p_user_id: string; p_action: string; p_limit: number; p_window_seconds: number };
         Returns: boolean;
@@ -224,6 +237,10 @@ export type Database = {
       update_browser_processing_status: {
         Args: { p_order_id: string; p_status: string; p_progress: number; p_error_message: string | null };
         Returns: undefined;
+      };
+      create_credit_clip_order: {
+        Args: { p_user_id: string; p_clip_count: number };
+        Returns: { order_code: string; clip_count: number; created_at: string; available_credits: number }[];
       };
       review_manual_qris_payment: {
         Args: { p_proof_id: string; p_decision: string; p_admin_user_id: string; p_note: string | null };

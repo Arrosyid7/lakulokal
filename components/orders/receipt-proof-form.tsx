@@ -77,7 +77,7 @@ export function ReceiptProofForm({ orderCode, amount, orderCreatedAt, onSubmitte
         paymentStatus: result.payment_status
       });
       form.reset();
-      setMessage("Nominal dan tanggal cocok menurut OCR. Order disetujui otomatis. OCR tidak memverifikasi dana masuk.");
+      setMessage("Bukti terkirim dan menunggu pemeriksaan admin. Kredit masuk setelah pembayaran disetujui.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Bukti pembayaran gagal diperiksa.");
       setMessage("");
@@ -101,13 +101,13 @@ export function ReceiptProofForm({ orderCode, amount, orderCreatedAt, onSubmitte
           aria-describedby={`receipt-help-${orderCode}`}
         />
         <small id={`receipt-help-${orderCode}`}>
-          JPG, PNG, atau WebP maksimal 5 MB. OCR mencocokkan nominal dan tanggal, lalu order disetujui otomatis. Pemeriksaan ini tidak memastikan dana diterima.
+          JPG, PNG, atau WebP maksimal 5 MB. Admin memeriksa pembayaran sebelum kredit ditambahkan.
         </small>
       </div>
       {message && <p className="muted" role="status" aria-live="polite">{message}</p>}
       {error && <p className="form-error" role="alert">{error}</p>}
       <button className="button button-accent" type="submit" disabled={busy}>
-        {busy ? "Memeriksa bukti..." : "Periksa bukti dan setujui order"}
+        {busy ? "Mengirim bukti..." : "Kirim bukti pembayaran"}
       </button>
     </form>
   );

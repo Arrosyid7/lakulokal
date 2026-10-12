@@ -10,7 +10,8 @@ import {
   getClipRanges,
   MAX_BROWSER_VIDEO_DURATION_SECONDS,
   readVideoDuration,
-  validateBrowserVideo
+  validateBrowserVideo,
+  type ClipRange
 } from "@/lib/browser-video";
 
 type Props = {
@@ -23,6 +24,9 @@ type Props = {
   initialPaymentStatus: string;
   initialProcessingStatus: string;
   initialFile?: File | null;
+  initialRanges?: ClipRange[];
+  isCreditPurchase?: boolean;
+  isCreditRun?: boolean;
 };
 
 export function BrowserCheckout({
@@ -34,7 +38,10 @@ export function BrowserCheckout({
   paymentProvider = "MANUAL_QRIS",
   initialPaymentStatus,
   initialProcessingStatus,
-  initialFile = null
+  initialFile = null,
+  initialRanges,
+  isCreditPurchase = false,
+  isCreditRun = false
 }: Props) {
   const [paymentStatus, setPaymentStatus] = useState(initialPaymentStatus);
   const [proofStatus, setProofStatus] = useState<string | null>(null);
@@ -73,14 +80,16 @@ export function BrowserCheckout({
       }
     };
     void checkPayment();
-    const shouldPoll = paymentStatus === "PENDING" || !["COMPLETED", "FAILED"].includes(processingStatus);
+    const shouldPoll = isCreditPurchase
+      ? paymentStatus === "PENDING"
+      : paymentStatus === "PENDING" || !["COMPLETED", "FAILED"].includes(processingStatus);
     if (!shouldPoll) return () => { active = false; };
     const timer = window.setInterval(() => { void checkPayment(); }, 4000);
     return () => {
       active = false;
       window.clearInterval(timer);
     };
-  }, [orderCode, paymentStatus, processingStatus]);
+  }, [isCreditPurchase, orderCode, paymentStatus, processingStatus]);
 
   useEffect(() => {
     let active = true;
@@ -234,7 +243,7 @@ export function BrowserCheckout({
       const extension = file.name.split(".").pop()?.toLowerCase() || "mp4";
       const sourceName = `source.${extension}`;
       await ffmpeg.writeFile(sourceName, new Uint8Array(await file.arrayBuffer()));
-      const ranges = getClipRanges(duration, clipCount);
+      const ranges = initialRanges ?? getClipRanges(duration, clipCount);
 
       for (const [index, range] of ranges.entries()) {
         setActiveClipNumber(index + 1);
@@ -321,7 +330,7 @@ export function BrowserCheckout({
 
   const money = new Intl.NumberFormat("id-ID", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
   const manualQris = paymentProvider === "MANUAL_QRIS";
-  const canUseOrder = paymentStatus === "PAID" || (manualQris && (proofStatus === "SUBMITTED" || proofStatus === "REJECTED"));
+  const canUseOrder = !isCreditPurchase && paymentStatus === "PAID";
   const canSelectFile = canUseOrder && !busy;
   const clipRunProgress = !busy && processingStatus === "COMPLETED" ? 100 : progress;
   const showClipRun = busy || (downloads.length > 0 && ["COMPLETED", "FAILED"].includes(processingStatus));
@@ -337,12 +346,19 @@ export function BrowserCheckout({
         <header className="checkout-heading">
           <p className="section-kicker">Pembayaran dan pemrosesan</p>
           <h2 id="checkout-title">Order {orderCode}</h2>
-          <p className="checkout-total"><span>Total pembayaran</span><strong>{money}</strong></p>
+          <p className="checkout-total">
+            <span>{isCreditRun ? "Kredit digunakan" : "Total pembayaran"}</span>
+            <strong>{isCreditRun ? `${clipCount} kredit` : money}</strong>
+          </p>
         </header>
       {paymentStatus === "PENDING" && manualQris && (
         <>
-          <PaymentQrCode amount={money} />
-          <p>Bayar tepat sesuai nominal order ini, lalu unggah bukti transaksi. Nominal dan tanggal yang cocok menurut OCR akan menyetujui order secara otomatis.</p>
+          {proofStatus !== "SUBMITTED" && (
+            <>
+              <PaymentQrCode amount={money} />
+              <p>Bayar tepat sesuai nominal order ini, lalu unggah bukti. Admin memeriksa transaksi sebelum kredit diberikan.</p>
+            </>
+          )}
           {proofStatus === "REJECTED" && (
             <div className="form-error" role="status">
               <p>Bukti sebelumnya ditolak oleh admin. Periksa catatan, lalu unggah bukti pembayaran yang benar.</p>
@@ -360,27 +376,32 @@ export function BrowserCheckout({
               }}
             />
           )}
+          {proofStatus === "SUBMITTED" && (
+            <p className="checkout-status-line" role="status" aria-live="polite">
+              Bukti sudah dikirim. Kredit akan masuk setelah admin mengonfirmasi pembayaran.
+            </p>
+          )}
         </>
       )}
       {paymentStatus === "PENDING" && !manualQris && (
         <p className="form-error" role="alert">Metode pembayaran order lama sudah dihentikan. Jangan membayar untuk order ini. Hubungi pengelola untuk bantuan.</p>
       )}
       {paymentStatus !== "PENDING" && (
-        <p className="checkout-status-line" aria-live="polite">
+        !isCreditRun && <p className="checkout-status-line" aria-live="polite">
           Status pembayaran: <span className={getStatusClassName("payment", paymentStatus)}>{getPaymentStatusLabel(paymentStatus, manualQris && proofStatus === "APPROVED")}</span>
         </p>
       )}
+      {isCreditPurchase && paymentStatus === "PAID" && (
+        <section className="checkout-status-line" role="status" aria-live="polite">
+          Pembayaran disetujui. {clipCount} kredit sudah ditambahkan ke saldo Anda.
+          {" "}<a className="text-link" href="/dashboard/clip">Buat clip</a>
+        </section>
+      )}
       {canUseOrder && (
         <div className="browser-clip-workspace">
-          {paymentStatus === "PAID" && manualQris && proofStatus === "APPROVED" ? (
-            <p>Order disetujui otomatis setelah OCR mencocokkan nominal dan tanggal bukti. OCR tidak memastikan dana masuk. Pilih file video untuk dibuat menjadi {clipCount} klip. Video sumber diproses di perangkat Anda, sedangkan clip hasil disimpan di riwayat order selama 24 jam.</p>
-          ) : paymentStatus === "PAID" ? (
-            <p>Pembayaran sudah dikonfirmasi. Pilih file video untuk dibuat menjadi {clipCount} klip. Video sumber diproses di perangkat Anda, sedangkan clip hasil disimpan di riwayat order selama 24 jam.</p>
-          ) : (
-            <p className="checkout-status-line" role="status">
-              Anda tetap dapat memproses dan mengunduh clip sekarang. OCR mencocokkan nominal dan tanggal pada bukti, tetapi tidak memastikan dana masuk.
-            </p>
-          )}
+          {paymentStatus === "PAID" ? (
+            <p>{isCreditRun ? `${clipCount} kredit digunakan untuk membuat clip ini.` : "Pembayaran sudah dikonfirmasi."} Pilih file video untuk dibuat menjadi {clipCount} klip. Video sumber diproses di perangkat Anda, sedangkan clip hasil disimpan di riwayat order selama 24 jam.</p>
+          ) : null}
           {showClipRun && (
             <section className="clip-run-status" aria-labelledby="clip-run-title">
               <div className="clip-run-meter" aria-hidden="true">
@@ -408,7 +429,7 @@ export function BrowserCheckout({
               <dl className="clip-run-details">
                 <div><dt>Video</dt><dd>{file?.name || "Tidak tersedia"}</dd></div>
                 <div><dt>Durasi sumber</dt><dd>{duration === null ? "Tidak tersedia" : `${Math.floor(duration / 60)} menit ${Math.round(duration % 60)} detik`}</dd></div>
-                <div><dt>Biaya</dt><dd>{money}</dd></div>
+                <div><dt>Biaya</dt><dd>{isCreditRun ? `${clipCount} kredit` : money}</dd></div>
               </dl>
               {busy && (
                 <div className="browser-progress">
@@ -428,7 +449,7 @@ export function BrowserCheckout({
                 type="file"
                 accept=".mp4,.mov,.m4v,.webm,video/mp4,video/quicktime,video/webm"
                 onChange={chooseFile}
-                disabled={!canSelectFile}
+                disabled={!canSelectFile || (isCreditRun && Boolean(file))}
               />
               <small>MP4, MOV, M4V, atau WebM. Maksimal 250 MB dan dua jam. Biarkan halaman terbuka sampai clip selesai dibuat.</small>
             </div>
@@ -453,10 +474,16 @@ export function BrowserCheckout({
               ))}
             </section>
           )}
-          {!busy && file && duration !== null && (
+          {!busy && file && duration !== null && !(isCreditRun && processingStatus === "FAILED") && (
             <button className="button button-accent" type="button" onClick={processVideo}>
               Buat klip di perangkat ini
             </button>
+          )}
+          {!busy && isCreditRun && processingStatus === "FAILED" && (
+            <p className="checkout-status-line" role="status">
+              Kredit untuk clip yang belum selesai sudah dikembalikan.{" "}
+              <a className="text-link" href="/dashboard/clip">Mulai clip baru</a>
+            </p>
           )}
         </div>
       )}
@@ -468,7 +495,7 @@ export function BrowserCheckout({
         <dl className="checkout-facts">
           <div><dt>Jumlah clip</dt><dd>{clipCount} clip</dd></div>
           <div><dt>Pembayaran</dt><dd><span className={getStatusClassName("payment", paymentStatus)}>{getPaymentStatusLabel(paymentStatus, manualQris && proofStatus === "APPROVED")}</span></dd></div>
-          <div><dt>Status proses</dt><dd><span className={getStatusClassName("processing", processingStatus)}>{getProcessingStatusLabel(processingStatus)}</span></dd></div>
+          {!isCreditPurchase && <div><dt>Status proses</dt><dd><span className={getStatusClassName("processing", processingStatus)}>{getProcessingStatusLabel(processingStatus)}</span></dd></div>}
         </dl>
         <p>Video sumber diproses di perangkat ini. Clip hasil dapat ditonton dan diunduh dari riwayat order selama 24 jam.</p>
       </aside>

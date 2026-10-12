@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { absoluteUrl } from "@/lib/site";
 import { getLandingContent, getSocialLinks } from "@/lib/site-content";
+import { CREDIT_PACKAGE_ID } from "@/lib/credits";
 
 export const dynamic = "force-dynamic";
 
@@ -35,13 +36,14 @@ async function getPackages(): Promise<{ packages: Package[]; failed: boolean }> 
     const { data, error } = await supabase
       .from("packages")
       .select("id,name,clip_count,price,currency")
+      .eq("id", CREDIT_PACKAGE_ID)
       .eq("active", true)
-      .order("price");
+      .maybeSingle();
     if (error) {
       console.error("landing_packages_load_failed", { code: error.code });
       return { packages: [], failed: true };
     }
-    return { packages: data ?? [], failed: false };
+    return { packages: data ? [data] : [], failed: false };
   } catch (error) {
     console.error("landing_packages_load_failed", {
       message: error instanceof Error ? error.message : "unknown"
@@ -79,10 +81,10 @@ async function PricingList() {
         <article className="pricing-item" key={item.id}>
           <div className="pricing-item-summary">
             <h3>{item.name}</h3>
-            <p>{item.clip_count} clip</p>
+            <p>{item.clip_count} kredit clip</p>
           </div>
           <p className="pricing-unit">
-            <span>Rata-rata per clip</span>
+            <span>Per kredit</span>
             <strong>
               {item.clip_count > 0
                 ? formatUnitMoney(item.price / item.clip_count, item.currency)
@@ -93,7 +95,7 @@ async function PricingList() {
             <span>Total paket</span>
             <strong>{formatMoney(item.price, item.currency)}</strong>
           </p>
-          <Link className="button button-small" href="/login?next=%2Fdashboard%2Fnew">Pilih paket</Link>
+          <Link className="button button-small" href="/login?next=%2Fdashboard%2Fnew">Beli 5 kredit</Link>
         </article>
       ))}
     </div>
@@ -244,7 +246,7 @@ export default async function HomePage() {
               {
                 "@type": "Service",
                 name: "Layanan clip video",
-                description: "Pilih file video, bayar dengan QRIS, lalu buat clip di browser.",
+                description: "Beli kredit lewat QRIS, lalu pilih bagian video untuk dibuat menjadi clip di browser.",
                 url: absoluteUrl("/"),
                 provider: { "@id": absoluteUrl("/#organization") }
               },

@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { orderSchema, validationMessage } from "@/lib/validation";
+import {
+  CREDIT_PACKAGE_COUNT,
+  CREDIT_PACKAGE_ID,
+  CREDIT_PACKAGE_NAME,
+  CREDIT_PACKAGE_PRICE
+} from "@/lib/credits";
 
 export const runtime = "nodejs";
 
@@ -45,11 +51,19 @@ export async function POST(request: Request) {
   const { data: product, error: productError } = await admin
     .from("packages")
     .select("id,name,clip_count,price,currency")
-    .eq("id", parsed.data.package_id)
+    .eq("id", CREDIT_PACKAGE_ID)
     .eq("active", true)
     .maybeSingle();
   if (productError) return NextResponse.json({ error: "Paket tidak dapat diperiksa." }, { status: 500 });
-  if (!product) return NextResponse.json({ error: "Paket tidak ditemukan atau sudah tidak aktif." }, { status: 400 });
+  if (
+    !product ||
+    product.name !== CREDIT_PACKAGE_NAME ||
+    product.clip_count !== CREDIT_PACKAGE_COUNT ||
+    product.price !== CREDIT_PACKAGE_PRICE ||
+    product.currency !== "IDR"
+  ) {
+    return NextResponse.json({ error: "Paket 5 kredit belum tersedia. Silakan hubungi pengelola." }, { status: 503 });
+  }
 
   const now = new Date();
   const datePart = now.toISOString().slice(0, 10).replaceAll("-", "");
@@ -64,6 +78,7 @@ export async function POST(request: Request) {
       package_name: product.name,
       clip_count: product.clip_count,
       amount: product.price,
+      metadata: { order_type: "CREDIT_PURCHASE", credits: CREDIT_PACKAGE_COUNT },
       currency: product.currency
     })
     .select("id,order_code,amount,currency,package_name,clip_count,created_at")

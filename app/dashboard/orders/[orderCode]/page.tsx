@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { DownloadLinks } from "@/components/orders/download-links";
 import { BrowserCheckout } from "@/components/orders/browser-checkout";
 import { getPaymentStatusLabel, getProcessingStatusLabel, getStatusClassName } from "@/lib/order-presentation";
+import { isCreditClipRun, isCreditPurchase } from "@/lib/credits";
 
 type PageProps = { params: Promise<{ orderCode: string }> };
 
@@ -40,6 +41,8 @@ export default async function OrderDetailPage({ params }: PageProps) {
           paymentProvider={payment?.provider ?? "UNKNOWN"}
           initialPaymentStatus={order.payment_status}
           initialProcessingStatus={order.processing_status}
+          isCreditPurchase={isCreditPurchase(order.metadata)}
+          isCreditRun={isCreditClipRun(order.metadata)}
         />
       ) : (
         <section className="panel stack">

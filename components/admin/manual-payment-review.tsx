@@ -69,8 +69,8 @@ export function ManualPaymentReview({ initialItems }: { initialItems: ManualPaym
             <p>Nominal order: <strong>{money.format(item.amount)}</strong></p>
             <p>Hasil OCR: {money.format(item.ocrAmount)} · tanggal {item.transactionDate}</p>
             <p>Dikirim: <time dateTime={item.submittedAt}>{new Date(item.submittedAt).toLocaleString("id-ID")}</time></p>
-            <p className="form-error" role="note">
-              OCR tidak membuktikan dana masuk. Cocokkan transaksi langsung di rekening atau aplikasi merchant sebelum menyetujui. Pengguna sudah dapat mengunduh clip sebelum pemeriksaan ini.
+            <p className="muted" role="note">
+              Cocokkan transaksi langsung di rekening atau aplikasi merchant sebelum menyetujui. Kredit baru diberikan setelah persetujuan.
             </p>
             <div className="field">
               <label htmlFor={`review-note-${item.id}`}>Catatan penolakan (opsional)</label>

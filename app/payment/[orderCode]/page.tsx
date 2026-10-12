@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BrowserCheckout } from "@/components/orders/browser-checkout";
 import { requireUser } from "@/lib/auth";
+import { isCreditPurchase } from "@/lib/credits";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -15,7 +16,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ orderC
   const { orderCode } = await params;
   const { data: order, error } = await supabase
     .from("orders")
-    .select("id,order_code,amount,currency,clip_count,payment_status,processing_status,created_at,youtube_url")
+    .select("id,order_code,amount,currency,clip_count,payment_status,processing_status,created_at,youtube_url,metadata")
     .eq("order_code", orderCode)
     .maybeSingle();
   if (error) return <main className="container app-main"><p className="form-error">Informasi pembayaran gagal dimuat.</p></main>;
@@ -43,6 +44,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ orderC
           paymentProvider={payment?.provider ?? "UNKNOWN"}
           initialPaymentStatus={order.payment_status}
           initialProcessingStatus={order.processing_status}
+          isCreditPurchase={isCreditPurchase(order.metadata)}
         />
       ) : (
         <section className="panel stack">

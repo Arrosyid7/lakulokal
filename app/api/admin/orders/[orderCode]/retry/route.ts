@@ -16,7 +16,7 @@ export async function POST(_request: Request, { params }: RouteContext) {
   const { orderCode } = await params;
   const admin = createSupabaseAdminClient();
   const { data: order, error: orderError } = await admin.from("orders")
-    .select("id,payment_status,processing_status,youtube_url")
+    .select("id,payment_status,processing_status,youtube_url,metadata")
     .eq("order_code", orderCode)
     .maybeSingle();
   if (orderError) return NextResponse.json({ error: "Order gagal diperiksa." }, { status: 500 });
@@ -26,6 +26,9 @@ export async function POST(_request: Request, { params }: RouteContext) {
   }
   if (order.youtube_url !== null) {
     return NextResponse.json({ error: "Order video lama tidak dapat diproses di browser. Minta pengguna membuat order video baru." }, { status: 409 });
+  }
+  if (order.metadata && typeof order.metadata === "object" && !Array.isArray(order.metadata) && order.metadata.order_type === "CREDIT_CLIP_RUN") {
+    return NextResponse.json({ error: "Clip gagal sudah mengembalikan kredit untuk clip yang belum selesai. Pengguna dapat memulai clip baru." }, { status: 409 });
   }
 
   const { data: job, error: jobError } = await admin.from("processing_jobs")

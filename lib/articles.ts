@@ -190,7 +190,7 @@ export const articles: Article[] = [
       {
         heading: "Pahami alur order",
         paragraphs: [
-          "Di LakuLokal, pengguna masuk ke akun, memilih file video dari perangkat dan memilih paket. Order disetujui otomatis jika OCR mencocokkan nominal dan tanggal pada bukti QRIS. Pemeriksaan OCR tidak memastikan dana diterima.",
+          "Di LakuLokal, pengguna membeli kredit lewat QRIS dan mengirim bukti pembayaran. Admin memeriksa transaksi. Kredit masuk ke saldo setelah admin menyetujui pembayaran.",
           "Status order, pembayaran, dan clip dapat dilihat di dashboard. Clip hasil tersedia dari riwayat order selama 24 jam, lalu file dihapus otomatis."
         ]
       },

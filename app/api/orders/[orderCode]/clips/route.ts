@@ -27,7 +27,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   const { orderCode } = await params;
   const admin = createSupabaseAdminClient();
   const { data: order, error: orderError } = await admin.from("orders")
-    .select("id,user_id,clip_count,payment_status,processing_status,processing_completed_at,result_expires_at")
+    .select("id,user_id,clip_count,payment_status,processing_status,processing_completed_at,result_expires_at,metadata")
     .eq("order_code", orderCode)
     .maybeSingle();
   if (orderError) {
@@ -36,6 +36,9 @@ export async function POST(request: Request, { params }: RouteContext) {
   }
   if (!order || !ownsOrder(order.user_id, current.user.id)) {
     return NextResponse.json({ error: "Order tidak ditemukan." }, { status: 404 });
+  }
+  if (order.metadata && typeof order.metadata === "object" && !Array.isArray(order.metadata) && order.metadata.order_type === "CREDIT_PURCHASE") {
+    return NextResponse.json({ error: "Order pembelian kredit tidak dapat menyimpan hasil clip." }, { status: 409 });
   }
   if (order.payment_status !== "PAID" || order.processing_status !== "PROCESSING") {
     return NextResponse.json({ error: "Order belum dapat menyimpan clip." }, { status: 409 });

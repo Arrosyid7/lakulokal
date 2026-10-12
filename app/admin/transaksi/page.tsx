@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
+import { isCreditClipRun, isCreditPurchase } from "@/lib/credits";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,7 @@ export default async function AdminTransactionsPage({ searchParams }: PageProps)
   const queryText = (search.q ?? "").trim().slice(0, 80);
   const paymentFilter = paymentStatuses.find((status) => status === search.payment);
   let query = supabase.from("orders")
-    .select("id,order_code,user_id,package_name,amount,currency,payment_status,processing_status,created_at", { count: "exact" })
+    .select("id,order_code,user_id,package_name,clip_count,amount,currency,payment_status,processing_status,created_at,metadata", { count: "exact" })
     .order("created_at", { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1);
   if (queryText) query = query.ilike("order_code", `%${queryText}%`);
@@ -80,7 +81,7 @@ export default async function AdminTransactionsPage({ searchParams }: PageProps)
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Order</th><th>Akun</th><th>Paket</th><th>Nominal</th><th>Pembayaran</th><th>Referensi</th><th>Pemrosesan</th><th>Dibuat</th>
+                  <th>Order</th><th>Akun</th><th>Paket</th><th>Nominal / kredit</th><th>Pembayaran</th><th>Referensi</th><th>Pemrosesan</th><th>Dibuat</th>
                 </tr>
               </thead>
               <tbody>
@@ -90,9 +91,9 @@ export default async function AdminTransactionsPage({ searchParams }: PageProps)
                     <tr key={order.id}>
                       <td>{order.order_code}</td>
                       <td>{emails.get(order.user_id) ?? "Email tidak tersedia"}</td>
-                      <td>{order.package_name}</td>
-                      <td>{money(order.amount, order.currency)}</td>
-                      <td>{autoApprovedOrderIds.has(order.id) ? "Disetujui otomatis (OCR)" : order.payment_status}</td>
+                      <td>{isCreditClipRun(order.metadata) ? `${order.clip_count} clip` : order.package_name}</td>
+                      <td>{isCreditClipRun(order.metadata) ? `${order.clip_count} kredit` : isCreditPurchase(order.metadata) ? `${money(order.amount, order.currency)} · ${order.clip_count} kredit` : money(order.amount, order.currency)}</td>
+                      <td>{isCreditClipRun(order.metadata) ? "Kredit dipakai" : autoApprovedOrderIds.has(order.id) ? "Disetujui otomatis (OCR)" : order.payment_status}</td>
                       <td>{payment ? `${payment.provider}: ${payment.provider_reference}` : "Belum tercatat"}</td>
                       <td>{order.processing_status}</td>
                       <td><time dateTime={order.created_at}>{new Date(order.created_at).toLocaleString("id-ID")}</time></td>

@@ -33,6 +33,24 @@ export function getClipRanges(duration: number, count: number): ClipRange[] {
   }));
 }
 
+export function getManualClipRange(start: number, end: number, videoDuration: number): ClipRange {
+  if (
+    !Number.isFinite(start) ||
+    !Number.isFinite(end) ||
+    !Number.isFinite(videoDuration) ||
+    start < 0 ||
+    end <= start ||
+    end > videoDuration
+  ) {
+    throw new Error("Waktu mulai dan selesai harus berada di dalam durasi video.");
+  }
+  const clipDuration = end - start;
+  if (clipDuration > MAX_CLIP_DURATION_SECONDS) {
+    throw new Error("Durasi satu clip maksimal 60 detik.");
+  }
+  return { start, duration: clipDuration };
+}
+
 export function validateBrowserVideo(file: File): string | null {
   if (file.size === 0) return "File video kosong.";
   if (file.size > MAX_BROWSER_VIDEO_BYTES) return "Ukuran video maksimal 250 MB.";

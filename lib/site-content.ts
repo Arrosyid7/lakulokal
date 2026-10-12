@@ -38,10 +38,10 @@ export type LandingContent = z.infer<typeof landingContentSchema>;
 
 export const DEFAULT_LANDING_CONTENT: LandingContent = {
   metaTitle: "Layanan Clip Video | LakuLokal",
-  metaDescription: "Pilih video dari perangkat, bayar dengan QRIS, lalu buat clip langsung di browser.",
+  metaDescription: "Beli kredit lewat QRIS, lalu pilih bagian video untuk dibuat menjadi clip di browser.",
   heroKicker: "Untuk video yang layak ditonton lagi",
   heroTitle: "Ubah file video jadi clip.",
-  heroDescription: "Pilih video dari perangkat, bayar lewat QRIS, lalu buat clip langsung di browser. Video tidak dikirim ke server.",
+  heroDescription: "Beli kredit lewat QRIS, lalu tentukan satu bagian video atau buat lima clip sekaligus. Video sumber tetap di perangkat Anda.",
   primaryCta: "Buat akun untuk mulai",
   secondaryCta: "Lihat cara kerja",
   heroNote: "Clip hasil tersedia di riwayat akun selama 24 jam.",
@@ -49,24 +49,24 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
   processTitle: "Cara kerja clip video.",
   processDescription: "Akun mencatat order dan pembayaran. File video tetap berada di perangkat Anda.",
   processSteps: [
-    { title: "Masuk atau buat akun", description: "Gunakan akun untuk membuat order dan melihat riwayat pembayaran." },
-    { title: "Pilih file dan paket", description: "Pilih video dari perangkat. Browser membaca file secara lokal." },
-    { title: "Selesaikan pembayaran", description: "Bayar dengan QRIS dan unggah bukti. Order disetujui otomatis jika OCR mencocokkan nominal dan tanggal." },
-    { title: "Buat dan unduh clip", description: "Setiap clip tampil saat selesai. Hasil tersimpan di riwayat selama 24 jam." }
+    { title: "Masuk atau buat akun", description: "Gunakan akun untuk membeli kredit dan melihat saldo." },
+    { title: "Bayar dengan QRIS", description: "Bayar Rp1.000 untuk 5 kredit, lalu unggah bukti pembayaran." },
+    { title: "Tunggu konfirmasi admin", description: "Kredit ditambahkan setelah admin memeriksa dan menyetujui transaksi." },
+    { title: "Pilih bagian video", description: "Gunakan satu kredit untuk satu clip. Pilih satu bagian sendiri atau buat lima clip." }
   ],
   pricingKicker: "Paket aktif",
   pricingTitle: "Harga layanan clip video.",
-  pricingDescription: "Lihat rata-rata biaya per clip dan total setiap paket aktif. Harga order dikonfirmasi kembali oleh server.",
+  pricingDescription: "Satu paket berisi 5 kredit. Gunakan satu kredit untuk setiap clip yang dibuat.",
   faqKicker: "FAQ",
   faqTitle: "Yang perlu diketahui sebelum mulai.",
   questions: [
     {
-      question: "Bagaimana cara membuat order clip?",
-      answer: "Masuk ke akun, pilih file video dan paket, lalu bayar menggunakan QRIS. Order disetujui otomatis jika OCR mencocokkan nominal dan tanggal bukti. OCR tidak memastikan dana masuk."
+      question: "Berapa harga kredit clip?",
+      answer: "Rp1.000 membeli 5 kredit. Satu clip menggunakan satu kredit."
     },
     {
       question: "Bagaimana pembayaran diproses?",
-      answer: "Unggah bukti QRIS. Order disetujui otomatis jika nominal dan tanggal pada bukti cocok menurut OCR. Pemeriksaan ini tidak memverifikasi dana diterima, jadi bukti palsu dapat memberi akses ke layanan."
+      answer: "Unggah bukti QRIS pada halaman order dan tunggu admin memeriksa transaksi. Kredit masuk ke saldo setelah admin menyetujui pembayaran."
     },
     {
       question: "File video apa yang dapat diproses?",

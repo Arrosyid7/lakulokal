@@ -4,6 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { RetryOrderButton } from "@/components/dashboard/retry-order-button";
 import { ManualPaymentReview, type ManualPaymentReviewItem } from "@/components/admin/manual-payment-review";
 import Link from "next/link";
+import { isCreditClipRun, isCreditPurchase } from "@/lib/credits";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -20,7 +21,7 @@ export default async function AdminPage() {
     { data: proofs, error: proofsError }
   ] = await Promise.all([
     supabase.rpc("admin_dashboard_stats").maybeSingle(),
-    supabase.from("orders").select("id,order_code,user_id,youtube_url,package_name,amount,payment_status,processing_status,created_at").order("created_at", { ascending: false }).limit(20),
+    supabase.from("orders").select("id,order_code,user_id,youtube_url,package_name,clip_count,amount,payment_status,processing_status,created_at,metadata").order("created_at", { ascending: false }).limit(20),
     supabase.from("profiles").select("id,email,full_name,created_at").order("created_at", { ascending: false }).limit(8),
     supabase.from("payment_proofs")
       .select("id,order_id,storage_path,ocr_amount,ocr_transaction_date,submitted_at")
@@ -112,7 +113,7 @@ export default async function AdminPage() {
               {!paymentReviewError && <span className="admin-count">{reviewItems.length} menunggu</span>}
             </div>
             <p className="admin-section-description">
-            Bukti baru disetujui otomatis saat OCR mencocokkan nominal dan tanggal. OCR tidak memverifikasi dana masuk. Tabel ini hanya menampilkan bukti lama yang masih menunggu pemeriksaan.
+            Cocokkan setiap bukti dengan transaksi pada rekening atau aplikasi merchant. Kredit baru masuk ke saldo pengguna setelah pembayaran disetujui.
             </p>
             {paymentReviewError ? (
               <p className="form-error" role="alert">Bukti pembayaran gagal dimuat. Periksa migrasi bukti QRIS, storage privat, dan konfigurasi server.</p>
@@ -131,9 +132,9 @@ export default async function AdminPage() {
             {!rows.length ? <p className="empty-state">Belum ada order.</p> : (
               <div className="table-wrap">
                 <table className="data-table">
-                  <thead><tr><th>Order</th><th>User ID</th><th>Paket</th><th>Jumlah</th><th>Pembayaran</th><th>Proses</th><th>Aksi</th></tr></thead>
+                  <thead><tr><th>Order</th><th>User ID</th><th>Paket</th><th>Nominal / kredit</th><th>Pembayaran</th><th>Proses</th><th>Aksi</th></tr></thead>
                   <tbody>{rows.map((order) => (
-                    <tr key={order.id}><td>{order.order_code}</td><td>{order.user_id}</td><td>{order.package_name}</td><td>{money.format(order.amount)}</td><td>{autoApprovedOrderIds.has(order.id) ? "Disetujui otomatis (OCR)" : order.payment_status}</td><td>{order.processing_status}</td><td>{order.youtube_url === null && order.processing_status === "FAILED" && order.payment_status === "PAID" ? <RetryOrderButton orderCode={order.order_code} /> : "Tidak perlu"}</td></tr>
+                    <tr key={order.id}><td>{order.order_code}</td><td>{order.user_id}</td><td>{isCreditClipRun(order.metadata) ? `${order.clip_count} clip` : order.package_name}</td><td>{isCreditClipRun(order.metadata) ? `${order.clip_count} kredit dipakai` : isCreditPurchase(order.metadata) ? `${money.format(order.amount)} / ${order.clip_count} kredit` : money.format(order.amount)}</td><td>{isCreditClipRun(order.metadata) ? "Kredit dipakai" : autoApprovedOrderIds.has(order.id) ? "Disetujui otomatis (OCR)" : order.payment_status}</td><td>{order.processing_status}</td><td>{order.youtube_url === null && !isCreditClipRun(order.metadata) && order.processing_status === "FAILED" && order.payment_status === "PAID" ? <RetryOrderButton orderCode={order.order_code} /> : "Tidak perlu"}</td></tr>
                   ))}</tbody>
                 </table>
               </div>

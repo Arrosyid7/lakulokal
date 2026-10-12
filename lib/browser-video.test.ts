@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getClipRanges, validateBrowserVideo } from "@/lib/browser-video";
+import { getClipRanges, getManualClipRange, validateBrowserVideo } from "@/lib/browser-video";
 
 describe("browser video clipping", () => {
   it("spreads clips evenly across the source", () => {
@@ -27,5 +27,12 @@ describe("browser video clipping", () => {
     expect(() => getClipRanges(10, 20)).toThrow("Video terlalu singkat");
     expect(validateBrowserVideo(new File(["data"], "video.avi"))).toContain("Gunakan video");
     expect(validateBrowserVideo(new File([""], "empty.mp4"))).toBe("File video kosong.");
+  });
+
+  it("validates manually selected clip time ranges", () => {
+    expect(getManualClipRange(12.5, 42.5, 90)).toEqual({ start: 12.5, duration: 30 });
+    expect(() => getManualClipRange(10, 8, 90)).toThrow("Waktu mulai dan selesai");
+    expect(() => getManualClipRange(0, 61, 90)).toThrow("maksimal 60 detik");
+    expect(() => getManualClipRange(20, 30, 25)).toThrow("Waktu mulai dan selesai");
   });
 });

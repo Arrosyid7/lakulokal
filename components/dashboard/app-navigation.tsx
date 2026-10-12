@@ -57,7 +57,8 @@ export function AppNavigation({ fullName, isAdmin }: { fullName: string; isAdmin
           aria-label="Navigasi akun"
         >
           <Link className={linkClass("/dashboard")} aria-current={linkClass("/dashboard") ? "page" : undefined} href="/dashboard" onClick={() => setOpen(false)}>Dashboard</Link>
-          <Link className={linkClass("/dashboard/new")} aria-current={linkClass("/dashboard/new") ? "page" : undefined} href="/dashboard/new" onClick={() => setOpen(false)}>Buat clip</Link>
+          <Link className={linkClass("/dashboard/clip")} aria-current={linkClass("/dashboard/clip") ? "page" : undefined} href="/dashboard/clip" onClick={() => setOpen(false)}>Buat clip</Link>
+          <Link className={linkClass("/dashboard/new")} aria-current={linkClass("/dashboard/new") ? "page" : undefined} href="/dashboard/new" onClick={() => setOpen(false)}>Beli kredit</Link>
           <Link className={linkClass("/dashboard/orders")} aria-current={linkClass("/dashboard/orders") ? "page" : undefined} href="/dashboard/orders" onClick={() => setOpen(false)}>Riwayat</Link>
           <Link className={linkClass("/dashboard/profile")} aria-current={linkClass("/dashboard/profile") ? "page" : undefined} href="/dashboard/profile" onClick={() => setOpen(false)}>Profil</Link>
           {isAdmin && <Link className={linkClass("/admin")} aria-current={linkClass("/admin") ? "page" : undefined} href="/admin" onClick={() => setOpen(false)}>Admin</Link>}
