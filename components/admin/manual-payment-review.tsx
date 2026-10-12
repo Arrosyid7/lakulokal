@@ -33,7 +33,11 @@ export function ManualPaymentReview({ initialItems }: { initialItems: ManualPaym
         body: JSON.stringify({ decision, note: notes[item.id] ?? "" })
       });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Pemeriksaan bukti gagal disimpan.");
+      if (!response.ok) {
+        const message = typeof result.error === "string" ? result.error : "Pemeriksaan bukti gagal disimpan.";
+        const errorCode = typeof result.errorCode === "string" ? ` (Kode: ${result.errorCode})` : "";
+        throw new Error(`${message}${errorCode}`);
+      }
       setItems((current) => current.filter(({ id }) => id !== item.id));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Pemeriksaan bukti gagal disimpan.");

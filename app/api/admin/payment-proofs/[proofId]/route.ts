@@ -5,6 +5,37 @@ import { hasAdminRole } from "@/lib/authorization";
 
 type RouteContext = { params: Promise<{ proofId: string }> };
 
+function getReviewErrorMessage(code: string | undefined, message: string) {
+  if (message.includes("admin role required")) {
+    return "Akun administrator tidak dikenali database. Keluar, masuk kembali sebagai admin, lalu coba lagi.";
+  }
+  if (message.includes("service role required")) {
+    return "Konfigurasi service-role server belum sesuai. Periksa SUPABASE_SERVICE_ROLE_KEY di environment server.";
+  }
+  if (message.includes("submitted payment proof required")) {
+    return "Bukti ini tidak lagi berstatus menunggu. Muat ulang halaman untuk melihat status terbaru.";
+  }
+  if (message.includes("manual QRIS payment not found")) {
+    return "Data pembayaran QRIS order ini tidak ditemukan atau tidak cocok.";
+  }
+  if (message.includes("payment proof does not match pending order")) {
+    return "Nominal bukti tidak cocok dengan order. Pembayaran belum disetujui.";
+  }
+  if (message.includes("payment reference mismatch")) {
+    return "Referensi pembayaran tidak cocok dengan order. Pembayaran belum disetujui.";
+  }
+  if (message.includes("credit purchase does not match the active package")) {
+    return "Data paket kredit order tidak cocok. Minta pengelola memperbaiki data paket sebelum mencoba lagi.";
+  }
+  if (message.includes("order is not payable")) {
+    return "Order tidak lagi menunggu pembayaran. Muat ulang halaman untuk melihat status terbaru.";
+  }
+  if (code === "42501") {
+    return "Database menolak akses untuk meninjau pembayaran. Periksa role admin dan konfigurasi server.";
+  }
+  return "Keputusan pembayaran gagal disimpan. Muat ulang halaman dan coba lagi. Jika berulang, kirim kode error kepada pengelola.";
+}
+
 export async function POST(request: Request, { params }: RouteContext) {
   const current = await getCurrentUser();
   if (!current) return NextResponse.json({ error: "Autentikasi diperlukan." }, { status: 401 });
@@ -57,8 +88,17 @@ export async function POST(request: Request, { params }: RouteContext) {
     p_note: typeof payload.note === "string" ? payload.note.trim() || null : null
   });
   if (reviewError) {
-    console.error("admin_manual_qris_review_failed", { proofId, code: reviewError.code });
-    return NextResponse.json({ error: "Keputusan pembayaran gagal disimpan." }, { status: 500 });
+    console.error("admin_manual_qris_review_failed", {
+      proofId,
+      code: reviewError.code,
+      message: reviewError.message,
+      details: reviewError.details,
+      hint: reviewError.hint
+    });
+    return NextResponse.json({
+      error: getReviewErrorMessage(reviewError.code, reviewError.message),
+      errorCode: reviewError.code ?? "UNKNOWN"
+    }, { status: 500 });
   }
 
   return NextResponse.json({ review_status: payload.decision === "APPROVE" ? "APPROVED" : "REJECTED" });
