@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 
 export default async function AdminPage() {
   const { supabase } = await requireAdmin();
+  const admin = createSupabaseAdminClient();
   const [
     { data: totals, error: statsError },
     { data: orders, error: ordersError },
@@ -21,9 +22,9 @@ export default async function AdminPage() {
     { data: proofs, error: proofsError }
   ] = await Promise.all([
     supabase.rpc("admin_dashboard_stats").maybeSingle(),
-    supabase.from("orders").select("id,order_code,user_id,youtube_url,package_name,clip_count,amount,payment_status,processing_status,created_at,metadata").order("created_at", { ascending: false }).limit(20),
-    supabase.from("profiles").select("id,email,full_name,created_at").order("created_at", { ascending: false }).limit(8),
-    supabase.from("payment_proofs")
+    admin.from("orders").select("id,order_code,user_id,youtube_url,package_name,clip_count,amount,payment_status,processing_status,created_at,metadata").order("created_at", { ascending: false }).limit(20),
+    admin.from("profiles").select("id,email,full_name,created_at").order("created_at", { ascending: false }).limit(8),
+    admin.from("payment_proofs")
       .select("id,order_id,storage_path,ocr_amount,ocr_transaction_date,submitted_at")
       .eq("review_status", "SUBMITTED")
       .order("submitted_at", { ascending: true })
@@ -32,17 +33,17 @@ export default async function AdminPage() {
   const rows = orders ?? [];
   const rowOrderIds = rows.map((order) => order.id);
   const { data: autoApprovedProofs, error: autoApprovalError } = rowOrderIds.length
-    ? await supabase.from("payment_proofs").select("order_id")
+    ? await admin.from("payment_proofs").select("order_id")
       .eq("review_status", "APPROVED").is("reviewed_by", null).in("order_id", rowOrderIds)
     : { data: [], error: null };
   const autoApprovedOrderIds = new Set((autoApprovedProofs ?? []).map((proof) => proof.order_id));
-  const error = statsError || ordersError || recentUsersError || autoApprovalError;
+  const error = ordersError || recentUsersError || autoApprovalError;
   const stats = totals;
   let paymentReviewError = proofsError !== null;
   let reviewItems: ManualPaymentReviewItem[] = [];
   if (proofs?.length) {
     const orderIds = [...new Set(proofs.map((proof) => proof.order_id))];
-    const { data: proofOrders, error: proofOrdersError } = await supabase.from("orders")
+    const { data: proofOrders, error: proofOrdersError } = await admin.from("orders")
       .select("id,order_code,user_id,package_name,amount,currency")
       .in("id", orderIds);
     if (proofOrdersError) {
@@ -52,7 +53,7 @@ export default async function AdminPage() {
       paymentReviewError = true;
     } else {
       const ordersById = new Map((proofOrders ?? []).map((order) => [order.id, order]));
-      const storage = createSupabaseAdminClient().storage.from("payment-proofs");
+      const storage = admin.storage.from("payment-proofs");
       const signedProofs = await Promise.all(proofs.map(async (proof) => {
         const order = ordersById.get(proof.order_id);
         if (!order) return null;
@@ -88,6 +89,7 @@ export default async function AdminPage() {
       </div>
       {error ? <p className="form-error" role="alert">Data admin gagal dimuat.</p> : (
         <>
+          {statsError && <p className="form-error" role="alert">Ringkasan statistik gagal dimuat. Daftar order dan bukti pembayaran tetap tersedia di bawah.</p>}
           <section className="admin-overview" aria-label="Statistik admin">
             <article className="admin-revenue">
               <p>Pendapatan terverifikasi</p>
@@ -108,7 +110,7 @@ export default async function AdminPage() {
             <div className="admin-section-heading">
               <div>
                 <p className="section-kicker">PEMBAYARAN</p>
-                <h2>Bukti QRIS lama menunggu pemeriksaan</h2>
+                <h2>Bukti QRIS menunggu pemeriksaan</h2>
               </div>
               {!paymentReviewError && <span className="admin-count">{reviewItems.length} menunggu</span>}
             </div>

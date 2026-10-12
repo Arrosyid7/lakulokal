@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { isCreditClipRun, isCreditPurchase } from "@/lib/credits";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -12,13 +13,14 @@ type PageProps = {
 };
 
 export default async function AdminTransactionsPage({ searchParams }: PageProps) {
-  const { supabase } = await requireAdmin();
+  await requireAdmin();
+  const admin = createSupabaseAdminClient();
   const search = await searchParams;
   const parsedPage = Number.parseInt(search.page ?? "1", 10);
   const page = Number.isSafeInteger(parsedPage) && parsedPage > 0 ? parsedPage : 1;
   const queryText = (search.q ?? "").trim().slice(0, 80);
   const paymentFilter = paymentStatuses.find((status) => status === search.payment);
-  let query = supabase.from("orders")
+  let query = admin.from("orders")
     .select("id,order_code,user_id,package_name,clip_count,amount,currency,payment_status,processing_status,created_at,metadata", { count: "exact" })
     .order("created_at", { ascending: false })
     .range((page - 1) * pageSize, page * pageSize - 1);
@@ -30,13 +32,13 @@ export default async function AdminTransactionsPage({ searchParams }: PageProps)
   const orderIds = (orders ?? []).map((order) => order.id);
   const [{ data: profiles, error: profilesError }, { data: payments, error: paymentsError }, { data: autoApprovedProofs, error: proofError }] = await Promise.all([
     userIds.length
-      ? supabase.from("profiles").select("id,email").in("id", userIds)
+      ? admin.from("profiles").select("id,email").in("id", userIds)
       : Promise.resolve({ data: [], error: null }),
     orderIds.length
-      ? supabase.from("payments").select("order_id,provider,provider_reference,status,paid_at").in("order_id", orderIds)
+      ? admin.from("payments").select("order_id,provider,provider_reference,status,paid_at").in("order_id", orderIds)
       : Promise.resolve({ data: [], error: null }),
     orderIds.length
-      ? supabase.from("payment_proofs").select("order_id").eq("review_status", "APPROVED").is("reviewed_by", null).in("order_id", orderIds)
+      ? admin.from("payment_proofs").select("order_id").eq("review_status", "APPROVED").is("reviewed_by", null).in("order_id", orderIds)
       : Promise.resolve({ data: [], error: null })
   ]);
 
