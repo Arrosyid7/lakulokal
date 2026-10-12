@@ -157,7 +157,7 @@ type PaymentProofRow = {
   order_id: string;
   storage_path: string;
   ocr_amount: number;
-  ocr_transaction_date: string;
+  ocr_transaction_date: string | null;
   review_status: "SUBMITTED" | "APPROVED" | "REJECTED";
   submitted_at: string;
   reviewed_at: string | null;
@@ -216,7 +216,7 @@ export type Database = {
       payments: Table<PaymentRow, "order_id" | "provider_reference" | "partner_reference" | "amount">;
       processing_jobs: Table<ProcessingJobRow, "order_id">;
       clips: Table<ClipRow, "order_id" | "clip_number" | "storage_path" | "file_name" | "size_bytes">;
-      payment_proofs: Table<PaymentProofRow, "payment_id" | "order_id" | "storage_path" | "ocr_amount" | "ocr_transaction_date">;
+      payment_proofs: Table<PaymentProofRow, "payment_id" | "order_id" | "storage_path" | "ocr_amount">;
       webhook_events: Table<WebhookEventRow, "provider" | "provider_event_id" | "event_type">;
       audit_logs: Table<AuditLogRow, "action" | "entity_type">;
       api_rate_limits: Table<RateLimitRow, "user_id" | "action" | "window_start">;

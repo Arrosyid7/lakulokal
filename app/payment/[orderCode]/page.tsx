@@ -16,7 +16,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ orderC
   const { orderCode } = await params;
   const { data: order, error } = await supabase
     .from("orders")
-    .select("id,order_code,amount,currency,clip_count,payment_status,processing_status,created_at,youtube_url,metadata")
+    .select("id,order_code,amount,currency,clip_count,payment_status,processing_status,youtube_url,metadata")
     .eq("order_code", orderCode)
     .maybeSingle();
   if (error) return <main className="container app-main"><p className="form-error">Informasi pembayaran gagal dimuat.</p></main>;
@@ -40,7 +40,6 @@ export default async function PaymentPage({ params }: { params: Promise<{ orderC
           clipCount={order.clip_count}
           amount={order.amount}
           currency={order.currency}
-          orderCreatedAt={order.created_at}
           paymentProvider={payment?.provider ?? "UNKNOWN"}
           initialPaymentStatus={order.payment_status}
           initialProcessingStatus={order.processing_status}

@@ -37,7 +37,6 @@ export default async function OrderDetailPage({ params }: PageProps) {
           clipCount={order.clip_count}
           amount={order.amount}
           currency={order.currency}
-          orderCreatedAt={order.created_at}
           paymentProvider={payment?.provider ?? "UNKNOWN"}
           initialPaymentStatus={order.payment_status}
           initialProcessingStatus={order.processing_status}

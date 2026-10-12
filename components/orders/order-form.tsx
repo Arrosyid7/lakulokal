@@ -14,7 +14,6 @@ type CheckoutOrder = {
   clipCount: number;
   amount: number;
   currency: string;
-  createdAt: string;
 };
 
 export function OrderForm({ product }: { product: PackageOption | null }) {
@@ -39,8 +38,7 @@ export function OrderForm({ product }: { product: PackageOption | null }) {
         orderCode: result.order.order_code,
         clipCount: result.order.clip_count,
         amount: result.order.amount,
-        currency: result.order.currency,
-        createdAt: result.order.created_at
+        currency: result.order.currency
       });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Order tidak dapat dibuat.");
@@ -56,7 +54,6 @@ export function OrderForm({ product }: { product: PackageOption | null }) {
         clipCount={checkout.clipCount}
         amount={checkout.amount}
         currency={checkout.currency}
-        orderCreatedAt={checkout.createdAt}
         initialPaymentStatus="PENDING"
         initialProcessingStatus="WAITING_PAYMENT"
         isCreditPurchase

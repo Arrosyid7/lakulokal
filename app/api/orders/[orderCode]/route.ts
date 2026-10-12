@@ -62,7 +62,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
     }
   }
   const { data: proof, error: proofError } = await supabase.from("payment_proofs")
-    .select("review_status,ocr_amount,ocr_transaction_date,review_note")
+    .select("review_status,ocr_amount,review_note")
     .eq("order_id", data.id)
     .order("submitted_at", { ascending: false })
     .limit(1)

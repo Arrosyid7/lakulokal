@@ -1,23 +1,17 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import {
-  extractReceiptAmounts,
-  extractReceiptDate,
-  formatJakartaDate,
-  isReceiptDateValid
-} from "@/lib/payment-proof";
+import { extractReceiptAmounts } from "@/lib/payment-proof";
 
 type Props = {
   orderCode: string;
   amount: number;
-  orderCreatedAt: string;
-  onSubmitted: (proof: { status: string; amount: number; date: string; paymentStatus: string }) => void;
+  onSubmitted: (proof: { status: string; amount: number; paymentStatus: string }) => void;
 };
 
 const MAX_RECEIPT_SIZE = 5 * 1024 * 1024;
 
-export function ReceiptProofForm({ orderCode, amount, orderCreatedAt, onSubmitted }: Props) {
+export function ReceiptProofForm({ orderCode, amount, onSubmitted }: Props) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -39,7 +33,7 @@ export function ReceiptProofForm({ orderCode, amount, orderCreatedAt, onSubmitte
     }
 
     setBusy(true);
-    setMessage("Membaca nominal dan tanggal pada bukti...");
+    setMessage("Membaca nominal pada bukti...");
     let worker: import("tesseract.js").Worker | null = null;
     try {
       const { createWorker } = await import("tesseract.js");
@@ -50,20 +44,9 @@ export function ReceiptProofForm({ orderCode, amount, orderCreatedAt, onSubmitte
         throw new Error("Nominal pada bukti tidak terbaca cocok dengan total order.");
       }
 
-      const transactionDate = extractReceiptDate(data.text);
-      if (!transactionDate) {
-        throw new Error("Tanggal transaksi tidak terbaca. Unggah bukti yang menampilkan tanggal dengan jelas.");
-      }
-      const orderDate = formatJakartaDate(new Date(orderCreatedAt));
-      const today = formatJakartaDate(new Date());
-      if (!isReceiptDateValid(transactionDate, orderDate, today)) {
-        throw new Error("Tanggal transaksi harus pada atau setelah tanggal order dan tidak boleh di masa depan.");
-      }
-
       const payload = new FormData();
       payload.set("receipt", image);
       payload.set("ocrAmount", String(recognizedAmount));
-      payload.set("ocrTransactionDate", transactionDate);
       const response = await fetch(`/api/orders/${encodeURIComponent(orderCode)}/payment-proof`, {
         method: "POST",
         body: payload
@@ -73,7 +56,6 @@ export function ReceiptProofForm({ orderCode, amount, orderCreatedAt, onSubmitte
       onSubmitted({
         status: result.proof.review_status,
         amount: result.proof.ocr_amount,
-        date: result.proof.ocr_transaction_date,
         paymentStatus: result.payment_status
       });
       form.reset();

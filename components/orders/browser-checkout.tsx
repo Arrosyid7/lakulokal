@@ -19,7 +19,6 @@ type Props = {
   clipCount: number;
   amount: number;
   currency: string;
-  orderCreatedAt: string;
   paymentProvider?: string;
   initialPaymentStatus: string;
   initialProcessingStatus: string;
@@ -34,7 +33,6 @@ export function BrowserCheckout({
   clipCount,
   amount,
   currency,
-  orderCreatedAt,
   paymentProvider = "MANUAL_QRIS",
   initialPaymentStatus,
   initialProcessingStatus,
@@ -369,7 +367,6 @@ export function BrowserCheckout({
             <ReceiptProofForm
               orderCode={orderCode}
               amount={amount}
-              orderCreatedAt={orderCreatedAt}
               onSubmitted={(proof) => {
                 setProofStatus(proof.status);
                 setPaymentStatus(proof.paymentStatus);

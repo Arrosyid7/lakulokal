@@ -11,7 +11,6 @@ export type ManualPaymentReviewItem = {
   amount: number;
   currency: string;
   ocrAmount: number;
-  transactionDate: string;
   submittedAt: string;
   imageUrl: string;
 };
@@ -71,7 +70,7 @@ export function ManualPaymentReview({ initialItems }: { initialItems: ManualPaym
             <p>Paket: {item.packageName}</p>
             <p>Pemilik order: {item.userId}</p>
             <p>Nominal order: <strong>{money.format(item.amount)}</strong></p>
-            <p>Hasil OCR: {money.format(item.ocrAmount)} · tanggal {item.transactionDate}</p>
+            <p>Hasil OCR nominal: {money.format(item.ocrAmount)}</p>
             <p>Dikirim: <time dateTime={item.submittedAt}>{new Date(item.submittedAt).toLocaleString("id-ID")}</time></p>
             <p className="muted" role="note">
               Cocokkan transaksi langsung di rekening atau aplikasi merchant sebelum menyetujui. Kredit baru diberikan setelah persetujuan.

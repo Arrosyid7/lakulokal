@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { formatJakartaDate, isReceiptDateValid } from "@/lib/payment-proof";
 
 export const runtime = "nodejs";
 
@@ -37,17 +36,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ ord
   }
   const receipt = form.get("receipt");
   const ocrAmount = Number(form.get("ocrAmount"));
-  const transactionDate = String(form.get("ocrTransactionDate") ?? "");
   if (!(receipt instanceof File) || !Number.isSafeInteger(ocrAmount) || ocrAmount < 0) {
     return NextResponse.json({ error: "Gambar bukti dan hasil OCR nominal wajib diisi." }, { status: 400 });
   }
   if (receipt.size < 1 || receipt.size > MAX_RECEIPT_BYTES) {
     return NextResponse.json({ error: "Ukuran gambar bukti harus maksimal 5 MB." }, { status: 413 });
   }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(transactionDate)) {
-    return NextResponse.json({ error: "Tanggal transaksi dari OCR tidak valid." }, { status: 400 });
-  }
-
   const { orderCode } = await params;
   const admin = createSupabaseAdminClient();
   const { data: withinLimit, error: rateLimitError } = await admin.rpc("consume_user_rate_limit", {
@@ -63,7 +57,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ ord
   if (!withinLimit) return NextResponse.json({ error: "Terlalu banyak percobaan. Tunggu satu menit lalu coba lagi." }, { status: 429 });
 
   const { data: order, error: orderError } = await admin.from("orders")
-    .select("id,user_id,amount,payment_status,created_at,youtube_url")
+    .select("id,user_id,amount,payment_status,youtube_url")
     .eq("order_code", orderCode)
     .maybeSingle();
   if (orderError) {
@@ -102,13 +96,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ ord
     return NextResponse.json({ error: "Bukti pembayaran untuk order ini sudah tercatat." }, { status: 409 });
   }
 
-  const orderDate = formatJakartaDate(new Date(order.created_at));
-  const today = formatJakartaDate(new Date());
-  if (
-    ocrAmount !== order.amount ||
-    !isReceiptDateValid(transactionDate, orderDate, today)
-  ) {
-    return NextResponse.json({ error: "Nominal atau tanggal bukti tidak cocok dengan order." }, { status: 400 });
+  if (ocrAmount !== order.amount) {
+    return NextResponse.json({ error: "Nominal bukti tidak cocok dengan order." }, { status: 400 });
   }
 
   const bytes = Buffer.from(await receipt.arrayBuffer());
@@ -134,9 +123,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ ord
     order_id: order.id,
     storage_path: storagePath,
     ocr_amount: ocrAmount,
-    ocr_transaction_date: transactionDate,
+    ocr_transaction_date: null,
     review_status: "SUBMITTED"
-  }).select("id,review_status,ocr_amount,ocr_transaction_date").single();
+  }).select("id,review_status,ocr_amount").single();
   if (insertError || !proof) {
     const { error: cleanupError } = await admin.storage.from("payment-proofs").remove([storagePath]);
     if (cleanupError) console.error("payment_proof_orphan_cleanup_failed", { proofId, message: cleanupError.message });

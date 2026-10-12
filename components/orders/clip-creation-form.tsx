@@ -14,7 +14,6 @@ import {
 type CheckoutOrder = {
   orderCode: string;
   clipCount: number;
-  createdAt: string;
   file: File;
   ranges: { start: number; duration: number }[];
 };
@@ -98,7 +97,6 @@ export function ClipCreationForm({ availableCredits }: { availableCredits: numbe
       setCheckout({
         orderCode: result.order.order_code,
         clipCount: result.order.clip_count,
-        createdAt: result.order.created_at,
         file,
         ranges
       });
@@ -117,7 +115,6 @@ export function ClipCreationForm({ availableCredits }: { availableCredits: numbe
         clipCount={checkout.clipCount}
         amount={0}
         currency="IDR"
-        orderCreatedAt={checkout.createdAt}
         initialPaymentStatus="PAID"
         initialProcessingStatus="WAITING_PAYMENT"
         initialFile={checkout.file}

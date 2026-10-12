@@ -27,7 +27,7 @@ export default async function AdminPage({ searchParams }: PageProps) {
   const toDate = search.to ?? "";
   const dateResult = resolveAdminDateRange(periodFilter, fromDate, toDate);
   let proofsQuery = admin.from("payment_proofs")
-    .select("id,order_id,storage_path,ocr_amount,ocr_transaction_date,submitted_at")
+    .select("id,order_id,storage_path,ocr_amount,submitted_at")
     .eq("review_status", "SUBMITTED")
     .order("submitted_at", { ascending: false })
     .limit(50);
@@ -85,7 +85,6 @@ export default async function AdminPage({ searchParams }: PageProps) {
           amount: order.amount,
           currency: order.currency,
           ocrAmount: proof.ocr_amount,
-          transactionDate: proof.ocr_transaction_date,
           submittedAt: proof.submitted_at,
           imageUrl: signed.signedUrl
         };

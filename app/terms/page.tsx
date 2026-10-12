@@ -31,7 +31,7 @@ export default function TermsPage() {
         </section>
         <section>
           <h2>Order dan pembayaran</h2>
-          <p>Paket dan harga yang berlaku ditampilkan saat membuat order. Server mengambil harga dari paket aktif di database. Pembayaran dilakukan melalui QRIS statis. Pengguna mengunggah gambar bukti, OCR menyaring nominal dan tanggal, lalu admin memeriksa dana masuk secara terpisah. OCR tidak memastikan transaksi berhasil.</p>
+          <p>Paket dan harga yang berlaku ditampilkan saat membuat order. Server mengambil harga dari paket aktif di database. Pembayaran dilakukan melalui QRIS statis. Pengguna mengunggah gambar bukti, OCR menyaring nominal saja, lalu admin memeriksa dana masuk secara terpisah. OCR tidak memastikan transaksi berhasil.</p>
           <p>Setelah bukti lolos penyaringan OCR, pengguna dapat memproses dan mengunduh clip sebelum pemeriksaan admin selesai. Jika dana tidak diterima atau bukti ditolak, layanan mungkin sudah digunakan. Status pembayaran baru menjadi lunas setelah admin mengonfirmasi transaksi.</p>
           <p>Jika pembayaran berhasil tetapi hasil tidak dapat disediakan karena kesalahan sistem, permintaan pengembalian dana dapat diajukan dalam 24 jam melalui <a className="text-link" href="mailto:halo@lakulokal.id">halo@lakulokal.id</a>. Pengajuan akan diperiksa berdasarkan catatan transaksi.</p>
         </section>

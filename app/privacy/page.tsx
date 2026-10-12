@@ -31,7 +31,7 @@ export default function PrivacyPage() {
         </section>
         <section>
           <h2>Tujuan penggunaan</h2>
-          <p>Data digunakan untuk mengelola sesi akun, membuat dan menampilkan order milik pengguna, menyaring serta memeriksa bukti pembayaran, mencatat status proses browser, menyimpan clip sementara agar dapat diunduh kembali, menjaga keamanan, dan menangani permintaan bantuan. Browser mengolah file video dan menjalankan OCR bukti pembayaran pada perangkat pengguna.</p>
+          <p>Data digunakan untuk mengelola sesi akun, membuat dan menampilkan order milik pengguna, menyaring serta memeriksa bukti pembayaran, mencatat status proses browser, menyimpan clip sementara agar dapat diunduh kembali, menjaga keamanan, dan menangani permintaan bantuan. Browser mengolah file video dan menjalankan OCR untuk membaca nominal pada bukti pembayaran di perangkat pengguna.</p>
         </section>
         <section>
           <h2>Penyedia layanan</h2>
