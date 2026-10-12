@@ -38,35 +38,47 @@ export type LandingContent = z.infer<typeof landingContentSchema>;
 
 export const DEFAULT_LANDING_CONTENT: LandingContent = {
   metaTitle: "Layanan Clip Video | LakuLokal",
-  metaDescription: "Beli kredit lewat QRIS, lalu pilih bagian video untuk dibuat menjadi clip di browser.",
+  metaDescription: "Beli 5 kredit seharga Rp1.000 lewat QRIS, tunggu persetujuan admin, lalu buat clip dari video di perangkat Anda.",
   heroKicker: "Untuk video yang layak ditonton lagi",
   heroTitle: "Ubah file video jadi clip.",
-  heroDescription: "Beli kredit lewat QRIS, lalu tentukan satu bagian video atau buat lima clip sekaligus. Video sumber tetap di perangkat Anda.",
+  heroDescription: "Beli 5 kredit seharga Rp1.000 lewat QRIS. Setelah admin menyetujui pembayaran, buat satu clip dengan waktu pilihan sendiri atau lima clip sekaligus.",
   primaryCta: "Buat akun untuk mulai",
   secondaryCta: "Lihat cara kerja",
   heroNote: "Clip hasil tersedia di riwayat akun selama 24 jam.",
   processKicker: "Cara kerja",
   processTitle: "Cara kerja clip video.",
-  processDescription: "Akun mencatat order dan pembayaran. File video tetap berada di perangkat Anda.",
+  processDescription: "Kredit masuk setelah pembayaran QRIS disetujui admin. Pilih satu clip atau lima clip dari video yang ada di perangkat Anda.",
   processSteps: [
-    { title: "Masuk atau buat akun", description: "Gunakan akun untuk membeli kredit dan melihat saldo." },
-    { title: "Bayar dengan QRIS", description: "Bayar Rp1.000 untuk 5 kredit, lalu unggah bukti pembayaran." },
-    { title: "Tunggu konfirmasi admin", description: "Kredit ditambahkan setelah admin memeriksa dan menyetujui transaksi." },
-    { title: "Pilih bagian video", description: "Gunakan satu kredit untuk satu clip. Pilih satu bagian sendiri atau buat lima clip." }
+    { title: "Masuk atau buat akun", description: "Gunakan akun untuk membeli kredit, melihat saldo, dan menyimpan riwayat order." },
+    { title: "Bayar Rp1.000 dengan QRIS", description: "Pembayaran membeli 5 kredit. Unggah bukti QRIS pada halaman order agar admin dapat memeriksanya." },
+    { title: "Tunggu persetujuan admin", description: "Order tetap menunggu selama pemeriksaan. Saldo bertambah 5 kredit setelah pembayaran disetujui." },
+    { title: "Pilih video dan jumlah clip", description: "Buat satu clip dengan rentang waktu manual memakai 1 kredit, lalu ulangi untuk clip berikutnya. Atau buat lima clip sekaligus dengan 5 kredit." }
   ],
   pricingKicker: "Paket aktif",
   pricingTitle: "Harga layanan clip video.",
-  pricingDescription: "Satu paket berisi 5 kredit. Gunakan satu kredit untuk setiap clip yang dibuat.",
+  pricingDescription: "Bayar Rp1.000 untuk 5 kredit. Setiap clip menggunakan 1 kredit.",
   faqKicker: "FAQ",
   faqTitle: "Yang perlu diketahui sebelum mulai.",
   questions: [
     {
       question: "Berapa harga kredit clip?",
-      answer: "Rp1.000 membeli 5 kredit. Satu clip menggunakan satu kredit."
+      answer: "Rp1.000 membeli 5 kredit. Setiap clip menggunakan 1 kredit, jadi satu pembelian cukup untuk membuat lima clip."
     },
     {
       question: "Bagaimana pembayaran diproses?",
-      answer: "Unggah bukti QRIS pada halaman order dan tunggu admin memeriksa transaksi. Kredit masuk ke saldo setelah admin menyetujui pembayaran."
+      answer: "Bayar melalui QRIS, lalu unggah bukti pada halaman order. Status order menunggu pemeriksaan admin. Kredit baru masuk ke saldo setelah admin menyetujui pembayaran."
+    },
+    {
+      question: "Bagaimana cara membuat satu clip atau lima clip?",
+      answer: "Pilih file video dari perangkat. Untuk clip manual, masukkan waktu mulai dan selesai dalam detik. Satu proses membuat satu clip dan memakai 1 kredit; mulai proses baru untuk membuat clip manual berikutnya. Pilihan lima clip membuat lima bagian yang dibagi merata sekaligus dan memakai 5 kredit."
+    },
+    {
+      question: "Apakah kredit yang belum dipakai tetap tersimpan?",
+      answer: "Ya. Kredit yang belum digunakan tetap tersimpan di saldo akun Anda. Saldo berkurang sesuai clip yang diproses: 1 kredit untuk satu clip atau 5 kredit untuk lima clip."
+    },
+    {
+      question: "Apa yang terjadi jika pembuatan clip gagal?",
+      answer: "Kredit untuk clip yang belum berhasil disimpan dikembalikan ke saldo. Clip yang sudah berhasil disimpan tetap menggunakan kredit."
     },
     {
       question: "File video apa yang dapat diproses?",
@@ -78,7 +90,7 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
     },
     {
       question: "Apakah video dan hasilnya disimpan?",
-      answer: "Video sumber tetap di perangkat dan diproses di browser. File clip disimpan di riwayat order selama 24 jam, lalu dihapus otomatis."
+      answer: "Video sumber diproses di browser dan tetap berada di perangkat Anda. File hasil tersedia di riwayat order selama 24 jam, lalu dihapus otomatis. Unduh hasil sebelum masa penyimpanan berakhir."
     }
   ]
 };

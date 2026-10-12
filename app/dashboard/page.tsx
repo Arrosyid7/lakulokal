@@ -33,6 +33,7 @@ export default async function DashboardPage() {
   const failures = [profileError, totalError, orderError, completedError, processingError, clipError, paidError, creditError, autoProofError].filter(Boolean);
   const paidTotal = paidOrders?.filter((order) => !autoApprovedOrderIds.has(order.id))
     .reduce((total, row) => total + Number(row.amount), 0) ?? 0;
+  const availableCredits = creditBalance?.balance ?? 0;
   const money = (amount: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(amount);
 
   return (
@@ -44,8 +45,19 @@ export default async function DashboardPage() {
           <p className="page-lead">Lihat status order terakhir atau mulai menyiapkan video berikutnya.</p>
         </div>
         <div className="cta-row">
-          <Link className="button button-accent" href="/dashboard/clip">Buat clip</Link>
-          <Link className="text-link" href="/dashboard/new">Beli kredit</Link>
+          {creditError ? (
+            <Link className="button button-accent" href="/dashboard/clip">Periksa saldo kredit</Link>
+          ) : availableCredits > 0 ? (
+            <>
+              <Link className="button button-accent" href="/dashboard/clip">Buat clip</Link>
+              <Link className="text-link" href="/dashboard/new">Beli kredit</Link>
+            </>
+          ) : (
+            <>
+              <Link className="button button-accent" href="/dashboard/new">Beli 5 kredit</Link>
+              <Link className="text-link" href="/dashboard/orders">Lihat order</Link>
+            </>
+          )}
         </div>
         <span className="account-cut-mark" aria-hidden="true" />
       </header>
@@ -54,7 +66,7 @@ export default async function DashboardPage() {
       ) : (
         <>
           <section className="account-metrics" aria-label="Ringkasan akun">
-            <article className="account-metric"><span>Kredit tersedia</span><strong>{creditBalance?.balance ?? 0}</strong><small>Siap dipakai untuk clip</small></article>
+            <article className="account-metric"><span>Kredit tersedia</span><strong>{availableCredits}</strong><small>Siap dipakai untuk clip</small></article>
             <article className="account-metric"><span>Total order</span><strong>{totalCount ?? 0}</strong><small>Semua order akun</small></article>
             <article className="account-metric"><span>Order selesai</span><strong>{completedCount ?? 0}</strong><small>Berhasil diproses</small></article>
             <article className="account-metric"><span>Sedang diproses</span><strong>{processingCount ?? 0}</strong><small>Masih berjalan</small></article>

@@ -344,7 +344,7 @@ export function BrowserCheckout({
     <section className={`panel browser-checkout${busy ? " browser-checkout-running" : ""}`} aria-labelledby="checkout-title">
       <div className="checkout-primary">
         <header className="checkout-heading">
-          <p className="section-kicker">Pembayaran dan pemrosesan</p>
+          <p className="section-kicker">{isCreditRun ? "Pemakaian kredit" : "Pembayaran dan pemrosesan"}</p>
           <h2 id="checkout-title">Order {orderCode}</h2>
           <p className="checkout-total">
             <span>{isCreditRun ? "Kredit digunakan" : "Total pembayaran"}</span>
@@ -485,16 +485,24 @@ export function BrowserCheckout({
               <a className="text-link" href="/dashboard/clip">Mulai clip baru</a>
             </p>
           )}
+          {!busy && isCreditRun && processingStatus === "COMPLETED" && (
+            <p className="checkout-status-line">
+              Clip selesai.{" "}
+              <a className="text-link" href="/dashboard/clip">Buat clip berikutnya dengan 1 kredit</a>
+            </p>
+          )}
         </div>
       )}
       {statusError && <p className="form-error" role="alert">{statusError}</p>}
       </div>
       <aside className="checkout-aside" aria-label="Ringkasan order">
-        <p className="section-kicker">Ringkasan</p>
-        <h3>Order ini mencakup</h3>
+        <p className="section-kicker">{isCreditRun ? "Saldo akun" : "Ringkasan"}</p>
+        <h3>{isCreditRun ? "Pemakaian clip" : "Order ini mencakup"}</h3>
         <dl className="checkout-facts">
           <div><dt>Jumlah clip</dt><dd>{clipCount} clip</dd></div>
-          <div><dt>Pembayaran</dt><dd><span className={getStatusClassName("payment", paymentStatus)}>{getPaymentStatusLabel(paymentStatus, manualQris && proofStatus === "APPROVED")}</span></dd></div>
+          {isCreditRun
+            ? <div><dt>Kredit dipakai</dt><dd>{clipCount} kredit</dd></div>
+            : <div><dt>Pembayaran</dt><dd><span className={getStatusClassName("payment", paymentStatus)}>{getPaymentStatusLabel(paymentStatus, manualQris && proofStatus === "APPROVED")}</span></dd></div>}
           {!isCreditPurchase && <div><dt>Status proses</dt><dd><span className={getStatusClassName("processing", processingStatus)}>{getProcessingStatusLabel(processingStatus)}</span></dd></div>}
         </dl>
         <p>Video sumber diproses di perangkat ini. Clip hasil dapat ditonton dan diunduh dari riwayat order selama 24 jam.</p>

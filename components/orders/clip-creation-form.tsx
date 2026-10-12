@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import Link from "next/link";
 import { BrowserCheckout } from "@/components/orders/browser-checkout";
 import {
   getClipRanges,
@@ -145,11 +146,11 @@ export function ClipCreationForm({ availableCredits }: { availableCredits: numbe
         <legend>Jumlah clip</legend>
         <label>
           <input type="radio" name="clip_count" value="1" checked={clipCount === 1} onChange={() => setClipCount(1)} />
-          <span>1 clip, pilih waktu sendiri. 1 kredit</span>
+          <span>1 clip manual per proses. Pilih waktu sendiri. 1 kredit</span>
         </label>
         <label>
           <input type="radio" name="clip_count" value="5" checked={clipCount === 5} onChange={() => setClipCount(5)} />
-          <span>5 clip dari video. 5 kredit</span>
+          <span>5 clip sekaligus, waktu dibagi merata. 5 kredit</span>
         </label>
       </fieldset>
       {clipCount === 1 && (
@@ -165,12 +166,16 @@ export function ClipCreationForm({ availableCredits }: { availableCredits: numbe
           <small>Durasi satu clip maksimal 60 detik.</small>
         </div>
       )}
-      {clipCount === 5 && <p className="muted">Lima clip dibagi merata dari video, masing-masing maksimal 60 detik.</p>}
+      {clipCount === 5 && <p className="muted">Lima bagian dipilih merata dari video. Durasi tiap clip maksimal 60 detik.</p>}
       {error && <p className="form-error" role="alert">{error}</p>}
       <button className="button button-accent" type="submit" disabled={busy || checkingFile || !file || availableCredits < clipCount}>
         {checkingFile ? "Memeriksa video..." : busy ? "Menyiapkan clip..." : `Buat ${clipCount} clip`}
       </button>
-      {availableCredits < clipCount && <p className="form-error" role="status">Kredit Anda belum cukup untuk pilihan ini.</p>}
+      {availableCredits < clipCount && (
+        <p className="form-error" role="status">
+          Saldo belum cukup untuk pilihan ini. <Link className="text-link" href="/dashboard/new">Beli 5 kredit seharga Rp1.000</Link>
+        </p>
+      )}
     </form>
   );
 }

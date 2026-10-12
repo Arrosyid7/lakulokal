@@ -113,7 +113,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             </a>.
           </p>
           <aside className="article-next">
-            <p>Kelola order clip video YouTube Anda di LakuLokal.</p>
+            <p>Buat clip dari file video di perangkat Anda dan lihat hasilnya di riwayat order.</p>
             <Link className="button" href="/register">Buat akun LakuLokal</Link>
           </aside>
           <nav className="related-articles" aria-label="Artikel terkait">

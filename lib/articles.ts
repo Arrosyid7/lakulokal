@@ -101,7 +101,7 @@ export const articles: Article[] = [
         heading: "Tinjau hasil sebelum dibagikan",
         paragraphs: [
           "Putar setiap clip pada perangkat yang akan digunakan untuk mengunggahnya. Pastikan gambar penting tetap terlihat, suara cukup jelas, dan clip tidak berakhir di tengah kalimat.",
-          "Pilih video dari perangkat untuk membuat order. Status pembayaran dan pemrosesan dapat dilihat di halaman order, sedangkan hasil clip diunduh langsung ke perangkat.",
+          "LakuLokal memproses file video yang Anda pilih dari perangkat, bukan tautan YouTube. File sumber diproses di browser, sementara status proses dan hasilnya dapat dilihat di riwayat order.",
           "Periksa pembingkaian gambar setelah dipotong. Pastikan wajah, papan tulis, atau benda yang sedang dibahas tidak berada terlalu dekat dengan tepi gambar.",
           "Jika Anda menambahkan teks saat mengedit lanjutan, baca kembali ejaan nama dan istilah. Teks sebaiknya membantu memahami isi, bukan menutupi bagian gambar yang penting.",
           "Hasil LakuLokal menggunakan bingkai vertikal. Periksa kembali posisi pembicara dan objek utama di setiap file sebelum mengunggahnya."
@@ -162,7 +162,7 @@ export const articles: Article[] = [
     slug: "video-untuk-clip-pendek",
     title: "Cara Menyiapkan Video untuk Clip Pendek",
     seoTitle: "Video untuk Clip Pendek: Cara Menyiapkan",
-    description: "Siapkan video untuk clip pendek dengan memeriksa file, topik, hak penggunaan, dan momen sebelum membuat order.",
+    description: "Siapkan video untuk clip pendek dengan memeriksa file, topik, hak penggunaan, dan momen sebelum membuat clip.",
     keyphrase: "video untuk clip pendek",
     intro: "Menyiapkan video untuk clip pendek membantu Anda memeriksa sumber, menentukan tujuan, dan meninjau hasil. Mulai dengan memilih file video yang benar dan memeriksa hak penggunaannya.",
     relatedSlugs: ["memilih-momen-video-untuk-clip", "clip-video-youtube-yang-jelas"],
@@ -170,8 +170,8 @@ export const articles: Article[] = [
       {
         heading: "Pastikan file video untuk clip pendek dapat dibuka",
         paragraphs: [
-          "Putar file sebelum membuat order dan pastikan itu memang sumber yang ingin diproses. LakuLokal menerima MP4, MOV, M4V, dan WebM.",
-          "Pastikan file berada di perangkat yang digunakan untuk membuat order. Video diproses langsung di browser dan tidak diunggah ke server.",
+          "Pilih dan putar file yang ingin diproses. LakuLokal menerima MP4, MOV, M4V, dan WebM.",
+          "Simpan file di perangkat yang digunakan untuk membuat clip. File sumber diproses langsung di browser dan tidak diunggah ke server.",
           "Jika video diberikan oleh orang lain, pastikan Anda memiliki izin untuk mengolahnya. Pemeriksaan singkat ini membantu menghindari order dengan sumber yang keliru."
         ]
       },
@@ -190,8 +190,16 @@ export const articles: Article[] = [
       {
         heading: "Pahami alur order",
         paragraphs: [
-          "Di LakuLokal, pengguna membeli kredit lewat QRIS dan mengirim bukti pembayaran. Admin memeriksa transaksi. Kredit masuk ke saldo setelah admin menyetujui pembayaran.",
-          "Status order, pembayaran, dan clip dapat dilihat di dashboard. Clip hasil tersedia dari riwayat order selama 24 jam, lalu file dihapus otomatis."
+          "Beli 5 kredit seharga Rp1.000 melalui QRIS, lalu unggah bukti pembayaran di halaman order. Admin memeriksa transaksi dan saldo bertambah setelah pembayaran disetujui.",
+          "Gunakan dashboard untuk melihat saldo dan riwayat order. File clip tersedia selama 24 jam setelah selesai, lalu dihapus otomatis. Unduh hasil sebelum masa itu berakhir."
+        ]
+      },
+      {
+        heading: "Pilih satu clip atau lima clip",
+        paragraphs: [
+          "Untuk clip manual, masukkan waktu mulai dan selesai yang Anda inginkan. Satu proses menghasilkan satu clip berdurasi maksimal 60 detik dan memakai 1 kredit. Kembali ke halaman pembuatan clip untuk menentukan rentang manual berikutnya.",
+          "Untuk lima clip, LakuLokal memilih lima bagian yang dibagi merata dari video. Setiap clip dibatasi maksimal 60 detik dan menggunakan total 5 kredit.",
+          "Kredit yang belum digunakan tetap tersimpan di saldo akun. Jika proses gagal, kredit untuk clip yang belum berhasil disimpan dikembalikan ke saldo."
         ]
       },
       {
