@@ -30,6 +30,9 @@ function getReviewErrorMessage(code: string | undefined, message: string) {
   if (message.includes("order is not payable")) {
     return "Order tidak lagi menunggu pembayaran. Muat ulang halaman untuk melihat status terbaru.";
   }
+  if (code === "42703") {
+    return "Skema database belum lengkap. Pastikan migration 20261013010000_add_order_metadata.sql sudah diterapkan, lalu coba lagi.";
+  }
   if (code === "42501") {
     return "Database menolak akses untuk meninjau pembayaran. Periksa role admin dan konfigurasi server.";
   }

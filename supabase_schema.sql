@@ -64,6 +64,7 @@ create table if not exists public.orders (
   currency text not null default 'IDR' check (currency = 'IDR'),
   payment_status public.payment_status not null default 'PENDING',
   processing_status public.processing_status not null default 'WAITING_PAYMENT',
+  metadata jsonb not null default '{}'::jsonb,
   dana_reference_no text,
   dana_partner_reference_no text,
   dana_qr_content text,

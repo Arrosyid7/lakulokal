@@ -1,6 +1,6 @@
 # LakuLokal
 
-LakuLokal membuat klip video vertikal dari file yang dipilih pengguna. Pengguna memilih paket, membayar lewat QRIS statis, lalu mengunggah bukti. Jika OCR mencocokkan nominal dan tanggal, aplikasi otomatis menyetujui order dan browser memproses video. Persetujuan OCR tidak memverifikasi dana masuk. Setiap clip muncul saat selesai dan disimpan privat agar dapat diakses dari riwayat order selama 24 jam. Aplikasi tidak membutuhkan VPS atau Cloud Run untuk pemrosesan video.
+LakuLokal membuat klip video vertikal dari file yang dipilih pengguna. Pengguna memilih paket, membayar lewat QRIS statis, lalu mengunggah bukti. OCR mencocokkan nominal, kemudian admin memeriksa transaksi sebelum menyetujui pembayaran. Setiap clip muncul saat selesai dan disimpan privat agar dapat diakses dari riwayat order selama 24 jam. Aplikasi tidak membutuhkan VPS atau Cloud Run untuk pemrosesan video.
 
 ## Menjalankan lokal
 
@@ -32,6 +32,10 @@ Jalankan `supabase_schema.sql` pada SQL Editor atau melalui Supabase CLI untuk i
 - `20261008120000_single_admin_account.sql`
 - `20261008130000_fix_browser_processing_with_payment_proof.sql`
 - `20261008140000_auto_approve_manual_qris_proofs.sql`
+- `20261012000000_credit_based_clip_creation.sql`
+- `20261012010000_refresh_credit_clip_content.sql`
+- `20261013000000_make_payment_proof_ocr_date_optional.sql`
+- `20261013010000_add_order_metadata.sql`
 
 Jangan memberikan akses `service_role` ke browser atau memberikan grant update untuk status pembayaran kepada pengguna.
 
@@ -39,7 +43,7 @@ Buat bucket Storage privat bernama `lakulokal-results` untuk file clip. Unggahan
 
 ## Pembayaran QRIS dan bukti transfer
 
-Order baru menampilkan QRIS statis dari `public/payment/qris-lakulokal.png`. Pengguna memasukkan nominal order dan mengunggah gambar bukti. OCR di browser mencocokkan nominal dan tanggal transaksi, lalu order otomatis berubah menjadi lunas dan bukti ditandai disetujui.
+Order baru menampilkan QRIS statis dari `public/payment/qris-lakulokal.png`. Pengguna memasukkan nominal order dan mengunggah gambar bukti. OCR di browser mencocokkan nominal saja. Admin harus memeriksa transaksi langsung di rekening atau aplikasi merchant dan menyetujui bukti sebelum order dinyatakan lunas.
 
 Peringatan: aplikasi tidak menghubungi bank atau penyedia pembayaran untuk memeriksa transfer. OCR hanya membaca teks dan hasilnya berasal dari browser, sehingga bukti palsu atau manipulasi permintaan dapat memberi akses layanan tanpa dana diterima. Audit log mencatat persetujuan otomatis sebagai `MANUAL_QRIS_AUTO_APPROVED`; dashboard admin tidak memasukkan order tersebut sebagai pendapatan terverifikasi.
 
