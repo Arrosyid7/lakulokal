@@ -53,6 +53,12 @@ export async function POST(request: Request) {
         errorCode: error.code
       }, { status: 503 });
     }
+    if (error.code === "42702" && error.message.includes("clip_count")) {
+      return NextResponse.json({
+        error: "Fitur clip perlu diperbarui di database. Pastikan migration 20261013030000_fix_credit_clip_count_ambiguity.sql sudah diterapkan.",
+        errorCode: error.code
+      }, { status: 503 });
+    }
     return NextResponse.json({
       error: "Clip belum dapat dimulai. Periksa log server untuk detail kegagalan.",
       errorCode: error.code ?? "UNKNOWN"
