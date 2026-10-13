@@ -38,6 +38,7 @@ Jalankan `supabase_schema.sql` pada SQL Editor atau melalui Supabase CLI untuk i
 - `20261013010000_add_order_metadata.sql`
 - `20261013020000_add_payments_updated_at.sql`
 - `20261013030000_fix_credit_clip_count_ambiguity.sql`
+- `20261013040000_fix_credit_clip_created_at_ambiguity.sql`
 
 Jangan memberikan akses `service_role` ke browser atau memberikan grant update untuk status pembayaran kepada pengguna.
 
