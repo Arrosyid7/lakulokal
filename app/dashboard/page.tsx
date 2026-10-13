@@ -70,7 +70,7 @@ export default async function DashboardPage() {
             <article className="account-metric"><span>Total order</span><strong>{totalCount ?? 0}</strong><small>Semua order akun</small></article>
             <article className="account-metric"><span>Order selesai</span><strong>{completedCount ?? 0}</strong><small>Berhasil diproses</small></article>
             <article className="account-metric"><span>Sedang diproses</span><strong>{processingCount ?? 0}</strong><small>Masih berjalan</small></article>
-            <article className="account-metric"><span>File tersimpan</span><strong>{clipCount ?? 0}</strong><small>Tersedia di riwayat</small></article>
+            <article className="account-metric"><span>Hasil lama tersimpan</span><strong>{clipCount ?? 0}</strong><small>File dari order sebelumnya</small></article>
           </section>
           <section className="dashboard-summary">
             <div className="row">

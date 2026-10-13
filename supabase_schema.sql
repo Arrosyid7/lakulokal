@@ -107,6 +107,7 @@ create table if not exists public.processing_jobs (
   status public.processing_status not null default 'QUEUED',
   progress smallint not null default 0 check (progress between 0 and 100),
   attempt_count integer not null default 0 check (attempt_count >= 0),
+  completed_clips integer not null default 0 check (completed_clips >= 0),
   error_message text,
   created_at timestamptz not null default now(),
   started_at timestamptz,

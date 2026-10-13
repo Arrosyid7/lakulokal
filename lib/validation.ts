@@ -22,6 +22,7 @@ export const orderSchema = z.object({
 export const browserProcessingSchema = z.object({
   status: z.enum(["PROCESSING", "COMPLETED", "FAILED"]),
   progress: z.number().int().min(0).max(100),
+  completed_clips: z.number().int().min(0),
   error_message: z.string().trim().max(400).nullable().optional()
 });
 

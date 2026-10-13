@@ -44,7 +44,7 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
   heroDescription: "Beli 5 kredit seharga Rp1.000 lewat QRIS. Setelah admin menyetujui pembayaran, buat satu clip dengan waktu pilihan sendiri atau lima clip sekaligus.",
   primaryCta: "Buat akun untuk mulai",
   secondaryCta: "Lihat cara kerja",
-  heroNote: "Clip hasil tersedia di riwayat akun selama 24 jam.",
+  heroNote: "Hasil hanya tersedia di halaman pemrosesan. Unduh sebelum keluar.",
   processKicker: "Cara kerja",
   processTitle: "Cara kerja clip video.",
   processDescription: "Kredit masuk setelah pembayaran QRIS disetujui admin. Pilih satu clip atau lima clip dari video yang ada di perangkat Anda.",
@@ -78,7 +78,7 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
     },
     {
       question: "Apa yang terjadi jika pembuatan clip gagal?",
-      answer: "Kredit untuk clip yang belum berhasil disimpan dikembalikan ke saldo. Clip yang sudah berhasil disimpan tetap menggunakan kredit."
+      answer: "Kredit untuk clip yang belum berhasil dibuat dikembalikan ke saldo. Clip yang sudah selesai tetap menggunakan kredit; unduh clip tersebut sebelum meninggalkan halaman."
     },
     {
       question: "File video apa yang dapat diproses?",
@@ -90,7 +90,7 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
     },
     {
       question: "Apakah video dan hasilnya disimpan?",
-      answer: "Video sumber diproses di browser dan tetap berada di perangkat Anda. File hasil tersedia di riwayat order selama 24 jam, lalu dihapus otomatis. Unduh hasil sebelum masa penyimpanan berakhir."
+      answer: "Video sumber dan clip hasil diproses di browser, bukan disimpan di server. Unduh setiap clip sebelum meninggalkan halaman; status order tetap terlihat di riwayat."
     }
   ]
 };

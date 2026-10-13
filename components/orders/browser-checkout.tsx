@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { PaymentQrCode } from "@/components/orders/payment-qr-code";
 import { ReceiptProofForm } from "@/components/orders/receipt-proof-form";
 import { getPaymentStatusLabel, getProcessingStatusLabel, getStatusClassName } from "@/lib/order-presentation";
 import { mergeOrderDownloads, type OrderDownload } from "@/lib/order-downloads";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import {
   getClipRanges,
   MAX_BROWSER_VIDEO_DURATION_SECONDS,
@@ -57,6 +56,30 @@ export function BrowserCheckout({
   const [activeClipNumber, setActiveClipNumber] = useState(0);
   const fileSelection = useRef(0);
   const blobUrls = useRef(new Set<string>());
+  const ffmpegRef = useRef<import("@ffmpeg/ffmpeg").FFmpeg | null>(null);
+  const leavingPage = useRef(false);
+
+  const updateServerStatus = useCallback(async (
+    status: "PROCESSING" | "COMPLETED" | "FAILED",
+    nextProgress: number,
+    errorMessage?: string,
+    completedClips = progressRef.current
+  ) => {
+    const response = await fetch(`/api/orders/${encodeURIComponent(orderCode)}/browser-processing`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        status,
+        progress: nextProgress,
+        completed_clips: completedClips,
+        error_message: errorMessage ?? null
+      })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Status pemrosesan gagal disimpan.");
+    setProcessingStatus(status);
+    setProgress(nextProgress);
+  }, [orderCode]);
 
   useEffect(() => {
     let active = true;
@@ -124,6 +147,66 @@ export function BrowserCheckout({
     blobUrls.current.clear();
   }, []);
 
+  useEffect(() => {
+    if (!busy) return;
+
+    const warnBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    const markInterrupted = () => {
+      if (leavingPage.current) return;
+      void fetch(`/api/orders/${encodeURIComponent(orderCode)}/browser-processing`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "FAILED",
+          progress,
+          completed_clips: progressRef.current,
+          error_message: "Proses terhenti karena halaman ditutup."
+        }),
+        keepalive: true
+      }).catch((error: unknown) => {
+        console.error("browser_processing_leave_update_failed", error);
+      });
+    };
+    const confirmInternalNavigation = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const link = target.closest<HTMLAnchorElement>("a[href]");
+      if (!link || link.target === "_blank" || link.hasAttribute("download")) return;
+
+      const destination = new URL(link.href, window.location.href);
+      if (
+        destination.origin !== window.location.origin ||
+        (destination.pathname === window.location.pathname && destination.search === window.location.search)
+      ) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      if (!window.confirm("Clip masih diproses. Jika meninggalkan halaman, proses akan dihentikan. Unduh clip yang sudah siap sebelum keluar. Lanjutkan?")) return;
+      if (leavingPage.current) return;
+      leavingPage.current = true;
+      ffmpegRef.current?.terminate();
+      void updateServerStatus("FAILED", progress, "Proses dihentikan karena halaman ditinggalkan.", progressRef.current)
+        .then(() => window.location.assign(destination.href))
+        .catch((error: unknown) => {
+          leavingPage.current = false;
+          const message = error instanceof Error ? error.message : "Status proses gagal diperbarui.";
+          setStatusError(`Tidak dapat meninggalkan proses dengan aman. ${message}`);
+        });
+    };
+
+    window.addEventListener("beforeunload", warnBeforeUnload);
+    window.addEventListener("pagehide", markInterrupted);
+    document.addEventListener("click", confirmInternalNavigation, true);
+    return () => {
+      window.removeEventListener("beforeunload", warnBeforeUnload);
+      window.removeEventListener("pagehide", markInterrupted);
+      document.removeEventListener("click", confirmInternalNavigation, true);
+    };
+  }, [busy, orderCode, progress, updateServerStatus]);
+
   async function chooseFile(event: ChangeEvent<HTMLInputElement>) {
     fileSelection.current += 1;
     const selection = fileSelection.current;
@@ -160,56 +243,6 @@ export function BrowserCheckout({
     }
   }
 
-  async function updateServerStatus(status: "PROCESSING" | "COMPLETED" | "FAILED", nextProgress: number, errorMessage?: string) {
-    const response = await fetch(`/api/orders/${encodeURIComponent(orderCode)}/browser-processing`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        status,
-        progress: nextProgress,
-        error_message: errorMessage ?? null
-      })
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "Status pemrosesan gagal disimpan.");
-    setProcessingStatus(status);
-    setProgress(nextProgress);
-  }
-
-  async function uploadClip(clipNumber: number, clipName: string, blob: Blob, clipDuration: number) {
-    const uploadInfoResponse = await fetch(`/api/orders/${encodeURIComponent(orderCode)}/clips`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        phase: "sign",
-        clip_number: clipNumber,
-        file_name: clipName,
-        size_bytes: blob.size,
-        duration_seconds: clipDuration
-      })
-    });
-    const uploadInfo = await uploadInfoResponse.json();
-    if (!uploadInfoResponse.ok) throw new Error(uploadInfo.error || `Klip ${clipNumber} gagal disiapkan untuk disimpan.`);
-    const { error: uploadError } = await createSupabaseBrowserClient()
-      .storage.from("lakulokal-results")
-      .uploadToSignedUrl(uploadInfo.path, uploadInfo.token, blob, { contentType: "video/mp4" });
-    if (uploadError) throw new Error(`Klip ${clipNumber} gagal disimpan: ${uploadError.message}`);
-
-    const finalizeResponse = await fetch(`/api/orders/${encodeURIComponent(orderCode)}/clips`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        phase: "finalize",
-        clip_number: clipNumber,
-        file_name: clipName,
-        size_bytes: blob.size,
-        duration_seconds: clipDuration
-      })
-    });
-    const finalized = await finalizeResponse.json();
-    if (!finalizeResponse.ok) throw new Error(finalized.error || `Klip ${clipNumber} gagal dicatat.`);
-  }
-
   async function processVideo() {
     if (!file || duration === null || busy) return;
     setBusy(true);
@@ -220,15 +253,16 @@ export function BrowserCheckout({
     progressRef.current = 0;
     setActiveClipNumber(1);
     let ffmpeg: import("@ffmpeg/ffmpeg").FFmpeg | null = null;
-    let pendingUpload: Promise<Error | null> | null = null;
     let processingStarted = false;
+    leavingPage.current = false;
 
     try {
-      await updateServerStatus("PROCESSING", 1);
+      await updateServerStatus("PROCESSING", 1, undefined, 0);
       processingStarted = true;
       setStage("Memuat pemroses video...");
       const { FFmpeg } = await import("@ffmpeg/ffmpeg");
       ffmpeg = new FFmpeg();
+      ffmpegRef.current = ffmpeg;
       ffmpeg.on("progress", ({ progress: clipProgress }) => {
         const next = Math.min(95, 10 + Math.round(((progressRef.current + clipProgress) / clipCount) * 85));
         setProgress(next);
@@ -283,37 +317,25 @@ export function BrowserCheckout({
         const clipProgress = Math.round(10 + ((index + 1) / clipCount) * 85);
         setProgress(clipProgress);
         setStage(index + 1 < clipCount
-          ? `Clip ${index + 1} siap ditonton. Proses lanjut ke clip ${index + 2}.`
-          : `Clip ${index + 1} siap ditonton. Menyimpan hasil terakhir.`);
+          ? `Clip ${index + 1} siap diunduh. Proses lanjut ke clip ${index + 2}.`
+          : `Clip ${index + 1} siap diunduh.`);
         await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
         await ffmpeg.deleteFile(clipName);
-        await updateServerStatus("PROCESSING", Math.min(95, clipProgress));
-        if (pendingUpload) {
-          const uploadError = await pendingUpload;
-          pendingUpload = null;
-          if (uploadError) throw uploadError;
-        }
-        pendingUpload = uploadClip(index + 1, clipName, blob, range.duration)
-          .then(() => null, (cause) => cause instanceof Error ? cause : new Error("Klip gagal disimpan."));
-        if (index + 1 < clipCount) setStage(`Menyimpan clip ${index + 1} sambil membuat clip ${index + 2}...`);
+        await updateServerStatus("PROCESSING", Math.min(95, clipProgress), undefined, index + 1);
       }
 
-      if (pendingUpload) {
-        const uploadError = await pendingUpload;
-        pendingUpload = null;
-        if (uploadError) throw uploadError;
-      }
-      await updateServerStatus("COMPLETED", 100);
+      await updateServerStatus("COMPLETED", 100, undefined, clipCount);
       setActiveClipNumber(clipCount);
-      setStage("Klip siap ditonton dan diunduh. Hasil tersimpan selama 24 jam.");
+      setStage("Semua clip siap diunduh. Hasil tidak disimpan di server atau riwayat.");
     } catch (error) {
+      if (leavingPage.current) return;
       const message = (error instanceof Error ? error.message : "Pemrosesan video gagal.").slice(0, 400);
       setStage("");
       if (!processingStarted) {
         setStatusError(message);
       } else {
         try {
-          await updateServerStatus("FAILED", progress, message);
+          await updateServerStatus("FAILED", progress, message, progressRef.current);
           setStatusError(message);
         } catch (statusError) {
           const saveError = statusError instanceof Error ? statusError.message : "Status gagal disimpan.";
@@ -322,6 +344,7 @@ export function BrowserCheckout({
       }
     } finally {
       ffmpeg?.terminate();
+      ffmpegRef.current = null;
       setBusy(false);
     }
   }
@@ -329,7 +352,8 @@ export function BrowserCheckout({
   const money = new Intl.NumberFormat("id-ID", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
   const manualQris = paymentProvider === "MANUAL_QRIS";
   const canUseOrder = !isCreditPurchase && paymentStatus === "PAID";
-  const canSelectFile = canUseOrder && !busy;
+  const detachedProcessing = !busy && processingStatus === "PROCESSING";
+  const canSelectFile = canUseOrder && !busy && !detachedProcessing && !(isCreditRun && ["COMPLETED", "FAILED"].includes(processingStatus));
   const clipRunProgress = !busy && processingStatus === "COMPLETED" ? 100 : progress;
   const showClipRun = busy || (downloads.length > 0 && ["COMPLETED", "FAILED"].includes(processingStatus));
   const clipRunTitle = busy
@@ -397,8 +421,18 @@ export function BrowserCheckout({
       {canUseOrder && (
         <div className="browser-clip-workspace">
           {paymentStatus === "PAID" ? (
-            <p>{isCreditRun ? `${clipCount} kredit digunakan untuk membuat clip ini.` : "Pembayaran sudah dikonfirmasi."} Pilih file video untuk dibuat menjadi {clipCount} klip. Video sumber diproses di perangkat Anda, sedangkan clip hasil disimpan di riwayat order selama 24 jam.</p>
+            <p>{isCreditRun ? `${clipCount} kredit digunakan untuk membuat clip ini.` : "Pembayaran sudah dikonfirmasi."} Pilih file video untuk dibuat menjadi {clipCount} klip. Video sumber dan hasil clip diproses di perangkat Anda.</p>
           ) : null}
+          {detachedProcessing && (
+            <p className="checkout-status-line" role="status">
+              Order ini masih berstatus diproses, tetapi halaman ini tidak dapat melanjutkan proses lama. Kembali ke tab asal jika masih terbuka. Jika tidak, muat ulang nanti untuk melihat status terbaru; file hasil yang belum diunduh tidak dapat dipulihkan.
+            </p>
+          )}
+          {(["WAITING_PAYMENT", "QUEUED", "PROCESSING"].includes(processingStatus) || busy) && (
+            <p className="checkout-status-line" role="note">
+              Hasil clip tidak disimpan di server atau riwayat order. Jangan pindah menu atau menutup halaman saat proses berjalan. Unduh setiap clip dari tombolnya sebelum meninggalkan halaman.
+            </p>
+          )}
           {showClipRun && (
             <section className="clip-run-status" aria-labelledby="clip-run-title">
               <div className="clip-run-meter" aria-hidden="true">
@@ -418,10 +452,12 @@ export function BrowserCheckout({
               <h3 id="clip-run-title">{clipRunTitle}</h3>
               <p className="clip-run-intro">
                 {busy
-                  ? "Setiap clip langsung muncul untuk dipratinjau. Proses berlanjut ke clip berikutnya tanpa menunggu seluruh paket selesai."
+                  ? "Setiap clip muncul di bawah setelah selesai dibuat. Unduh clip yang sudah siap sebelum proses berlanjut."
                   : processingStatus === "COMPLETED"
-                    ? "Semua hasil tersedia di bawah untuk ditonton dan diunduh selama 24 jam."
-                    : "Hasil yang sudah selesai tetap dapat dipratinjau dan diunduh di bawah."}
+                    ? downloads.length > 0
+                      ? "Unduh setiap clip sekarang. File hanya tersedia selama halaman ini terbuka."
+                      : "Proses selesai, tetapi file hasil tidak disimpan di riwayat. Buat clip baru untuk mendapatkan file lagi."
+                    : "Unduh clip yang sudah siap dari halaman ini. File tidak disimpan di riwayat."}
               </p>
               <dl className="clip-run-details">
                 <div><dt>Video</dt><dd>{file?.name || "Tidak tersedia"}</dd></div>
@@ -435,7 +471,7 @@ export function BrowserCheckout({
                   <span>{progress}%</span>
                 </div>
               )}
-              <p className="clip-run-count" role="status" aria-live="polite">{downloads.length} dari {clipCount} clip siap ditonton</p>
+              <p className="clip-run-count" role="status" aria-live="polite">{downloads.length} dari {clipCount} clip siap diunduh</p>
             </section>
           )}
           {!busy && (
@@ -448,20 +484,26 @@ export function BrowserCheckout({
                 onChange={chooseFile}
                 disabled={!canSelectFile || (isCreditRun && Boolean(file))}
               />
-              <small>MP4, MOV, M4V, atau WebM. Maksimal 250 MB dan dua jam. Biarkan halaman terbuka sampai clip selesai dibuat.</small>
+              <small>MP4, MOV, M4V, atau WebM. Maksimal 250 MB dan dua jam. Hasil hanya tersedia di halaman ini, jadi unduh setiap clip sebelum keluar.</small>
             </div>
           )}
           {file && duration !== null && !busy && <p className="muted">Dipilih: {file.name} · {Math.ceil(duration / 60)} menit</p>}
           {fileError && <p className="form-error" role="alert">{fileError}</p>}
           {downloads.length > 0 && (
             <section className="browser-downloads" aria-labelledby="browser-downloads-title">
-              <h3 id="browser-downloads-title">{busy ? "Preview clip yang sudah siap" : "Clip siap ditonton dan diunduh"}</h3>
+              <h3 id="browser-downloads-title">{busy ? "Clip siap diunduh" : "Unduh hasil clip"}</h3>
               {[...downloads].sort((left, right) => (right.clipNumber ?? 0) - (left.clipNumber ?? 0)).map((item) => (
                 <article className="browser-download-item" key={item.clipNumber ?? item.name}>
                   <div className="browser-download-copy">
                     <p className="section-kicker">Clip {item.clipNumber ?? ""} dari {clipCount}</p>
                     <h4>{item.name}</h4>
-                    <p>{busy ? "Preview siap. Clip berikutnya diproses otomatis." : "Preview siap ditonton. Unduh file ini jika ingin menyimpannya sekarang."}</p>
+                    <p>
+                      {busy
+                        ? "Unduh clip ini sebelum proses berlanjut."
+                        : item.local
+                          ? "File ini hanya tersedia selama halaman ini terbuka."
+                          : "Ini hasil dari order lama. Unduh sekarang karena tautan akses dibuat sementara."}
+                    </p>
                   </div>
                   <video controls playsInline preload="metadata" src={item.url} aria-label={`Pratinjau ${item.name}`} />
                   <a className="button button-secondary" href={item.downloadUrl ?? item.url} download={item.local ? item.name : undefined}>
@@ -478,14 +520,21 @@ export function BrowserCheckout({
           )}
           {!busy && isCreditRun && processingStatus === "FAILED" && (
             <p className="checkout-status-line" role="status">
-              Kredit untuk clip yang belum selesai sudah dikembalikan.{" "}
+              Proses terhenti. Clip yang sudah siap tetap bisa diunduh di halaman ini. Kredit untuk clip yang belum selesai dikembalikan jika berlaku.{" "}
               <a className="text-link" href="/dashboard/clip">Mulai clip baru</a>
             </p>
           )}
           {!busy && isCreditRun && processingStatus === "COMPLETED" && (
             <p className="checkout-status-line">
-              Clip selesai.{" "}
+              {downloads.length > 0 ? "Unduh clip yang sudah siap sebelum meninggalkan halaman. " : "File hasil tidak tersimpan di riwayat. Buat clip baru untuk mendapatkan file lagi. "}
               <a className="text-link" href="/dashboard/clip">Buat clip berikutnya dengan 1 kredit</a>
+            </p>
+          )}
+          {!busy && !isCreditPurchase && !isCreditRun && processingStatus === "COMPLETED" && (
+            <p className="checkout-status-line" role="status">
+              {downloads.length > 0
+                ? "Unduh setiap clip yang sudah siap sebelum meninggalkan halaman."
+                : "Order selesai, tetapi file hasil tidak tersimpan di riwayat. Jika halaman proses sudah ditutup, buat clip baru untuk mendapatkan file lagi."}
             </p>
           )}
         </div>
@@ -502,7 +551,7 @@ export function BrowserCheckout({
             : <div><dt>Pembayaran</dt><dd><span className={getStatusClassName("payment", paymentStatus)}>{getPaymentStatusLabel(paymentStatus, manualQris && proofStatus === "APPROVED")}</span></dd></div>}
           {!isCreditPurchase && <div><dt>Status proses</dt><dd><span className={getStatusClassName("processing", processingStatus)}>{getProcessingStatusLabel(processingStatus)}</span></dd></div>}
         </dl>
-        <p>Video sumber diproses di perangkat ini. Clip hasil dapat ditonton dan diunduh dari riwayat order selama 24 jam.</p>
+        <p>Video sumber dan clip hasil hanya berada di perangkat Anda. Unduh setiap clip sebelum meninggalkan halaman. LakuLokal tidak menyimpan file hasil di server atau riwayat order.</p>
       </aside>
     </section>
   );

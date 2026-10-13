@@ -32,7 +32,7 @@ export default async function CreateClipPage() {
               <li>Untuk clip manual, buat satu clip dengan waktu mulai dan selesai pilihan Anda. Ulangi proses ini untuk clip berikutnya, satu kredit per clip.</li>
               <li>Untuk lima clip sekaligus, sistem memilih lima bagian video yang dibagi merata dan memakai lima kredit.</li>
               <li>Kredit yang belum dipakai tetap tersimpan di saldo akun Anda.</li>
-              <li>Hasil clip disimpan di riwayat order selama 24 jam.</li>
+              <li>Unduh setiap clip sebelum meninggalkan halaman. File hasil tidak disimpan di server atau riwayat order.</li>
             </ul>
             {availableCredits < 1 && <Link className="button button-small" href="/dashboard/new">Beli 5 kredit seharga Rp1.000</Link>}
           </aside>

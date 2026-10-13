@@ -79,17 +79,19 @@ describe("order authorization and validation", () => {
 
 describe("browser processing validation", () => {
   it("accepts progress updates from the browser", () => {
-    expect(browserProcessingSchema.safeParse({ status: "PROCESSING", progress: 40 }).success).toBe(true);
+    expect(browserProcessingSchema.safeParse({ status: "PROCESSING", progress: 40, completed_clips: 2 }).success).toBe(true);
   });
 
   it("accepts completed and failed states with bounded error messages", () => {
-    expect(browserProcessingSchema.safeParse({ status: "COMPLETED", progress: 100 }).success).toBe(true);
-    expect(browserProcessingSchema.safeParse({ status: "FAILED", progress: 0, error_message: "Video rusak" }).success).toBe(true);
-    expect(browserProcessingSchema.safeParse({ status: "FAILED", progress: 0, error_message: "x".repeat(401) }).success).toBe(false);
+    expect(browserProcessingSchema.safeParse({ status: "COMPLETED", progress: 100, completed_clips: 5 }).success).toBe(true);
+    expect(browserProcessingSchema.safeParse({ status: "FAILED", progress: 0, completed_clips: 0, error_message: "Video rusak" }).success).toBe(true);
+    expect(browserProcessingSchema.safeParse({ status: "FAILED", progress: 0, completed_clips: 0, error_message: "x".repeat(401) }).success).toBe(false);
   });
 
   it("rejects unsupported states and invalid progress", () => {
-    expect(browserProcessingSchema.safeParse({ status: "PAID", progress: 100 }).success).toBe(false);
-    expect(browserProcessingSchema.safeParse({ status: "PROCESSING", progress: 101 }).success).toBe(false);
+    expect(browserProcessingSchema.safeParse({ status: "PAID", progress: 100, completed_clips: 0 }).success).toBe(false);
+    expect(browserProcessingSchema.safeParse({ status: "PROCESSING", progress: 101, completed_clips: 0 }).success).toBe(false);
+    expect(browserProcessingSchema.safeParse({ status: "PROCESSING", progress: 40, completed_clips: -1 }).success).toBe(false);
+    expect(browserProcessingSchema.safeParse({ status: "PROCESSING", progress: 40 }).success).toBe(false);
   });
 });

@@ -143,7 +143,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             <p className="auth-aside-foot">
               {mode === "admin"
                 ? "Akses ini hanya untuk akun admin yang dibuat oleh pemilik proyek."
-                : "Akun menyimpan riwayat order. Clip hasil tersedia selama 24 jam setelah proses selesai."}
+                : "Akun menyimpan status order. Unduh setiap clip sebelum meninggalkan halaman proses; file hasil tidak disimpan di riwayat."}
             </p>
           </aside>
           <section className="auth-card" aria-labelledby="auth-title">

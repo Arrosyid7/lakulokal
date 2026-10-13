@@ -7,8 +7,8 @@ Next.js App Router berjalan di Vercel. Supabase Auth dan PostgreSQL menyimpan ak
 1. Pengguna memilih file video dan paket. API membuat order dan QRIS, tetapi tidak menerima file video.
 2. Browser menjalankan OCR pada bukti QRIS. Jika nominal dan tanggal cocok, aplikasi menyetujui order secara otomatis tanpa verifikasi ke bank atau penyedia pembayaran.
 3. Setelah persetujuan, browser memproses video menjadi segmen vertikal berdasarkan jarak waktu yang merata.
-4. Setiap clip segera tampil sebagai preview dan diunggah ke penyimpanan privat untuk riwayat order.
-5. Dashboard menyimpan status order dan clip hasil selama 24 jam, bukan file sumber.
+4. Setiap clip segera muncul sebagai unduhan lokal di browser; pengguna mengunduhnya sebelum meninggalkan halaman.
+5. Dashboard menyimpan status order dan jumlah clip selesai, bukan file video sumber atau hasil baru. File hasil dari order lama tetap dapat diakses sampai masa retensinya berakhir.
 
 ## Pembayaran QRIS
 

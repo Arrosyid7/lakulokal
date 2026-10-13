@@ -21,7 +21,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   const { orderCode } = await params;
   const { data: order, error: orderError } = await current.supabase
     .from("orders")
-    .select("id,payment_status,youtube_url")
+    .select("id,payment_status,youtube_url,clip_count")
     .eq("order_code", orderCode)
     .maybeSingle();
   if (orderError) {
@@ -33,13 +33,17 @@ export async function POST(request: Request, { params }: RouteContext) {
   if (order.youtube_url !== null) {
     return NextResponse.json({ error: "Order ini bukan order pemrosesan lokal." }, { status: 409 });
   }
+  if (parsed.data.completed_clips > order.clip_count) {
+    return NextResponse.json({ error: "Jumlah clip selesai melebihi jumlah clip pada order." }, { status: 400 });
+  }
 
   const admin = createSupabaseAdminClient();
   const { error } = await admin.rpc("update_browser_processing_status", {
     p_order_id: order.id,
     p_status: parsed.data.status,
     p_progress: parsed.data.progress,
-    p_error_message: parsed.data.error_message ?? null
+    p_error_message: parsed.data.error_message ?? null,
+    p_completed_clips: parsed.data.completed_clips
   });
   if (error) {
     console.error("browser_processing_status_update_failed", { code: error.code, status: parsed.data.status });

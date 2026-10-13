@@ -64,7 +64,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
           <h2>Hasil clip</h2>
           {(clips?.length ?? 0) > 0
             ? <DownloadLinks orderCode={order.order_code} clipCount={clips?.length ?? 0} />
-            : <p className="empty-state">Order berstatus selesai, tetapi daftar file masih kosong. Hubungi pengelola untuk pemeriksaan.</p>}
+            : <p className="empty-state">Order lama berstatus selesai, tetapi file hasilnya tidak ditemukan. Hubungi pengelola untuk pemeriksaan.</p>}
         </section>
       ) : (
         <section className="panel" style={{ marginTop: 18 }}>

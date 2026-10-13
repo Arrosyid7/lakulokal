@@ -101,7 +101,7 @@ export const articles: Article[] = [
         heading: "Tinjau hasil sebelum dibagikan",
         paragraphs: [
           "Putar setiap clip pada perangkat yang akan digunakan untuk mengunggahnya. Pastikan gambar penting tetap terlihat, suara cukup jelas, dan clip tidak berakhir di tengah kalimat.",
-          "LakuLokal memproses file video yang Anda pilih dari perangkat, bukan tautan YouTube. File sumber diproses di browser, sementara status proses dan hasilnya dapat dilihat di riwayat order.",
+          "LakuLokal memproses file video yang Anda pilih dari perangkat, bukan tautan YouTube. File sumber dan hasil clip diproses di browser. Status proses tetap tercatat di riwayat order, tetapi file hasil tidak disimpan di sana.",
           "Periksa pembingkaian gambar setelah dipotong. Pastikan wajah, papan tulis, atau benda yang sedang dibahas tidak berada terlalu dekat dengan tepi gambar.",
           "Jika Anda menambahkan teks saat mengedit lanjutan, baca kembali ejaan nama dan istilah. Teks sebaiknya membantu memahami isi, bukan menutupi bagian gambar yang penting.",
           "Hasil LakuLokal menggunakan bingkai vertikal. Periksa kembali posisi pembicara dan objek utama di setiap file sebelum mengunggahnya."
@@ -191,7 +191,7 @@ export const articles: Article[] = [
         heading: "Pahami alur order",
         paragraphs: [
           "Beli 5 kredit seharga Rp1.000 melalui QRIS, lalu unggah bukti pembayaran di halaman order. Admin memeriksa transaksi dan saldo bertambah setelah pembayaran disetujui.",
-          "Gunakan dashboard untuk melihat saldo dan riwayat order. File clip tersedia selama 24 jam setelah selesai, lalu dihapus otomatis. Unduh hasil sebelum masa itu berakhir."
+          "Gunakan dashboard untuk melihat saldo dan status order. Clip hasil hanya tersedia di halaman proses yang sedang terbuka, jadi unduh setiap file sebelum meninggalkannya."
         ]
       },
       {
@@ -205,7 +205,7 @@ export const articles: Article[] = [
       {
         heading: "Simpan hasil dengan tertib",
         paragraphs: [
-          "Setelah clip selesai dibuat, unduh file ke perangkat dan pindahkan ke penyimpanan yang Anda kelola. Hasil tersedia selama 24 jam, jadi simpan file sebelum masa itu berakhir.",
+          "Setelah tiap clip selesai dibuat, unduh file ke perangkat dan pindahkan ke penyimpanan yang Anda kelola. File hasil tidak disimpan di server; jika halaman ditutup sebelum unduhan, clip itu tidak dapat dipulihkan.",
           "Gunakan nama file yang menjelaskan topik atau urutan clip. Simpan juga catatan singkat tentang tujuan tiap potongan agar file lebih mudah ditemukan ketika akan disunting atau diunggah.",
           "Pastikan file sudah dapat dibuka sebelum menutup halaman order. Jika ada kendala, catat kode order supaya lebih mudah meminta bantuan."
         ]

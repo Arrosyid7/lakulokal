@@ -1,6 +1,6 @@
 # LakuLokal
 
-LakuLokal membuat klip video vertikal dari file yang dipilih pengguna. Pengguna memilih paket, membayar lewat QRIS statis, lalu mengunggah bukti. OCR mencocokkan nominal, kemudian admin memeriksa transaksi sebelum menyetujui pembayaran. Setiap clip muncul saat selesai dan disimpan privat agar dapat diakses dari riwayat order selama 24 jam. Aplikasi tidak membutuhkan VPS atau Cloud Run untuk pemrosesan video.
+LakuLokal membuat klip video vertikal dari file yang dipilih pengguna. Pengguna memilih paket, membayar lewat QRIS statis, lalu mengunggah bukti. OCR mencocokkan nominal, kemudian admin memeriksa transaksi sebelum menyetujui pembayaran. Clip diproses di browser dan diunduh langsung oleh pengguna; file hasil baru tidak diunggah atau disimpan di server maupun riwayat order. Aplikasi tidak membutuhkan VPS atau Cloud Run untuk pemrosesan video.
 
 ## Menjalankan lokal
 
@@ -39,10 +39,11 @@ Jalankan `supabase_schema.sql` pada SQL Editor atau melalui Supabase CLI untuk i
 - `20261013020000_add_payments_updated_at.sql`
 - `20261013030000_fix_credit_clip_count_ambiguity.sql`
 - `20261013040000_fix_credit_clip_created_at_ambiguity.sql`
+- `20261014000000_local_clip_downloads.sql`
 
 Jangan memberikan akses `service_role` ke browser atau memberikan grant update untuk status pembayaran kepada pengguna.
 
-Buat bucket Storage privat bernama `lakulokal-results` untuk file clip. Unggahan clip memakai signed upload URL, sedangkan tautan tonton dan unduh dibuat singkat untuk pemilik order. Terapkan migration sebelum mengaktifkan halaman hasil atau panel admin.
+Bucket privat `lakulokal-results` hanya diperlukan untuk mengakses atau membersihkan clip dari order lama. Pemrosesan baru tidak mengunggah file clip ke bucket; status order dan jumlah clip yang selesai tetap dicatat di database.
 
 ## Pembayaran QRIS dan bukti transfer
 
@@ -56,7 +57,7 @@ Integrasi DANA, callback, dan rekonsiliasi otomatis sudah dihapus. Kolom serta m
 
 File video diproses secara lokal dengan FFmpeg WebAssembly. Format yang diterima: MP4, MOV, M4V, dan WebM. Ukuran maksimal 250 MB, durasi maksimal dua jam, dan setiap klip berdurasi hingga 60 detik. Klip dipilih berdasarkan jarak waktu merata, bukan deteksi highlight. Bukti pembayaran gambar disimpan privat untuk pemeriksaan admin; hanya OCR nominal dan tanggal yang dijalankan di browser.
 
-Video sumber tidak diunggah ke server. Setiap clip ditampilkan segera setelah selesai, lalu file clip disimpan di Supabase Storage privat dan catatannya di database sampai 24 jam setelah pemrosesan berakhir. Endpoint hasil menolak akses setelah batas 24 jam. Vercel Cron menghapus file serta catatan yang kedaluwarsa setiap hari; penghapusan fisik dapat menyusul hingga sekitar 24 jam setelah hasil tidak lagi bisa diakses. Browser harus tetap terbuka selama pemrosesan; hasil dapat gagal jika perangkat kehabisan memori atau browser tidak mendukung WebAssembly. Aplikasi menyajikan file FFmpeg dari domain sendiri, bukan mengambilnya dari CDN saat pengguna membuat klip.
+Video sumber dan hasil clip baru tidak diunggah ke server. Setiap clip muncul di halaman pemrosesan sebagai unduhan lokal. Pengguna harus tetap di halaman sampai proses selesai dan mengunduh setiap clip sebelum keluar; jika halaman ditutup atau dimuat ulang, hasil lokal yang belum diunduh tidak dapat dipulihkan. Database tetap menyimpan status order dan jumlah clip selesai. Vercel Cron membersihkan file serta catatan hasil lama yang masih ada di Supabase Storage. Browser membutuhkan memori yang cukup dan dukungan WebAssembly. Aplikasi menyajikan file FFmpeg dari domain sendiri, bukan mengambilnya dari CDN saat pengguna membuat klip.
 
 Panel admin dibuka dari `/admin` dan memakai halaman masuk khusus di `/admin-login`, terpisah dari login serta pendaftaran pengguna. Buat satu akun admin dari Supabase Dashboard pada Authentication > Users, lalu tetapkan role `ADMIN` untuk profil akun tersebut melalui SQL Editor. Database membatasi hanya satu profil admin; aplikasi tidak menyediakan pendaftaran admin. Admin menggunakan email dan password yang ditetapkan saat akun Auth dibuat. Panel mengelola teks dan metadata landing page, artikel beserta checklist SEO bergaya Yoast, tautan Instagram/Facebook/TikTok, serta daftar transaksi. Checklist SEO dibuat di aplikasi, bukan integrasi plugin Yoast WordPress.
 
@@ -67,8 +68,8 @@ Paket `@ffmpeg/core` menggunakan lisensi GPL-2.0-or-later. Lihat lisensi paket d
 1. Deploy Next.js ke Vercel.
 2. Atur variabel Supabase dari `.env.example`. Jangan menaruh secret di variable `NEXT_PUBLIC_*`.
 3. Pastikan `npm install`/`npm ci` menjalankan `postinstall`, sehingga aset FFmpeg tersedia di `public/ffmpeg/` saat build.
-4. Aktifkan Vercel Cron untuk pembersihan hasil lama, lalu isi `CRON_SECRET`.
-5. Terapkan migration baru, pastikan bucket `payment-proofs` dan `lakulokal-results` privat, dan verifikasi file QRIS yang dipasang sebelum melayani order.
+4. Aktifkan Vercel Cron untuk pembersihan hasil order lama, lalu isi `CRON_SECRET`.
+5. Terapkan migration baru, pastikan bucket `payment-proofs` privat (dan `lakulokal-results` privat jika masih ada file hasil lama), serta verifikasi file QRIS yang dipasang sebelum melayani order.
 6. Buat user Auth admin di Supabase Dashboard, lalu jalankan SQL berikut dengan email yang dipakai admin:
 
    ```sql
@@ -80,7 +81,7 @@ Paket `@ffmpeg/core` menggunakan lisensi GPL-2.0-or-later. Lihat lisensi paket d
    ```
 
    Pastikan query memperbarui satu profil. Buka `/admin` dan masuk dengan email serta password akun Auth tersebut. Jangan buat admin kedua.
-7. Uji unggah bukti, penyaringan OCR, pemeriksaan admin, pemrosesan browser, pratinjau clip bertahap, penghapusan setelah masa simpan, panel admin, dan tampilan mobile.
+7. Uji unggah bukti, penyaringan OCR, pemeriksaan admin, pemrosesan browser, unduhan tiap clip, status selesai/refund kredit, pembersihan file order lama, panel admin, dan tampilan mobile.
 
 Vercel menyajikan aplikasi dan aset FFmpeg. Pemrosesan video menggunakan CPU serta memori perangkat pengguna, bukan server.
 

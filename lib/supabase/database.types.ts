@@ -109,6 +109,7 @@ type ProcessingJobRow = {
   status: ProcessingStatus;
   progress: number;
   attempt_count: number;
+  completed_clips: number;
   error_message: string | null;
   created_at: string;
   started_at: string | null;
@@ -235,7 +236,7 @@ export type Database = {
         Returns: boolean;
       };
       update_browser_processing_status: {
-        Args: { p_order_id: string; p_status: string; p_progress: number; p_error_message: string | null };
+        Args: { p_order_id: string; p_status: string; p_progress: number; p_error_message: string | null; p_completed_clips: number };
         Returns: undefined;
       };
       create_credit_clip_order: {

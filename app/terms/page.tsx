@@ -41,7 +41,7 @@ export default function TermsPage() {
         </section>
         <section>
           <h2>Penyimpanan hasil</h2>
-          <p>Browser memproses video sumber di perangkat pengguna. File clip yang selesai dibuat disimpan secara privat dan dapat diakses dari riwayat order selama 24 jam sejak proses selesai. Setelah masa itu, sistem menghapus file hasil secara otomatis. Pengguna sebaiknya mengunduh hasil sebelum masa simpan berakhir.</p>
+          <p>Browser memproses video sumber dan membuat clip di perangkat pengguna. File hasil tidak diunggah atau disimpan di server maupun riwayat order. Pengguna harus tetap di halaman proses dan mengunduh setiap clip sebelum meninggalkannya. Jika halaman ditutup sebelum file diunduh, hasil tersebut tidak dapat dipulihkan. Status order dan pemakaian kredit tetap dicatat di akun.</p>
         </section>
         <section>
           <h2>Ketersediaan dan perubahan</h2>
