@@ -4,6 +4,24 @@ export const MAX_CLIP_DURATION_SECONDS = 60;
 
 export type ClipRange = { start: number; duration: number };
 
+export function parseClipTimecode(value: string): number {
+  const match = /^(\d{1,3}):([0-5]\d)$/.exec(value.trim());
+  if (!match) throw new Error("Gunakan format menit:detik, misalnya 00:30.");
+
+  const seconds = Number(match[1]) * 60 + Number(match[2]);
+  if (seconds > MAX_BROWSER_VIDEO_DURATION_SECONDS) {
+    throw new Error("Waktu tidak boleh melebihi durasi video maksimal dua jam.");
+  }
+  return seconds;
+}
+
+export function formatClipTimecode(seconds: number): string {
+  const wholeSeconds = Math.floor(seconds);
+  const minutes = Math.floor(wholeSeconds / 60);
+  const remainingSeconds = wholeSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+}
+
 export function readVideoDuration(file: File): Promise<number> {
   const url = URL.createObjectURL(file);
   const video = document.createElement("video");

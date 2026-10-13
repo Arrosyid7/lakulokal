@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { getClipRanges, getManualClipRange, validateBrowserVideo } from "@/lib/browser-video";
+import {
+  formatClipTimecode,
+  getClipRanges,
+  getManualClipRange,
+  parseClipTimecode,
+  validateBrowserVideo
+} from "@/lib/browser-video";
 
 describe("browser video clipping", () => {
   it("spreads clips evenly across the source", () => {
@@ -34,5 +40,16 @@ describe("browser video clipping", () => {
     expect(() => getManualClipRange(10, 8, 90)).toThrow("Waktu mulai dan selesai");
     expect(() => getManualClipRange(0, 61, 90)).toThrow("maksimal 60 detik");
     expect(() => getManualClipRange(20, 30, 25)).toThrow("Waktu mulai dan selesai");
+  });
+
+  it("parses and formats manual clip times as minutes and seconds", () => {
+    expect(parseClipTimecode("00:00")).toBe(0);
+    expect(parseClipTimecode("01:05")).toBe(65);
+    expect(parseClipTimecode("120:00")).toBe(7200);
+    expect(formatClipTimecode(65)).toBe("01:05");
+    expect(formatClipTimecode(59.9)).toBe("00:59");
+    expect(() => parseClipTimecode("1:60")).toThrow("menit:detik");
+    expect(() => parseClipTimecode("120:01")).toThrow("dua jam");
+    expect(() => parseClipTimecode("")).toThrow("menit:detik");
   });
 });

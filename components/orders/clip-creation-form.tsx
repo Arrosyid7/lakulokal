@@ -4,9 +4,11 @@ import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import Link from "next/link";
 import { BrowserCheckout } from "@/components/orders/browser-checkout";
 import {
+  formatClipTimecode,
   getClipRanges,
   getManualClipRange,
   MAX_BROWSER_VIDEO_DURATION_SECONDS,
+  parseClipTimecode,
   readVideoDuration,
   validateBrowserVideo
 } from "@/lib/browser-video";
@@ -22,8 +24,8 @@ export function ClipCreationForm({ availableCredits }: { availableCredits: numbe
   const [file, setFile] = useState<File | null>(null);
   const [duration, setDuration] = useState<number | null>(null);
   const [clipCount, setClipCount] = useState(1);
-  const [startTime, setStartTime] = useState("0");
-  const [endTime, setEndTime] = useState("60");
+  const [startTime, setStartTime] = useState("00:00");
+  const [endTime, setEndTime] = useState("01:00");
   const [checkingFile, setCheckingFile] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -56,8 +58,8 @@ export function ClipCreationForm({ availableCredits }: { availableCredits: numbe
       if (fileSelection.current === selection) {
         setFile(selected);
         setDuration(videoDuration);
-        setStartTime("0");
-        setEndTime(String(Math.min(videoDuration, 60)));
+        setStartTime("00:00");
+        setEndTime(formatClipTimecode(Math.floor(Math.min(videoDuration, 60))));
       }
     } catch (cause) {
       if (fileSelection.current === selection) {
@@ -77,7 +79,7 @@ export function ClipCreationForm({ availableCredits }: { availableCredits: numbe
     let ranges: { start: number; duration: number }[];
     try {
       ranges = clipCount === 1
-        ? [getManualClipRange(Number(startTime), Number(endTime), duration)]
+        ? [getManualClipRange(parseClipTimecode(startTime), parseClipTimecode(endTime), duration)]
         : getClipRanges(duration, 5);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Rentang clip tidak valid.");
@@ -93,7 +95,11 @@ export function ClipCreationForm({ availableCredits }: { availableCredits: numbe
         body: JSON.stringify({ clip_count: clipCount })
       });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Clip belum dapat dimulai.");
+      if (!response.ok) {
+        const message = typeof result.error === "string" ? result.error : "Clip belum dapat dimulai.";
+        const errorCode = typeof result.errorCode === "string" ? ` (Kode: ${result.errorCode})` : "";
+        throw new Error(`${message}${errorCode}`);
+      }
       setCheckout({
         orderCode: result.order.order_code,
         clipCount: result.order.clip_count,
@@ -153,14 +159,14 @@ export function ClipCreationForm({ availableCredits }: { availableCredits: numbe
       {clipCount === 1 && (
         <div className="clip-time-fields">
           <div className="field">
-            <label htmlFor="clip-start">Mulai (detik)</label>
-            <input id="clip-start" type="number" min="0" max={duration ?? undefined} step="0.1" value={startTime} onChange={(event) => setStartTime(event.target.value)} required />
+            <label htmlFor="clip-start">Mulai (MM:SS)</label>
+            <input id="clip-start" type="text" inputMode="numeric" maxLength={6} pattern="[0-9]{1,3}:[0-5][0-9]" placeholder="00:00" value={startTime} onChange={(event) => setStartTime(event.target.value)} required />
           </div>
           <div className="field">
-            <label htmlFor="clip-end">Selesai (detik)</label>
-            <input id="clip-end" type="number" min="0.1" max={duration ?? undefined} step="0.1" value={endTime} onChange={(event) => setEndTime(event.target.value)} required />
+            <label htmlFor="clip-end">Selesai (MM:SS)</label>
+            <input id="clip-end" type="text" inputMode="numeric" maxLength={6} pattern="[0-9]{1,3}:[0-5][0-9]" placeholder="00:00" value={endTime} onChange={(event) => setEndTime(event.target.value)} required />
           </div>
-          <small>Durasi satu clip maksimal 60 detik.</small>
+          <small>Masukkan menit:detik, misalnya 00:30. Durasi satu clip maksimal 60 detik.</small>
         </div>
       )}
       {clipCount === 5 && <p className="muted">Lima bagian dipilih merata dari video. Durasi tiap clip maksimal 60 detik.</p>}

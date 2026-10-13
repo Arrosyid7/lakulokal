@@ -33,14 +33,30 @@ export async function POST(request: Request) {
     p_clip_count: parsed.data.clip_count
   });
   if (error) {
-    console.error("credit_clip_run_create_failed", { userId: current.user.id, code: error.code });
+    console.error("credit_clip_run_create_failed", {
+      userId: current.user.id,
+      clipCount: parsed.data.clip_count,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint
+    });
     if (error.code === "22003") {
       return NextResponse.json({ error: "Kredit Anda belum cukup untuk pilihan ini." }, { status: 402 });
     }
     if (error.code === "P0002") {
       return NextResponse.json({ error: "Paket kredit belum tersedia. Coba lagi nanti." }, { status: 503 });
     }
-    return NextResponse.json({ error: "Clip belum dapat dimulai. Coba lagi nanti." }, { status: 500 });
+    if (error.code === "PGRST202") {
+      return NextResponse.json({
+        error: "Fitur clip belum tersedia di database. Pastikan migration 20261012000000_credit_based_clip_creation.sql sudah diterapkan.",
+        errorCode: error.code
+      }, { status: 503 });
+    }
+    return NextResponse.json({
+      error: "Clip belum dapat dimulai. Periksa log server untuk detail kegagalan.",
+      errorCode: error.code ?? "UNKNOWN"
+    }, { status: 500 });
   }
   const order = data?.[0];
   if (!order) {
