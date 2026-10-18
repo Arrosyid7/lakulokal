@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { requireAdmin } from "@/lib/auth";
 import { isCreditClipRun, isCreditPurchase } from "@/lib/credits";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -41,7 +42,12 @@ export default async function AdminTransactionsPage({ searchParams }: PageProps)
     : await query;
   const userIds = [...new Set((orders ?? []).map((order) => order.user_id))];
   const orderIds = (orders ?? []).map((order) => order.id);
-  const [{ data: profiles, error: profilesError }, { data: payments, error: paymentsError }, { data: autoApprovedProofs, error: proofError }] = await Promise.all([
+  const [
+    { data: profiles, error: profilesError },
+    { data: payments, error: paymentsError },
+    { data: autoApprovedProofs, error: proofError },
+    { data: proofs, error: proofsError }
+  ] = await Promise.all([
     userIds.length
       ? admin.from("profiles").select("id,email").in("id", userIds)
       : Promise.resolve({ data: [], error: null }),
@@ -50,13 +56,30 @@ export default async function AdminTransactionsPage({ searchParams }: PageProps)
       : Promise.resolve({ data: [], error: null }),
     orderIds.length
       ? admin.from("payment_proofs").select("order_id").eq("review_status", "APPROVED").is("reviewed_by", null).in("order_id", orderIds)
+      : Promise.resolve({ data: [], error: null }),
+    orderIds.length
+      ? admin.from("payment_proofs").select("order_id,storage_path,submitted_at").in("order_id", orderIds).order("submitted_at", { ascending: false })
       : Promise.resolve({ data: [], error: null })
   ]);
 
-  const failed = Boolean(error || profilesError || paymentsError || proofError);
+  const failed = Boolean(error || profilesError || paymentsError || proofError || proofsError);
   const emails = new Map((profiles ?? []).map((profile) => [profile.id, profile.email]));
   const paymentsByOrder = new Map((payments ?? []).map((payment) => [payment.order_id, payment]));
   const autoApprovedOrderIds = new Set((autoApprovedProofs ?? []).map((proof) => proof.order_id));
+  const proofPathByOrder = new Map<string, string>();
+  for (const proof of proofs ?? []) {
+    if (!proofPathByOrder.has(proof.order_id)) proofPathByOrder.set(proof.order_id, proof.storage_path);
+  }
+  const storage = admin.storage.from("payment-proofs");
+  const signedProofs = await Promise.all([...proofPathByOrder].map(async ([orderId, storagePath]) => {
+    const { data, error: signError } = await storage.createSignedUrl(storagePath, 120);
+    if (signError || !data?.signedUrl) {
+      console.error("admin_transaction_proof_sign_failed", { orderId, message: signError?.message });
+      return [orderId, null] as const;
+    }
+    return [orderId, data.signedUrl] as const;
+  }));
+  const proofUrlByOrder = new Map(signedProofs);
   const totalPages = Math.max(1, Math.ceil((count ?? 0) / pageSize));
   const money = (amount: number, currency: string) =>
     new Intl.NumberFormat("id-ID", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
@@ -104,16 +127,17 @@ export default async function AdminTransactionsPage({ searchParams }: PageProps)
         <p className="form-error" role="alert">Daftar transaksi gagal dimuat. Muat ulang halaman atau periksa izin database admin.</p>
       ) : orders?.length ? (
         <>
-          <div className="table-wrap">
+          <div className="table-wrap" tabIndex={0} aria-label="Tabel transaksi, geser secara horizontal untuk melihat semua kolom">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Order</th><th>Akun</th><th>Paket</th><th>Nominal / kredit</th><th>Pembayaran</th><th>Referensi</th><th>Pemrosesan</th><th>Dibuat</th>
+                  <th>Order</th><th>Akun</th><th>Paket</th><th>Nominal / kredit</th><th>Pembayaran</th><th>Bukti</th><th>Referensi</th><th>Pemrosesan</th><th>Dibuat</th>
                 </tr>
               </thead>
               <tbody>
                 {orders.map((order) => {
                   const payment = paymentsByOrder.get(order.id);
+                  const proofUrl = proofUrlByOrder.get(order.id);
                   return (
                     <tr key={order.id}>
                       <td>{order.order_code}</td>
@@ -121,6 +145,20 @@ export default async function AdminTransactionsPage({ searchParams }: PageProps)
                       <td>{isCreditClipRun(order.metadata) ? `${order.clip_count} clip` : order.package_name}</td>
                       <td>{isCreditClipRun(order.metadata) ? `${order.clip_count} kredit` : isCreditPurchase(order.metadata) ? `${money(order.amount, order.currency)} · ${order.clip_count} kredit` : money(order.amount, order.currency)}</td>
                       <td>{isCreditClipRun(order.metadata) ? "Kredit dipakai" : autoApprovedOrderIds.has(order.id) ? "Disetujui otomatis (OCR)" : order.payment_status}</td>
+                      <td>
+                        {proofPathByOrder.has(order.id) ? proofUrl ? (
+                          <a className="transaction-proof-link" href={proofUrl} target="_blank" rel="noreferrer" aria-label={`Buka bukti pembayaran order ${order.order_code} di tab baru`}>
+                            <Image
+                              className="transaction-proof-thumb"
+                              src={proofUrl}
+                              alt={`Bukti pembayaran ${order.order_code}`}
+                              width={64}
+                              height={64}
+                              unoptimized
+                            />
+                          </a>
+                        ) : <span className="muted">Bukti tidak dapat dimuat</span> : <span className="muted">Tidak ada bukti</span>}
+                      </td>
                       <td>{payment ? `${payment.provider}: ${payment.provider_reference}` : "Belum tercatat"}</td>
                       <td>{order.processing_status}</td>
                       <td><time dateTime={order.created_at}>{new Date(order.created_at).toLocaleString("id-ID")}</time></td>

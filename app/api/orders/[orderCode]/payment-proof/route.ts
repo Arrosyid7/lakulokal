@@ -4,7 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
-const MAX_RECEIPT_BYTES = 5 * 1024 * 1024;
+const MAX_RECEIPT_BYTES = 750 * 1024;
 
 type ReceiptImage = { mimeType: string; extension: string };
 
@@ -40,7 +40,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ ord
     return NextResponse.json({ error: "Gambar bukti dan hasil OCR nominal wajib diisi." }, { status: 400 });
   }
   if (receipt.size < 1 || receipt.size > MAX_RECEIPT_BYTES) {
-    return NextResponse.json({ error: "Ukuran gambar bukti harus maksimal 5 MB." }, { status: 413 });
+    return NextResponse.json({ error: "Ukuran gambar bukti setelah dikompres harus maksimal 750 KB." }, { status: 413 });
   }
   const { orderCode } = await params;
   const admin = createSupabaseAdminClient();
@@ -102,8 +102,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ ord
 
   const bytes = Buffer.from(await receipt.arrayBuffer());
   const image = detectReceiptImage(bytes);
-  if (!image || image.mimeType !== receipt.type) {
-    return NextResponse.json({ error: "Isi file harus berupa gambar JPG, PNG, atau WebP yang valid." }, { status: 415 });
+  if (!image || image.mimeType !== "image/jpeg" || receipt.type !== "image/jpeg") {
+    return NextResponse.json({ error: "Bukti harus berupa gambar JPG yang valid dan sudah dikompres." }, { status: 415 });
   }
 
   const proofId = crypto.randomUUID();

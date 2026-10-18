@@ -8,6 +8,7 @@ const sections = [
     label: "OPERASIONAL",
     links: [
       { href: "/admin", label: "Ringkasan" },
+      { href: "/admin/akun", label: "Data akun" },
       { href: "/admin/transaksi", label: "Transaksi" }
     ]
   },
@@ -15,6 +16,7 @@ const sections = [
     label: "KONTEN",
     links: [
       { href: "/admin/landing", label: "Landing page" },
+      { href: "/admin/ulasan", label: "Ulasan" },
       { href: "/admin/artikel", label: "Artikel" },
       { href: "/admin/sosial", label: "Media sosial" }
     ]

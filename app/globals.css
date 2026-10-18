@@ -151,6 +151,15 @@ button { color: inherit; }
 .faq-list details[open] summary::after { content: "−"; }
 .faq-list details p { max-width: 720px; margin: 0 0 20px; color: var(--muted); font-size: .93rem; line-height: 1.75; }
 
+.review-section { border-block: 1px solid var(--line); background: var(--purple-wash); }
+.review-layout { display: grid; grid-template-columns: minmax(240px, .72fr) minmax(0, 1.28fr); align-items: start; gap: clamp(40px, 9vw, 128px); }
+.review-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.review-card { min-width: 0; border: 1px solid #c9c5d9; border-radius: 14px 4px 14px 4px; padding: clamp(18px, 2.5vw, 26px); background: var(--white); }
+.review-card blockquote { display: grid; align-content: space-between; gap: 22px; height: 100%; margin: 0; }
+.review-card blockquote > p { margin: 0; color: var(--ink); line-height: 1.75; overflow-wrap: anywhere; }
+.review-card cite { display: inline-flex; align-items: center; gap: 10px; color: var(--purple-deep); font-style: normal; font-weight: 800; }
+.review-card cite::after { width: 20px; height: 6px; content: ""; transform: skewX(-24deg); background: var(--coral); }
+
 .site-footer { position: relative; overflow: hidden; border-top: 5px solid var(--coral); padding-block: 44px; background: var(--purple-deep); color: var(--white); }
 .site-footer::before { content: ""; position: absolute; top: 0; right: 7%; width: 150px; height: 5px; background: var(--coral); }
 .site-footer .brand { color: var(--white); }
@@ -268,6 +277,7 @@ button { color: inherit; }
 .account-metric span { color: var(--muted); font-size: .84rem; }
 .account-metric strong { color: var(--purple-deep); font-family: var(--font-display); font-size: 1.8rem; line-height: 1; }
 .table-wrap { max-width: 100%; overflow-x: auto; }
+.table-wrap:focus-visible { outline-offset: 2px; }
 .data-table { width: 100%; border-collapse: collapse; text-align: left; }
 .data-table th, .data-table td { padding: 13px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .data-table th { color: var(--muted); font-size: .84rem; }
@@ -318,6 +328,29 @@ button { color: inherit; }
 .admin-publish-toggle { width: fit-content; min-height: 44px; display: inline-flex; align-items: center; gap: 10px; font-weight: 700; }
 .admin-publish-toggle input { width: 20px; height: 20px; }
 .admin-transaction-filters { display: grid; grid-template-columns: minmax(190px, 1.2fr) minmax(150px, .85fr) minmax(160px, .85fr) minmax(145px, .65fr) minmax(145px, .65fr) auto; align-items: end; gap: 14px; margin-bottom: 22px; }
+.admin-account-search { width: min(100%, 680px); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 14px; margin-bottom: 22px; }
+.admin-account-search .field { min-width: 0; }
+.admin-account-email { display: block; margin-top: 3px; color: var(--muted); overflow-wrap: anywhere; }
+.admin-account-footnote { margin-top: 14px; color: var(--muted); font-size: .86rem; }
+.admin-account-table { min-width: 760px; }
+.admin-account-table td:first-child { min-width: 200px; }
+.transaction-proof-link { width: 64px; height: 64px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 6px; padding: 3px; background: var(--white); }
+.transaction-proof-link:focus-visible { outline-offset: 3px; }
+.transaction-proof-thumb { display: block; width: 56px; height: 56px; object-fit: cover; }
+.admin-reviews { display: grid; gap: 32px; }
+.review-publish-option { width: fit-content; min-height: 44px; display: inline-flex; align-items: center; gap: 10px; color: var(--purple-deep); font-weight: 700; cursor: pointer; }
+.review-publish-option input { width: 20px; height: 20px; accent-color: var(--purple); }
+.admin-review-list { display: grid; gap: 16px; }
+.admin-review-list > .admin-section-heading { border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+.admin-review-items { display: grid; }
+.admin-review-item { display: grid; gap: 14px; border-bottom: 1px solid var(--line); padding: 20px 0; }
+.admin-review-item:first-child { border-top: 1px solid var(--line); }
+.admin-review-item-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.admin-review-item-heading .section-kicker { margin: 0 0 4px; font-size: .72rem; font-weight: 800; letter-spacing: .08em; }
+.admin-review-item-heading h3 { margin: 0; color: var(--purple-deep); font-family: var(--font-display); font-size: 1.2rem; }
+.admin-review-item-heading time { color: var(--muted); font-size: .84rem; }
+.admin-review-item > .row { justify-content: flex-start; }
+.admin-review-item .button { min-height: 44px; }
 .admin-proof-filters { grid-template-columns: repeat(3, minmax(0, 1fr)) auto; }
 .admin-pagination { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding-top: 20px; }
 .admin-pagination > span { color: var(--muted); text-align: center; }
@@ -497,7 +530,8 @@ button { color: inherit; }
   .hero { grid-template-columns: minmax(0, 1fr) minmax(270px, .72fr); gap: 42px; }
   .hero-character-stage { min-height: 0; }
   .hero-character { height: min(48vw, 450px); }
-  .process-layout, .faq-layout { grid-template-columns: minmax(210px, .7fr) minmax(0, 1.3fr); gap: 40px; }
+  .process-layout, .faq-layout, .review-layout { grid-template-columns: minmax(210px, .7fr) minmax(0, 1.3fr); gap: 40px; }
+  .review-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pricing-layout { grid-template-columns: minmax(190px, .75fr) minmax(0, 1.25fr); gap: 32px; }
   .pricing-item { grid-template-columns: minmax(0, 1fr) auto; gap: 10px 16px; }
   .pricing-item-summary { grid-column: 1; }
@@ -542,7 +576,8 @@ button { color: inherit; }
   .home-cut-divider { min-height: 28px; gap: 8px; }
   .home-cut-divider::before, .home-cut-divider::after { background: repeating-linear-gradient(90deg, var(--purple) 0 10px, transparent 10px 16px); }
   .home-cut-divider span { width: 24px; height: 10px; }
-  .process-layout, .faq-layout { grid-template-columns: 1fr; gap: 28px; }
+  .process-layout, .faq-layout, .review-layout { grid-template-columns: 1fr; gap: 28px; }
+  .review-cards { grid-template-columns: minmax(0, 1fr); }
   .pricing-layout { grid-template-columns: 1fr; gap: 24px; }
   .pricing-visual { order: -1; }
   .pricing-character { width: min(58vw, 260px); max-height: 320px; }
@@ -577,9 +612,14 @@ button { color: inherit; }
   .admin-navigation { gap: 0; }
   .admin-navigation a { padding-inline: 9px; font-size: .88rem; }
   .admin-transaction-filters { grid-template-columns: 1fr; }
+  .admin-account-search { grid-template-columns: 1fr; }
+  .admin-account-search .button { width: 100%; }
   .admin-transaction-filters .button { width: 100%; }
   .admin-pagination { flex-wrap: wrap; }
   .admin-pagination .button { flex: 1 1 130px; }
+  .admin-review-item-heading { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .admin-review-item .row { align-items: stretch; flex-direction: column; }
+  .admin-review-item .button { width: 100%; }
 }
 @media (max-width: 400px) {
   .container { width: min(100% - 28px, 1160px); }

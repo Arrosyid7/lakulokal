@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { PublicNavigation } from "@/components/public-navigation";
 import { ProcessCarousel } from "@/components/process-carousel";
 import { SiteFooter } from "@/components/site-footer";
+import { HomeReviews, HomeReviewsLoading } from "@/components/home-reviews";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { absoluteUrl } from "@/lib/site";
 import { getLandingContent, getSocialLinks } from "@/lib/site-content";
@@ -190,6 +191,11 @@ export default async function HomePage() {
             </div>
           </div>
         </section>
+        <div className="home-cut-divider container" aria-hidden="true"><span /></div>
+
+        <Suspense fallback={<HomeReviewsLoading />}>
+          <HomeReviews />
+        </Suspense>
         <div className="home-cut-divider container" aria-hidden="true"><span /></div>
 
         <section className="section faq-section" id="faq">

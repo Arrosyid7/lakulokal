@@ -195,6 +195,15 @@ type SiteArticleRow = {
   updated_at: string;
 };
 
+type CustomerReviewRow = {
+  id: string;
+  display_name: string;
+  review_text: string;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
 type AdminStats = {
   total_users: number;
   total_orders: number;
@@ -223,6 +232,7 @@ export type Database = {
       api_rate_limits: Table<RateLimitRow, "user_id" | "action" | "window_start">;
       site_configuration: Table<SiteConfigurationRow, "id">;
       site_articles: Table<SiteArticleRow, "slug" | "title" | "seo_title" | "description" | "keyphrase" | "intro">;
+      customer_reviews: Table<CustomerReviewRow, "display_name" | "review_text">;
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -246,6 +256,16 @@ export type Database = {
       review_manual_qris_payment: {
         Args: { p_proof_id: string; p_decision: string; p_admin_user_id: string; p_note: string | null };
         Returns: undefined;
+      };
+      admin_account_metrics: {
+        Args: { p_user_ids: string[] };
+        Returns: {
+          user_id: string;
+          credit_balance: number;
+          completed_clips: number;
+          total_transactions: number;
+          total_paid_idr: number;
+        }[];
       };
     };
     Enums: {

@@ -40,6 +40,7 @@ Jalankan `supabase_schema.sql` pada SQL Editor atau melalui Supabase CLI untuk i
 - `20261013030000_fix_credit_clip_count_ambiguity.sql`
 - `20261013040000_fix_credit_clip_created_at_ambiguity.sql`
 - `20261014000000_local_clip_downloads.sql`
+- `20261018100000_reviews_account_metrics_and_small_payment_proofs.sql`
 
 Jangan memberikan akses `service_role` ke browser atau memberikan grant update untuk status pembayaran kepada pengguna.
 
@@ -47,7 +48,7 @@ Bucket privat `lakulokal-results` hanya diperlukan untuk mengakses atau membersi
 
 ## Pembayaran QRIS dan bukti transfer
 
-Order baru menampilkan QRIS statis dari `public/payment/qris-lakulokal.png`. Pengguna memasukkan nominal order dan mengunggah gambar bukti. OCR di browser mencocokkan nominal saja. Admin harus memeriksa transaksi langsung di rekening atau aplikasi merchant dan menyetujui bukti sebelum order dinyatakan lunas.
+Order baru menampilkan QRIS statis dari `public/payment/qris-lakulokal.png`. Pengguna memasukkan nominal order dan mengunggah gambar bukti. OCR di browser mencocokkan nominal saja. Aplikasi mengecilkan bukti menjadi JPG maksimal 750 KB sebelum mengirimnya ke bucket Storage privat; database hanya menyimpan lokasi file dan data pemeriksaannya. Admin harus memeriksa transaksi langsung di rekening atau aplikasi merchant dan menyetujui bukti sebelum order dinyatakan lunas.
 
 Peringatan: aplikasi tidak menghubungi bank atau penyedia pembayaran untuk memeriksa transfer. OCR hanya membaca teks dan hasilnya berasal dari browser, sehingga bukti palsu atau manipulasi permintaan dapat memberi akses layanan tanpa dana diterima. Audit log mencatat persetujuan otomatis sebagai `MANUAL_QRIS_AUTO_APPROVED`; dashboard admin tidak memasukkan order tersebut sebagai pendapatan terverifikasi.
 
@@ -59,7 +60,7 @@ File video diproses secara lokal dengan FFmpeg WebAssembly. Format yang diterima
 
 Video sumber dan hasil clip baru tidak diunggah ke server. Setiap clip muncul di halaman pemrosesan sebagai unduhan lokal. Pengguna harus tetap di halaman sampai proses selesai dan mengunduh setiap clip sebelum keluar; jika halaman ditutup atau dimuat ulang, hasil lokal yang belum diunduh tidak dapat dipulihkan. Database tetap menyimpan status order dan jumlah clip selesai. Vercel Cron membersihkan file serta catatan hasil lama yang masih ada di Supabase Storage. Browser membutuhkan memori yang cukup dan dukungan WebAssembly. Aplikasi menyajikan file FFmpeg dari domain sendiri, bukan mengambilnya dari CDN saat pengguna membuat klip.
 
-Panel admin dibuka dari `/admin` dan memakai halaman masuk khusus di `/admin-login`, terpisah dari login serta pendaftaran pengguna. Buat satu akun admin dari Supabase Dashboard pada Authentication > Users, lalu tetapkan role `ADMIN` untuk profil akun tersebut melalui SQL Editor. Database membatasi hanya satu profil admin; aplikasi tidak menyediakan pendaftaran admin. Admin menggunakan email dan password yang ditetapkan saat akun Auth dibuat. Panel mengelola teks dan metadata landing page, artikel beserta checklist SEO bergaya Yoast, tautan Instagram/Facebook/TikTok, serta daftar transaksi. Checklist SEO dibuat di aplikasi, bukan integrasi plugin Yoast WordPress.
+Panel admin dibuka dari `/admin` dan memakai halaman masuk khusus di `/admin-login`, terpisah dari login serta pendaftaran pengguna. Buat satu akun admin dari Supabase Dashboard pada Authentication > Users, lalu tetapkan role `ADMIN` untuk profil akun tersebut melalui SQL Editor. Database membatasi hanya satu profil admin; aplikasi tidak menyediakan pendaftaran admin. Admin menggunakan email dan password yang ditetapkan saat akun Auth dibuat. Panel mengelola ringkasan akun, saldo kredit dan aktivitas clip, bukti pembayaran, ulasan beranda, teks landing page, artikel beserta checklist SEO bergaya Yoast, serta tautan Instagram/Facebook/TikTok. Ulasan baru berstatus draf sampai admin memilih untuk menampilkannya. Checklist SEO dibuat di aplikasi, bukan integrasi plugin Yoast WordPress.
 
 Paket `@ffmpeg/core` menggunakan lisensi GPL-2.0-or-later. Lihat lisensi paket dan sumber FFmpeg sebelum mendistribusikan aplikasi.
 
