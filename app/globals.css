@@ -173,8 +173,8 @@ button { color: inherit; }
 .review-star-option:has(input:checked) { border-color: var(--purple); background: var(--purple-wash); }
 .review-star-option input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .review-star-option:focus-within { outline: 2px solid var(--purple-deep); outline-offset: 3px; }
-.review-star-option span { color: var(--coral-ink); font-size: 1.25rem; }
-.review-star-option input:checked + span { color: var(--coral-ink); }
+.review-star-option span { color: var(--muted); font-size: 1.25rem; }
+.review-star-option span.is-active { color: #aa7a00; }
 .review-owner-items { display: grid; gap: 12px; }
 .review-owner-item { display: grid; gap: 8px; border-top: 1px solid var(--line); padding-top: 14px; }
 .review-owner-item > p { margin: 0; line-height: 1.6; overflow-wrap: anywhere; }

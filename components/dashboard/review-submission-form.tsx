@@ -8,6 +8,8 @@ export function ReviewSubmissionForm() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [previewRating, setPreviewRating] = useState(0);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -22,6 +24,8 @@ export function ReviewSubmissionForm() {
       if (!response.ok) throw new Error(result.error || "Ulasan belum dapat dikirim.");
       setNotice("Ulasan terkirim. Admin akan memeriksa ulasan dan foto sebelum menampilkannya.");
       form.reset();
+      setSelectedRating(0);
+      setPreviewRating(0);
       router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Ulasan belum dapat dikirim.");
@@ -44,9 +48,25 @@ export function ReviewSubmissionForm() {
       <fieldset className="review-star-options">
         <legend>Penilaian bintang</legend>
         {[1, 2, 3, 4, 5].map((rating) => (
-          <label className="review-star-option" key={rating}>
-            <input type="radio" name="rating" value={rating} aria-label={`${rating} bintang`} required disabled={busy} />
-            <span aria-hidden="true">★</span>
+          <label
+            className="review-star-option"
+            key={rating}
+            onMouseEnter={() => setPreviewRating(rating)}
+            onMouseLeave={() => setPreviewRating(0)}
+            onFocus={() => setPreviewRating(rating)}
+            onBlur={() => setPreviewRating(0)}
+          >
+            <input
+              type="radio"
+              name="rating"
+              value={rating}
+              aria-label={`${rating} bintang`}
+              checked={selectedRating === rating}
+              onChange={() => setSelectedRating(rating)}
+              required
+              disabled={busy}
+            />
+            <span className={rating <= (previewRating || selectedRating) ? "is-active" : undefined} aria-hidden="true">★</span>
           </label>
         ))}
       </fieldset>
