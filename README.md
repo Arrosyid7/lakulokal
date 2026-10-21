@@ -14,6 +14,8 @@ Order hanya dapat dibuat bila Supabase service role dan migration QRIS sudah ter
 
 ## Supabase
 
+Untuk membuat akun tanpa verifikasi email, buka Supabase Dashboard > Authentication > Sign In / Providers > Email, lalu nonaktifkan `Confirm email`. Jika pengaturan ini masih aktif, Supabase tidak memberikan sesi setelah pendaftaran dan aplikasi akan menampilkan pesan agar pengelola memperbaiki pengaturannya. Setelah dinonaktifkan, pendaftaran berhasil akan mengakhiri sesi baru dan mengarahkan pengguna ke halaman masuk.
+
 Jalankan `supabase_schema.sql` pada SQL Editor atau melalui Supabase CLI untuk instalasi baru. Untuk database lama, terapkan migration sesuai urutan yang belum pernah dijalankan:
 
 - `20260413000000_fix_confirm_paid_order_payment_reference.sql`

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
@@ -13,6 +13,12 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ kind: "error" | "success"; text: string } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (mode === "login" && new URLSearchParams(window.location.search).get("registered") === "1") {
+      setMessage({ kind: "success", text: "Pendaftaran berhasil. Silakan masuk dengan email dan password Anda." });
+    }
+  }, [mode]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -41,10 +47,15 @@ export function AuthForm({ mode }: AuthFormProps) {
         });
         if (error) throw error;
         if (!data.session) {
-          setMessage({ kind: "success", text: "Periksa email Anda untuk mengonfirmasi pendaftaran sebelum masuk." });
+          setMessage({
+            kind: "error",
+            text: "Konfirmasi email masih aktif di Supabase. Minta pengelola menonaktifkan pengaturan Confirm email agar akun bisa langsung digunakan."
+          });
           return;
         }
-        router.replace("/dashboard");
+        const { error: signOutError } = await supabase.auth.signOut();
+        if (signOutError) throw signOutError;
+        router.replace("/login?registered=1");
         router.refresh();
       } else if (mode === "login") {
         if (!email || !password) throw new Error("Email dan password wajib diisi.");
@@ -116,7 +127,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const descriptions = {
     login: "Masuk untuk mengelola order dan melihat status pembayaran.",
     admin: "Gunakan email dan password khusus administrator.",
-    register: "Gunakan email aktif untuk membuat dan melihat order.",
+    register: "Daftarkan email dan password untuk membuat serta melihat order. Setelah berhasil, Anda akan diarahkan ke halaman masuk.",
     forgot: "Masukkan email akun. Kami akan mengirim tautan pemulihan bila alamat terdaftar.",
     reset: "Gunakan password baru dengan panjang minimal 8 karakter."
   }[mode];
