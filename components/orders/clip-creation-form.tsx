@@ -176,7 +176,7 @@ export function ClipCreationForm({ availableCredits }: { availableCredits: numbe
       </button>
       {availableCredits < clipCount && (
         <p className="form-error" role="status">
-          Saldo belum cukup untuk pilihan ini. <Link className="text-link" href="/dashboard/new">Beli 5 kredit seharga Rp1.000</Link>
+          Saldo belum cukup untuk pilihan ini. <Link className="text-link" href="/dashboard/new">Pilih paket kredit</Link>
         </p>
       )}
     </form>

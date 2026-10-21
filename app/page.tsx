@@ -9,7 +9,7 @@ import { HomeReviews, HomeReviewsLoading } from "@/components/home-reviews";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { absoluteUrl } from "@/lib/site";
 import { getLandingContent, getSocialLinks } from "@/lib/site-content";
-import { CREDIT_PACKAGE_ID } from "@/lib/credits";
+import { CREDIT_PACKAGES, isConfiguredCreditPackage } from "@/lib/credits";
 
 export const dynamic = "force-dynamic";
 
@@ -37,14 +37,14 @@ async function getPackages(): Promise<{ packages: Package[]; failed: boolean }> 
     const { data, error } = await supabase
       .from("packages")
       .select("id,name,clip_count,price,currency")
-      .eq("id", CREDIT_PACKAGE_ID)
+      .in("id", CREDIT_PACKAGES.map((product) => product.id))
       .eq("active", true)
-      .maybeSingle();
+      .order("price", { ascending: true });
     if (error) {
       console.error("landing_packages_load_failed", { code: error.code });
       return { packages: [], failed: true };
     }
-    return { packages: data ? [data] : [], failed: false };
+    return { packages: (data ?? []).filter(isConfiguredCreditPackage), failed: false };
   } catch (error) {
     console.error("landing_packages_load_failed", {
       message: error instanceof Error ? error.message : "unknown"
@@ -96,7 +96,7 @@ async function PricingList() {
             <span>Total paket</span>
             <strong>{formatMoney(item.price, item.currency)}</strong>
           </p>
-          <Link className="button button-small" href="/login?next=%2Fdashboard%2Fnew">Beli 5 kredit</Link>
+          <Link className="button button-small" href="/login?next=%2Fdashboard%2Fnew">Pilih paket</Link>
         </article>
       ))}
     </div>

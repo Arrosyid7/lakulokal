@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { getPaymentStatusLabel, getProcessingStatusLabel, getStatusClassName } from "@/lib/order-presentation";
-import { isCreditClipRun } from "@/lib/credits";
+import { isCreditClipRun, isCreditPurchase } from "@/lib/credits";
 
 export default async function DashboardPage() {
   const { supabase, user } = await requireUser();
@@ -10,20 +10,23 @@ export default async function DashboardPage() {
     { count: totalCount, error: totalError },
     { data: userOrders, error: userOrdersError },
     { data: orders, error: orderError },
-    { count: completedCount, error: completedError },
-    { count: processingCount, error: processingError },
     { data: paidOrders, error: paidError },
     { data: creditBalance, error: creditError }
   ] = await Promise.all([
     supabase.from("profiles").select("full_name,email").eq("id", user.id).maybeSingle(),
     supabase.from("orders").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-    supabase.from("orders").select("id").eq("user_id", user.id).order("id"),
+    supabase.from("orders").select("id,processing_status,metadata").eq("user_id", user.id).order("id"),
     supabase.from("orders").select("id,order_code,package_name,clip_count,amount,currency,payment_status,processing_status,created_at,metadata").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
-    supabase.from("orders").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("processing_status", "COMPLETED"),
-    supabase.from("orders").select("id", { count: "exact", head: true }).eq("user_id", user.id).in("processing_status", ["QUEUED", "DOWNLOADING", "PROCESSING", "UPLOADING"]),
     supabase.from("orders").select("id,amount").eq("user_id", user.id).eq("payment_status", "PAID"),
     supabase.from("user_credit_balances").select("balance").eq("user_id", user.id).maybeSingle()
   ]);
+  const completedCount = userOrders?.filter((order) =>
+    order.processing_status === "COMPLETED" && !isCreditPurchase(order.metadata)
+  ).length ?? 0;
+  const processingCount = userOrders?.filter((order) =>
+    ["QUEUED", "DOWNLOADING", "PROCESSING", "UPLOADING"].includes(order.processing_status) &&
+    !isCreditPurchase(order.metadata)
+  ).length ?? 0;
   const userOrderIds = userOrders?.map((order) => order.id) ?? [];
   const { count: clipCount, error: clipError } = userOrderIds.length
     ? await supabase.from("clips").select("id", { count: "exact", head: true }).in("order_id", userOrderIds)
@@ -34,7 +37,7 @@ export default async function DashboardPage() {
       .eq("review_status", "APPROVED").is("reviewed_by", null).in("order_id", paidOrderIds)
     : { data: [], error: null };
   const autoApprovedOrderIds = new Set((autoApprovedProofs ?? []).map((proof) => proof.order_id));
-  const failures = [profileError, totalError, userOrdersError, orderError, completedError, processingError, clipError, paidError, creditError, autoProofError].filter(Boolean);
+  const failures = [profileError, totalError, userOrdersError, orderError, clipError, paidError, creditError, autoProofError].filter(Boolean);
   const paidTotal = paidOrders?.filter((order) => !autoApprovedOrderIds.has(order.id))
     .reduce((total, row) => total + Number(row.amount), 0) ?? 0;
   const availableCredits = creditBalance?.balance ?? 0;
@@ -58,7 +61,7 @@ export default async function DashboardPage() {
             </>
           ) : (
             <>
-              <Link className="button button-accent" href="/dashboard/new">Beli 5 kredit</Link>
+              <Link className="button button-accent" href="/dashboard/new">Beli kredit</Link>
               <Link className="text-link" href="/dashboard/orders">Lihat order</Link>
             </>
           )}
@@ -96,7 +99,7 @@ export default async function DashboardPage() {
             {!orders?.length ? (
               <div className="empty-state-block">
                 <p>Belum ada order. Riwayat pembayaran tampil di sini, sedangkan hasil clip diunduh langsung ke perangkat.</p>
-                <Link className="button" href="/dashboard/new">Beli 5 kredit</Link>
+                <Link className="button" href="/dashboard/new">Beli kredit</Link>
               </div>
             ) : (
               <div className="recent-order-list">
@@ -106,11 +109,13 @@ export default async function DashboardPage() {
                       <Link className="text-link" href={`/dashboard/orders/${encodeURIComponent(order.order_code)}`}>{order.order_code}</Link>
                       <p>{isCreditClipRun(order.metadata)
                         ? `${order.clip_count} clip · ${order.clip_count} kredit digunakan`
+                        : isCreditPurchase(order.metadata)
+                          ? `${order.clip_count} kredit · ${money(Number(order.amount))}`
                         : `${order.package_name} · ${money(Number(order.amount))}`}</p>
                     </div>
                     <div className="status-pair">
                       {!isCreditClipRun(order.metadata) && <span className={getStatusClassName("payment", order.payment_status)}>{getPaymentStatusLabel(order.payment_status, autoApprovedOrderIds.has(order.id))}</span>}
-                      <span className={getStatusClassName("processing", order.processing_status)}>{getProcessingStatusLabel(order.processing_status)}</span>
+                      {!isCreditPurchase(order.metadata) && <span className={getStatusClassName("processing", order.processing_status)}>{getProcessingStatusLabel(order.processing_status)}</span>}
                     </div>
                   </article>
                 ))}

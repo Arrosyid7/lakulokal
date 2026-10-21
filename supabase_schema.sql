@@ -42,8 +42,18 @@ create table if not exists public.packages (
   updated_at timestamptz not null default now()
 );
 
+update public.packages
+set active = false,
+    updated_at = now()
+where id = 'five-clips';
+
 insert into public.packages (id, name, clip_count, price, currency, active)
-values ('five-clips', '5 Clip', 5, 1000, 'IDR', true)
+values
+  ('00000000-0000-4000-8000-000000000005', '5 Kredit Clip', 5, 1000, 'IDR', true),
+  ('00000000-0000-4000-8000-000000000010', '10 Kredit Clip', 10, 2000, 'IDR', true),
+  ('00000000-0000-4000-8000-000000000015', '15 Kredit Clip', 15, 3000, 'IDR', true),
+  ('00000000-0000-4000-8000-000000000020', '20 Kredit Clip', 20, 4000, 'IDR', true),
+  ('00000000-0000-4000-8000-000000000025', '25 Kredit Clip', 25, 5000, 'IDR', true)
 on conflict (id) do update set
   name = excluded.name,
   clip_count = excluded.clip_count,

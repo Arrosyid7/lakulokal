@@ -10,7 +10,7 @@ LakuLokal membuat klip video vertikal dari file yang dipilih pengguna. Pengguna 
 4. Untuk database baru, terapkan `supabase_schema.sql`, lalu migration `20261008085000_manual_qris_payment_proofs.sql` dan semua migration setelahnya secara berurutan. Untuk database yang sudah digunakan, terapkan migration yang belum pernah dijalankan.
 5. Jalankan `npm run dev`.
 
-Order hanya dapat dibuat bila Supabase service role dan migration QRIS sudah tersedia. Gambar `public/payment/qris-lakulokal.png` adalah QRIS statis yang ditampilkan kepada pengguna.
+Order hanya dapat dibuat bila Supabase service role dan migration QRIS sudah tersedia. Lima gambar di `public/payment/` masing-masing menampilkan QRIS untuk nominal Rp1.000, Rp2.000, Rp3.000, Rp4.000, dan Rp5.000. Setiap Rp1.000 memberi 5 kredit, sampai 25 kredit pada paket Rp5.000.
 
 ## Supabase
 
@@ -43,6 +43,8 @@ Jalankan `supabase_schema.sql` pada SQL Editor atau melalui Supabase CLI untuk i
 - `20261013040000_fix_credit_clip_created_at_ambiguity.sql`
 - `20261014000000_local_clip_downloads.sql`
 - `20261018100000_reviews_account_metrics_and_small_payment_proofs.sql`
+- `20261021100000_add_credit_purchase_tiers.sql`
+- `20261021120000_user_reviews_and_payment_order_history.sql`
 
 Jangan memberikan akses `service_role` ke browser atau memberikan grant update untuk status pembayaran kepada pengguna.
 
@@ -50,7 +52,7 @@ Bucket privat `lakulokal-results` hanya diperlukan untuk mengakses atau membersi
 
 ## Pembayaran QRIS dan bukti transfer
 
-Order baru menampilkan QRIS statis dari `public/payment/qris-lakulokal.png`. Pengguna memasukkan nominal order dan mengunggah gambar bukti. OCR di browser mencocokkan nominal saja. Aplikasi mengecilkan bukti menjadi JPG maksimal 750 KB sebelum mengirimnya ke bucket Storage privat; database hanya menyimpan lokasi file dan data pemeriksaannya. Admin harus memeriksa transaksi langsung di rekening atau aplikasi merchant dan menyetujui bukti sebelum order dinyatakan lunas.
+Order baru menyediakan pilihan Rp1.000 sampai Rp5.000. Setiap Rp1.000 memberi 5 kredit. Halaman pembayaran menampilkan QRIS sesuai nominal pilihan dari `public/payment/qris-1000.jpg` sampai `public/payment/qris-5000.jpg`, lalu pengguna mengunggah gambar bukti. OCR di browser mencocokkan nominal saja. Aplikasi mengecilkan bukti menjadi JPG maksimal 750 KB sebelum mengirimnya ke bucket Storage privat; database hanya menyimpan lokasi file dan data pemeriksaannya. Admin harus memeriksa transaksi langsung di rekening atau aplikasi merchant dan menyetujui bukti sebelum order dinyatakan lunas.
 
 Peringatan: aplikasi tidak menghubungi bank atau penyedia pembayaran untuk memeriksa transfer. OCR hanya membaca teks dan hasilnya berasal dari browser, sehingga bukti palsu atau manipulasi permintaan dapat memberi akses layanan tanpa dana diterima. Audit log mencatat persetujuan otomatis sebagai `MANUAL_QRIS_AUTO_APPROVED`; dashboard admin tidak memasukkan order tersebut sebagai pendapatan terverifikasi.
 
@@ -62,7 +64,9 @@ File video diproses secara lokal dengan FFmpeg WebAssembly. Format yang diterima
 
 Video sumber dan hasil clip baru tidak diunggah ke server. Setiap clip muncul di halaman pemrosesan sebagai unduhan lokal. Pengguna harus tetap di halaman sampai proses selesai dan mengunduh setiap clip sebelum keluar; jika halaman ditutup atau dimuat ulang, hasil lokal yang belum diunduh tidak dapat dipulihkan. Database tetap menyimpan status order dan jumlah clip selesai. Vercel Cron membersihkan file serta catatan hasil lama yang masih ada di Supabase Storage. Browser membutuhkan memori yang cukup dan dukungan WebAssembly. Aplikasi menyajikan file FFmpeg dari domain sendiri, bukan mengambilnya dari CDN saat pengguna membuat klip.
 
-Panel admin dibuka dari `/admin` dan memakai halaman masuk khusus di `/admin-login`, terpisah dari login serta pendaftaran pengguna. Buat satu akun admin dari Supabase Dashboard pada Authentication > Users, lalu tetapkan role `ADMIN` untuk profil akun tersebut melalui SQL Editor. Database membatasi hanya satu profil admin; aplikasi tidak menyediakan pendaftaran admin. Admin menggunakan email dan password yang ditetapkan saat akun Auth dibuat. Panel mengelola ringkasan akun, saldo kredit dan aktivitas clip, bukti pembayaran, ulasan beranda, teks landing page, artikel beserta checklist SEO bergaya Yoast, serta tautan Instagram/Facebook/TikTok. Ulasan baru berstatus draf sampai admin memilih untuk menampilkannya. Checklist SEO dibuat di aplikasi, bukan integrasi plugin Yoast WordPress.
+Panel admin dibuka dari `/admin` dan memakai halaman masuk khusus di `/admin-login`, terpisah dari login serta pendaftaran pengguna. Buat satu akun admin dari Supabase Dashboard pada Authentication > Users, lalu tetapkan role `ADMIN` untuk profil akun tersebut melalui SQL Editor. Database membatasi hanya satu profil admin; aplikasi tidak menyediakan pendaftaran admin. Admin menggunakan email dan password yang ditetapkan saat akun Auth dibuat. Panel mengelola ringkasan akun, saldo kredit dan aktivitas clip, bukti pembayaran, moderasi ulasan pengguna, teks landing page, artikel beserta checklist SEO bergaya Yoast, serta tautan Instagram/Facebook/TikTok. Pengguna yang masuk dapat mengirim ulasan dengan bintang dan foto, lalu admin menyetujui sebelum ditampilkan. Checklist SEO dibuat di aplikasi, bukan integrasi plugin Yoast WordPress.
+
+Ulasan lama yang tidak memiliki akun pengirim, bintang, dan foto otomatis disembunyikan oleh migration `20261021120000_user_reviews_and_payment_order_history.sql`. Bucket `customer-review-images` harus tetap privat; aplikasi hanya membuat URL sementara untuk admin dan ulasan yang sudah disetujui.
 
 Paket `@ffmpeg/core` menggunakan lisensi GPL-2.0-or-later. Lihat lisensi paket dan sumber FFmpeg sebelum mendistribusikan aplikasi.
 
@@ -72,7 +76,7 @@ Paket `@ffmpeg/core` menggunakan lisensi GPL-2.0-or-later. Lihat lisensi paket d
 2. Atur variabel Supabase dari `.env.example`. Jangan menaruh secret di variable `NEXT_PUBLIC_*`.
 3. Pastikan `npm install`/`npm ci` menjalankan `postinstall`, sehingga aset FFmpeg tersedia di `public/ffmpeg/` saat build.
 4. Aktifkan Vercel Cron untuk pembersihan hasil order lama, lalu isi `CRON_SECRET`.
-5. Terapkan migration baru, pastikan bucket `payment-proofs` privat (dan `lakulokal-results` privat jika masih ada file hasil lama), serta verifikasi file QRIS yang dipasang sebelum melayani order.
+5. Terapkan seluruh migration baru, pastikan bucket `payment-proofs` privat (dan `lakulokal-results` privat jika masih ada file hasil lama), serta pastikan lima QRIS nominal Rp1.000 sampai Rp5.000 di `public/payment/` sesuai dengan rekening penerima sebelum melayani order.
 6. Buat user Auth admin di Supabase Dashboard, lalu jalankan SQL berikut dengan email yang dipakai admin:
 
    ```sql

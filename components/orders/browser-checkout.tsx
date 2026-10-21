@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
 import { PaymentQrCode } from "@/components/orders/payment-qr-code";
 import { ReceiptProofForm } from "@/components/orders/receipt-proof-form";
+import { getCreditPackageByPrice } from "@/lib/credits";
 import { getPaymentStatusLabel, getProcessingStatusLabel, getStatusClassName } from "@/lib/order-presentation";
 import { mergeOrderDownloads, type OrderDownload } from "@/lib/order-downloads";
 import {
@@ -351,6 +352,7 @@ export function BrowserCheckout({
 
   const money = new Intl.NumberFormat("id-ID", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
   const manualQris = paymentProvider === "MANUAL_QRIS";
+  const hasMatchingQris = Boolean(getCreditPackageByPrice(amount));
   const canUseOrder = !isCreditPurchase && paymentStatus === "PAID";
   const detachedProcessing = !busy && processingStatus === "PROCESSING";
   const canSelectFile = canUseOrder && !busy && !detachedProcessing && !(isCreditRun && ["COMPLETED", "FAILED"].includes(processingStatus));
@@ -366,7 +368,7 @@ export function BrowserCheckout({
     <section className={`panel browser-checkout${busy ? " browser-checkout-running" : ""}`} aria-labelledby="checkout-title">
       <div className="checkout-primary">
         <header className="checkout-heading">
-          <p className="section-kicker">{isCreditRun ? "Pemakaian kredit" : "Pembayaran dan pemrosesan"}</p>
+          <p className="section-kicker">{isCreditPurchase ? "Pembelian kredit" : isCreditRun ? "Pemakaian kredit" : "Pembayaran dan pemrosesan"}</p>
           <h2 id="checkout-title">Order {orderCode}</h2>
           <p className="checkout-total">
             <span>{isCreditRun ? "Kredit digunakan" : "Total pembayaran"}</span>
@@ -375,19 +377,24 @@ export function BrowserCheckout({
         </header>
       {paymentStatus === "PENDING" && manualQris && (
         <>
-          {proofStatus !== "SUBMITTED" && (
+          {!hasMatchingQris ? (
+            <p className="form-error" role="alert">
+              QRIS untuk nominal order ini sudah tidak tersedia. Jangan lakukan pembayaran. Hubungi{" "}
+              <a href="mailto:halo@lakulokal.id">halo@lakulokal.id</a> untuk bantuan.
+            </p>
+          ) : proofStatus !== "SUBMITTED" && (
             <>
-              <PaymentQrCode amount={money} />
-              <p>Bayar tepat sesuai nominal order ini, lalu unggah bukti. Admin memeriksa transaksi sebelum kredit diberikan.</p>
+              <PaymentQrCode amount={amount} />
+              <p>Admin memeriksa transaksi sebelum kredit diberikan.</p>
             </>
           )}
-          {proofStatus === "REJECTED" && (
+          {hasMatchingQris && proofStatus === "REJECTED" && (
             <div className="form-error" role="status">
               <p>Bukti sebelumnya ditolak oleh admin. Periksa catatan, lalu unggah bukti pembayaran yang benar.</p>
               {proofNote && <p>Catatan admin: {proofNote}</p>}
             </div>
           )}
-          {proofStatus !== "SUBMITTED" && (
+          {hasMatchingQris && proofStatus !== "SUBMITTED" && (
             <ReceiptProofForm
               orderCode={orderCode}
               amount={amount}
@@ -545,13 +552,15 @@ export function BrowserCheckout({
         <p className="section-kicker">{isCreditRun ? "Saldo akun" : "Ringkasan"}</p>
         <h3>{isCreditRun ? "Pemakaian clip" : "Order ini mencakup"}</h3>
         <dl className="checkout-facts">
-          <div><dt>Jumlah clip</dt><dd>{clipCount} clip</dd></div>
+          <div><dt>{isCreditPurchase ? "Kredit dibeli" : "Jumlah clip"}</dt><dd>{isCreditPurchase ? `${clipCount} kredit` : `${clipCount} clip`}</dd></div>
           {isCreditRun
             ? <div><dt>Kredit dipakai</dt><dd>{clipCount} kredit</dd></div>
             : <div><dt>Pembayaran</dt><dd><span className={getStatusClassName("payment", paymentStatus)}>{getPaymentStatusLabel(paymentStatus, manualQris && proofStatus === "APPROVED")}</span></dd></div>}
           {!isCreditPurchase && <div><dt>Status proses</dt><dd><span className={getStatusClassName("processing", processingStatus)}>{getProcessingStatusLabel(processingStatus)}</span></dd></div>}
         </dl>
-        <p>Video sumber dan clip hasil hanya berada di perangkat Anda. Unduh setiap clip sebelum meninggalkan halaman. LakuLokal tidak menyimpan file hasil di server atau riwayat order.</p>
+        <p>{isCreditPurchase
+          ? "Kredit yang dibeli ditambahkan ke saldo setelah pembayaran disetujui admin. Gunakan kredit tersebut untuk membuat clip."
+          : "Video sumber dan clip hasil hanya berada di perangkat Anda. Unduh setiap clip sebelum meninggalkan halaman. LakuLokal tidak menyimpan file hasil di server atau riwayat order."}</p>
       </aside>
     </section>
   );

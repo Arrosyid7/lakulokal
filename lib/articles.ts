@@ -190,7 +190,7 @@ export const articles: Article[] = [
       {
         heading: "Pahami alur order",
         paragraphs: [
-          "Beli 5 kredit seharga Rp1.000 melalui QRIS, lalu unggah bukti pembayaran di halaman order. Admin memeriksa transaksi dan saldo bertambah setelah pembayaran disetujui.",
+          "Pilih paket Rp1.000 hingga Rp5.000 melalui QRIS untuk mendapat 5 hingga 25 kredit, lalu unggah bukti pembayaran di halaman order. Admin memeriksa transaksi dan saldo bertambah setelah pembayaran disetujui.",
           "Gunakan dashboard untuk melihat saldo dan status order. Clip hasil hanya tersedia di halaman proses yang sedang terbuka, jadi unduh setiap file sebelum meninggalkannya."
         ]
       },

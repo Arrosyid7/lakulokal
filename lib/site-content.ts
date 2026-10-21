@@ -38,10 +38,10 @@ export type LandingContent = z.infer<typeof landingContentSchema>;
 
 export const DEFAULT_LANDING_CONTENT: LandingContent = {
   metaTitle: "Layanan Clip Video | LakuLokal",
-  metaDescription: "Beli 5 kredit seharga Rp1.000 lewat QRIS, tunggu persetujuan admin, lalu buat clip dari video di perangkat Anda.",
+  metaDescription: "Pilih paket 5 hingga 25 kredit lewat QRIS, tunggu persetujuan admin, lalu buat clip dari video di perangkat Anda.",
   heroKicker: "Untuk video yang layak ditonton lagi",
   heroTitle: "Ubah file video jadi clip.",
-  heroDescription: "Beli 5 kredit seharga Rp1.000 lewat QRIS. Setelah admin menyetujui pembayaran, buat satu clip dengan waktu pilihan sendiri atau lima clip sekaligus.",
+  heroDescription: "Pilih paket 5 hingga 25 kredit lewat QRIS. Setelah admin menyetujui pembayaran, buat satu clip dengan waktu pilihan sendiri atau lima clip sekaligus.",
   primaryCta: "Buat akun untuk mulai",
   secondaryCta: "Lihat cara kerja",
   heroNote: "Hasil hanya tersedia di halaman pemrosesan. Unduh sebelum keluar.",
@@ -50,19 +50,19 @@ export const DEFAULT_LANDING_CONTENT: LandingContent = {
   processDescription: "Kredit masuk setelah pembayaran QRIS disetujui admin. Pilih satu clip atau lima clip dari video yang ada di perangkat Anda.",
   processSteps: [
     { title: "Masuk atau buat akun", description: "Gunakan akun untuk membeli kredit, melihat saldo, dan menyimpan riwayat order." },
-    { title: "Bayar Rp1.000 dengan QRIS", description: "Pembayaran membeli 5 kredit. Unggah bukti QRIS pada halaman order agar admin dapat memeriksanya." },
-    { title: "Tunggu persetujuan admin", description: "Order tetap menunggu selama pemeriksaan. Saldo bertambah 5 kredit setelah pembayaran disetujui." },
+    { title: "Pilih nominal dan bayar dengan QRIS", description: "Pilih pembayaran Rp1.000 hingga Rp5.000 untuk mendapat 5 hingga 25 kredit. Unggah bukti pada halaman order agar admin dapat memeriksanya." },
+    { title: "Tunggu persetujuan admin", description: "Order tetap menunggu selama pemeriksaan. Saldo bertambah sesuai paket setelah pembayaran disetujui." },
     { title: "Pilih video dan jumlah clip", description: "Buat satu clip dengan rentang waktu manual memakai 1 kredit, lalu ulangi untuk clip berikutnya. Atau buat lima clip sekaligus dengan 5 kredit." }
   ],
   pricingKicker: "Paket aktif",
   pricingTitle: "Harga layanan clip video.",
-  pricingDescription: "Bayar Rp1.000 untuk 5 kredit. Setiap clip menggunakan 1 kredit.",
+  pricingDescription: "Pilih 5, 10, 15, 20, atau 25 kredit seharga Rp1.000 hingga Rp5.000. Setiap clip menggunakan 1 kredit.",
   faqKicker: "FAQ",
   faqTitle: "Yang perlu diketahui sebelum mulai.",
   questions: [
     {
       question: "Berapa harga kredit clip?",
-      answer: "Rp1.000 membeli 5 kredit. Setiap clip menggunakan 1 kredit, jadi satu pembelian cukup untuk membuat lima clip."
+      answer: "Pilih paket Rp1.000, Rp2.000, Rp3.000, Rp4.000, atau Rp5.000 untuk mendapat 5, 10, 15, 20, atau 25 kredit. Setiap clip menggunakan 1 kredit."
     },
     {
       question: "Bagaimana pembayaran diproses?",

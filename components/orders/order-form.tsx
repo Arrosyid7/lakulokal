@@ -2,13 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { BrowserCheckout } from "@/components/orders/browser-checkout";
-import {
-  CREDIT_PACKAGE_COUNT,
-  CREDIT_PACKAGE_ID,
-  CREDIT_PACKAGE_PRICE
-} from "@/lib/credits";
+import { CREDIT_PACKAGES, type CreditPackageRow } from "@/lib/credits";
 
-type PackageOption = { id: string; name: string; clip_count: number; price: number; currency: string };
 type CheckoutOrder = {
   orderCode: string;
   clipCount: number;
@@ -16,21 +11,31 @@ type CheckoutOrder = {
   currency: string;
 };
 
-export function OrderForm({ product }: { product: PackageOption | null }) {
+function formatMoney(amount: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0
+  }).format(amount);
+}
+
+export function OrderForm({ products }: { products: CreditPackageRow[] }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [checkout, setCheckout] = useState<CheckoutOrder | null>(null);
+  const [selectedPackageId, setSelectedPackageId] = useState(products[0]?.id ?? "");
+  const selectedPackage = products.find((product) => product.id === selectedPackageId);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!product) return;
+    if (!selectedPackage) return;
     setBusy(true);
     setError("");
     try {
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ package_id: CREDIT_PACKAGE_ID })
+        body: JSON.stringify({ package_id: selectedPackage.id })
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Order tidak dapat dibuat.");
@@ -63,16 +68,34 @@ export function OrderForm({ product }: { product: PackageOption | null }) {
 
   return (
     <form className="panel form-stack credit-purchase-form" onSubmit={submit}>
-      <div className="credit-package">
-        <p className="section-kicker">Paket kredit</p>
-        <h2>{product?.name ?? "5 Kredit Clip"}</h2>
-        <p>{CREDIT_PACKAGE_COUNT} clip, satu kredit untuk satu clip.</p>
-        <strong>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(CREDIT_PACKAGE_PRICE)}</strong>
-      </div>
+      <fieldset className="credit-package-options">
+        <legend>Pilih nominal pembayaran</legend>
+        {products.map((product) => {
+          const configured = CREDIT_PACKAGES.find((option) => option.id === product.id);
+          if (!configured) return null;
+          return (
+            <label className="credit-package-option" key={product.id}>
+              <input
+                type="radio"
+                name="package_id"
+                value={product.id}
+                checked={selectedPackageId === product.id}
+                onChange={() => setSelectedPackageId(product.id)}
+                disabled={busy}
+              />
+              <span className="credit-package-option-details">
+                <strong>{configured.clipCount} kredit</strong>
+                <small>{configured.clipCount} clip, satu kredit untuk satu clip</small>
+              </span>
+              <span className="credit-package-option-price">{formatMoney(configured.price)}</span>
+            </label>
+          );
+        })}
+      </fieldset>
       {error && <p className="form-error" role="alert">{error}</p>}
-      {!product && <p className="form-error" role="status">Paket kredit belum tersedia. Muat ulang halaman atau coba lagi nanti.</p>}
-      <button className="button button-accent" type="submit" disabled={busy || !product}>
-        {busy ? "Membuat order..." : "Buat order QRIS"}
+      {products.length === 0 && <p className="form-error" role="status">Paket kredit belum tersedia. Muat ulang halaman atau coba lagi nanti.</p>}
+      <button className="button button-accent" type="submit" disabled={busy || !selectedPackage}>
+        {busy ? "Membuat order..." : selectedPackage ? `Buat order QRIS ${formatMoney(selectedPackage.price)}` : "Pilih paket kredit"}
       </button>
       <p className="muted">Kredit masuk setelah admin memeriksa dan menyetujui bukti pembayaran.</p>
     </form>

@@ -34,7 +34,7 @@ export default async function CreateClipPage() {
               <li>Kredit yang belum dipakai tetap tersimpan di saldo akun Anda.</li>
               <li>Unduh setiap clip sebelum meninggalkan halaman. File hasil tidak disimpan di server atau riwayat order.</li>
             </ul>
-            {availableCredits < 1 && <Link className="button button-small" href="/dashboard/new">Beli 5 kredit seharga Rp1.000</Link>}
+            {availableCredits < 1 && <Link className="button button-small" href="/dashboard/new">Pilih paket kredit</Link>}
           </aside>
         </div>
       )}

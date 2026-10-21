@@ -29,7 +29,7 @@ export default async function OrderDetailPage({ params }: PageProps) {
       <header className="account-order-heading">
         <p className="section-kicker">Rincian order</p>
         <h1 className="page-title">{order.order_code}</h1>
-      <p className="page-lead">{order.package_name} · {money} · {order.clip_count} clip</p>
+      <p className="page-lead">{isCreditPurchase(order.metadata) ? `${order.clip_count} kredit` : `${order.package_name} · ${order.clip_count} clip`} · {money}</p>
       </header>
       {order.youtube_url === null ? (
         <BrowserCheckout

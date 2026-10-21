@@ -7,9 +7,19 @@ describe("payment proof OCR parsing", () => {
     expect(extractReceiptAmounts("Amount: IDR 125.000,00")).toContain(125000);
   });
 
+  it("extracts amounts when the label, currency, and value are split across lines", () => {
+    expect(extractReceiptAmounts("Nominal\nRp\n12.000")).toContain(12000);
+    expect(extractReceiptAmounts("Total transaksi\n15.000")).toContain(15000);
+  });
+
+  it("extracts amounts when rupiah is directly joined to the digits", () => {
+    expect(extractReceiptAmounts("Rp1.000\nID Transaksi\n261021-NV66-YCUTDJ")).toEqual([1000]);
+  });
+
   it("ignores transaction dates and unrelated numeric references", () => {
     expect(extractReceiptAmounts("Tanggal transaksi: 12/10/2026\nNomor referensi: 12345")).toEqual([]);
     expect(extractReceiptAmounts("Total pembayaran: Rp 1.000\nTanggal transaksi: 12/10/2026")).toEqual([1000]);
     expect(extractReceiptAmounts("Date 12/10/2026 · Total Rp 1.000")).toContain(1000);
+    expect(extractReceiptAmounts("Total\nNomor referensi\n12345")).toEqual([]);
   });
 });

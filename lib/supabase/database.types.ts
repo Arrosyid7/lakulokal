@@ -197,8 +197,12 @@ type SiteArticleRow = {
 
 type CustomerReviewRow = {
   id: string;
+  user_id: string | null;
   display_name: string;
   review_text: string;
+  rating: number | null;
+  image_path: string | null;
+  review_status: "SUBMITTED" | "PUBLISHED" | "REJECTED";
   published: boolean;
   created_at: string;
   updated_at: string;

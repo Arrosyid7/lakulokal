@@ -33,7 +33,10 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
   } else if (selected.processingStatuses?.length) {
     request = request.in("processing_status", selected.processingStatuses);
   }
-  const { data: orders, error } = await request;
+  const { data, error } = await request;
+  const orders = selected.processingStatuses
+    ? (data ?? []).filter((order) => !isCreditPurchase(order.metadata))
+    : data;
   const orderIds = orders?.map((order) => order.id) ?? [];
   const { data: autoApprovedProofs, error: autoApprovalError } = orderIds.length
     ? await supabase.from("payment_proofs").select("order_id")
@@ -48,7 +51,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
         <div>
           <p className="section-kicker">Aktivitas akun</p>
           <h1 className="page-title">Riwayat order</h1>
-          <p className="page-lead">Order dan status pembayaran untuk akun Anda.</p>
+          <p className="page-lead">Pembelian kredit menampilkan status pembayaran dan jumlah kredit. Status proses hanya berlaku untuk order pembuatan clip.</p>
         </div>
         <div className="row">
           <Link className="button button-accent" href="/dashboard/clip">Buat clip</Link>
@@ -68,20 +71,20 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
           <div className="empty-state-block">
             <h2>{active === "all" ? "Belum ada order" : "Tidak ada order pada filter ini"}</h2>
             <p>{active === "all" ? "Riwayat order dan pembayaran muncul di sini. Hasil clip diunduh langsung ke perangkat." : "Pilih filter lain untuk melihat order dengan status berbeda."}</p>
-            {active === "all" && <Link className="button" href="/dashboard/new">Beli 5 kredit</Link>}
+            {active === "all" && <Link className="button" href="/dashboard/new">Beli kredit</Link>}
           </div>
         ) : (
           <div className="order-list">
             {orders.map((order) => (
-              <article className="order-row" key={order.id}>
+              <article className={`order-row${isCreditPurchase(order.metadata) ? " order-row-credit-purchase" : ""}`} key={order.id}>
                 <div className="order-field">
                   <span className="order-field-label">Order</span>
                   <Link className="text-link order-field-value" href={`/dashboard/orders/${encodeURIComponent(order.order_code)}`}>{order.order_code}</Link>
                 </div>
-                <div className="order-field"><span className="order-field-label">{isCreditClipRun(order.metadata) ? "Pemakaian" : "Paket"}</span><span className="order-field-value">{isCreditClipRun(order.metadata) ? `${order.clip_count} kredit · ${order.clip_count} clip` : isCreditPurchase(order.metadata) ? `${order.clip_count} kredit` : `${order.package_name} · ${order.clip_count} clip`}</span></div>
+                <div className="order-field"><span className="order-field-label">{isCreditClipRun(order.metadata) ? "Pemakaian" : isCreditPurchase(order.metadata) ? "Kredit dibeli" : "Paket"}</span><span className="order-field-value">{isCreditClipRun(order.metadata) ? `${order.clip_count} kredit · ${order.clip_count} clip` : isCreditPurchase(order.metadata) ? `${order.clip_count} kredit` : `${order.package_name} · ${order.clip_count} clip`}</span></div>
                 <div className="order-field"><span className="order-field-label">{isCreditClipRun(order.metadata) ? "Biaya" : "Total"}</span><span className="order-field-value">{isCreditClipRun(order.metadata) ? `${order.clip_count} kredit` : money(Number(order.amount), order.currency)}</span></div>
                 <div className="order-field"><span className="order-field-label">{isCreditClipRun(order.metadata) ? "Saldo" : "Pembayaran"}</span><span className={isCreditClipRun(order.metadata) ? "order-field-value" : getStatusClassName("payment", order.payment_status)}>{isCreditClipRun(order.metadata) ? "Kredit dipakai" : getPaymentStatusLabel(order.payment_status, autoApprovedOrderIds.has(order.id))}</span></div>
-                <div className="order-field"><span className="order-field-label">Proses</span><span className={getStatusClassName("processing", order.processing_status)}>{getProcessingStatusLabel(order.processing_status)}</span></div>
+                {!isCreditPurchase(order.metadata) && <div className="order-field"><span className="order-field-label">Proses</span><span className={getStatusClassName("processing", order.processing_status)}>{getProcessingStatusLabel(order.processing_status)}</span></div>}
                 <div className="order-field"><span className="order-field-label">Dibuat</span><time className="order-field-value" dateTime={order.created_at}>{new Date(order.created_at).toLocaleString("id-ID")}</time></div>
               </article>
             ))}
