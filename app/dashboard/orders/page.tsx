@@ -17,12 +17,13 @@ const filters: Record<string, {
 };
 
 export default async function OrdersPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
-  const { supabase } = await requireUser();
+  const { supabase, user } = await requireUser();
   const query = await searchParams;
   const active = filters[query.status || "all"] ? query.status || "all" : "all";
   let request = supabase
     .from("orders")
     .select("id,order_code,package_name,clip_count,amount,currency,payment_status,processing_status,created_at,metadata")
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
   const selected = filters[active];
   if (selected.paymentStatuses?.length) {

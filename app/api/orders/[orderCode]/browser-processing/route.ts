@@ -23,6 +23,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     .from("orders")
     .select("id,payment_status,youtube_url,clip_count")
     .eq("order_code", orderCode)
+    .eq("user_id", current.user.id)
     .maybeSingle();
   if (orderError) {
     console.error("browser_processing_order_query_failed", { code: orderError.code });

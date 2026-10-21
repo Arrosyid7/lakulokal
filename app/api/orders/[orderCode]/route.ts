@@ -7,12 +7,13 @@ type RouteContext = { params: Promise<{ orderCode: string }> };
 export async function GET(_request: Request, { params }: RouteContext) {
   const current = await getCurrentUser();
   if (!current) return NextResponse.json({ error: "Autentikasi diperlukan." }, { status: 401 });
-  const { supabase } = current;
+  const { supabase, user } = current;
   const { orderCode } = await params;
   const { data, error } = await supabase
     .from("orders")
     .select("id,order_code,youtube_url,package_name,clip_count,amount,currency,payment_status,processing_status,created_at,paid_at,processing_started_at,processing_completed_at,result_expires_at,error_message")
     .eq("order_code", orderCode)
+    .eq("user_id", user.id)
     .maybeSingle();
   if (error) return NextResponse.json({ error: "Order gagal dimuat." }, { status: 500 });
   if (!data) return NextResponse.json({ error: "Order tidak ditemukan." }, { status: 404 });

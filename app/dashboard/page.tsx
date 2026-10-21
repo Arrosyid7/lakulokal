@@ -8,29 +8,33 @@ export default async function DashboardPage() {
   const [
     { data: profile, error: profileError },
     { count: totalCount, error: totalError },
+    { data: userOrders, error: userOrdersError },
     { data: orders, error: orderError },
     { count: completedCount, error: completedError },
     { count: processingCount, error: processingError },
-    { count: clipCount, error: clipError },
     { data: paidOrders, error: paidError },
     { data: creditBalance, error: creditError }
   ] = await Promise.all([
     supabase.from("profiles").select("full_name,email").eq("id", user.id).maybeSingle(),
-    supabase.from("orders").select("id", { count: "exact", head: true }),
-    supabase.from("orders").select("id,order_code,package_name,clip_count,amount,currency,payment_status,processing_status,created_at,metadata").order("created_at", { ascending: false }).limit(5),
-    supabase.from("orders").select("id", { count: "exact", head: true }).eq("processing_status", "COMPLETED"),
-    supabase.from("orders").select("id", { count: "exact", head: true }).in("processing_status", ["QUEUED", "DOWNLOADING", "PROCESSING", "UPLOADING"]),
-    supabase.from("clips").select("id", { count: "exact", head: true }),
-    supabase.from("orders").select("id,amount").eq("payment_status", "PAID"),
+    supabase.from("orders").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase.from("orders").select("id").eq("user_id", user.id).order("id"),
+    supabase.from("orders").select("id,order_code,package_name,clip_count,amount,currency,payment_status,processing_status,created_at,metadata").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
+    supabase.from("orders").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("processing_status", "COMPLETED"),
+    supabase.from("orders").select("id", { count: "exact", head: true }).eq("user_id", user.id).in("processing_status", ["QUEUED", "DOWNLOADING", "PROCESSING", "UPLOADING"]),
+    supabase.from("orders").select("id,amount").eq("user_id", user.id).eq("payment_status", "PAID"),
     supabase.from("user_credit_balances").select("balance").eq("user_id", user.id).maybeSingle()
   ]);
+  const userOrderIds = userOrders?.map((order) => order.id) ?? [];
+  const { count: clipCount, error: clipError } = userOrderIds.length
+    ? await supabase.from("clips").select("id", { count: "exact", head: true }).in("order_id", userOrderIds)
+    : { count: 0, error: null };
   const paidOrderIds = paidOrders?.map((order) => order.id) ?? [];
   const { data: autoApprovedProofs, error: autoProofError } = paidOrderIds.length
     ? await supabase.from("payment_proofs").select("order_id")
       .eq("review_status", "APPROVED").is("reviewed_by", null).in("order_id", paidOrderIds)
     : { data: [], error: null };
   const autoApprovedOrderIds = new Set((autoApprovedProofs ?? []).map((proof) => proof.order_id));
-  const failures = [profileError, totalError, orderError, completedError, processingError, clipError, paidError, creditError, autoProofError].filter(Boolean);
+  const failures = [profileError, totalError, userOrdersError, orderError, completedError, processingError, clipError, paidError, creditError, autoProofError].filter(Boolean);
   const paidTotal = paidOrders?.filter((order) => !autoApprovedOrderIds.has(order.id))
     .reduce((total, row) => total + Number(row.amount), 0) ?? 0;
   const availableCredits = creditBalance?.balance ?? 0;

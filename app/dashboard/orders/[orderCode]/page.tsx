@@ -9,9 +9,9 @@ import { isCreditClipRun, isCreditPurchase } from "@/lib/credits";
 type PageProps = { params: Promise<{ orderCode: string }> };
 
 export default async function OrderDetailPage({ params }: PageProps) {
-  const { supabase } = await requireUser();
+  const { supabase, user } = await requireUser();
   const { orderCode } = await params;
-  const { data: order, error } = await supabase.from("orders").select("*").eq("order_code", orderCode).maybeSingle();
+  const { data: order, error } = await supabase.from("orders").select("*").eq("order_code", orderCode).eq("user_id", user.id).maybeSingle();
   if (error) return <main id="account-content" className="container app-main"><p className="form-error">Detail order gagal dimuat.</p></main>;
   if (!order) notFound();
   const { data: payment, error: paymentError } = await supabase.from("payments")
