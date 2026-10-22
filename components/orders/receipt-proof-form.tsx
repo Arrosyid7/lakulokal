@@ -12,6 +12,28 @@ type Props = {
 const MAX_RECEIPT_SIZE = 5 * 1024 * 1024;
 const MAX_COMPRESSED_RECEIPT_SIZE = 750 * 1024;
 
+async function prepareReceiptForOcr(source: File): Promise<Blob> {
+  const bitmap = await createImageBitmap(source);
+  try {
+    const scale = Math.min(2, 2200 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Gambar bukti belum dapat diproses di browser ini.");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.filter = "grayscale(1) contrast(1.2)";
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
+    if (!blob) throw new Error("Gambar bukti belum dapat disiapkan untuk dibaca ulang.");
+    return blob;
+  } finally {
+    bitmap.close();
+  }
+}
+
 async function compressReceipt(source: File): Promise<File> {
   const bitmap = await createImageBitmap(source);
   try {
@@ -63,9 +85,16 @@ export function ReceiptProofForm({ orderCode, amount, onSubmitted }: Props) {
     let worker: import("tesseract.js").Worker | null = null;
     try {
       const { createWorker } = await import("tesseract.js");
-      worker = await createWorker("eng+ind");
-      const { data } = await worker.recognize(image);
-      const recognizedAmount = extractReceiptAmounts(data.text).find((candidate) => candidate === amount);
+      const ocrWorker = await createWorker("eng+ind");
+      worker = ocrWorker;
+      const { data } = await ocrWorker.recognize(image);
+      let recognizedAmount = extractReceiptAmounts(data.text).find((candidate) => candidate === amount);
+      if (recognizedAmount === undefined) {
+        setMessage("Nominal belum cocok, mencoba membaca ulang bukti...");
+        const enhancedImage = await prepareReceiptForOcr(image);
+        const retry = await ocrWorker.recognize(enhancedImage);
+        recognizedAmount = extractReceiptAmounts(retry.data.text).find((candidate) => candidate === amount);
+      }
       if (recognizedAmount === undefined) {
         throw new Error("Nominal pada bukti tidak terbaca cocok dengan total order.");
       }

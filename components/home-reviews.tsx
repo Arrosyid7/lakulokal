@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import Image from "next/image";
 import Link from "next/link";
+import { ReviewCarousel } from "@/components/review-carousel";
 
 export async function HomeReviews() {
   let reviews: { id: string; display_name: string; review_text: string; rating: number; imageUrl: string }[] | null = null;
@@ -54,27 +54,7 @@ export async function HomeReviews() {
         {failed ? (
           <p className="form-error" role="alert">Ulasan belum dapat dimuat. Muat ulang halaman untuk mencoba kembali.</p>
         ) : reviews?.length ? (
-          <div className="review-cards">
-            {reviews.map((review) => (
-              <article className="review-card" key={review.id}>
-                  <Image
-                    className="review-card-image"
-                    src={review.imageUrl}
-                    alt={`Foto bukti pengalaman LakuLokal dari ${review.display_name}`}
-                    width={360}
-                    height={280}
-                    unoptimized
-                  />
-                  <p className="review-rating" aria-label={`Penilaian ${review.rating} dari 5 bintang`}>
-                    {"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}
-                  </p>
-                  <blockquote>
-                    <p>{review.review_text}</p>
-                    <footer><cite>{review.display_name}</cite></footer>
-                </blockquote>
-              </article>
-            ))}
-          </div>
+          <ReviewCarousel reviews={reviews} />
         ) : (
           <p className="empty-state">Belum ada ulasan pengguna yang ditampilkan. Kirim ulasan beserta foto terkait LakuLokal untuk diajukan ke admin.</p>
         )}

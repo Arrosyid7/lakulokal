@@ -152,15 +152,20 @@ button { color: inherit; }
 .faq-list details p { max-width: 720px; margin: 0 0 20px; color: var(--muted); font-size: .93rem; line-height: 1.75; }
 
 .review-section { border-block: 1px solid var(--line); background: var(--purple-wash); }
-.review-layout { display: grid; grid-template-columns: minmax(240px, .72fr) minmax(0, 1.28fr); align-items: start; gap: clamp(40px, 9vw, 128px); }
-.review-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-.review-card { min-width: 0; border: 1px solid #c9c5d9; border-radius: 14px 4px 14px 4px; padding: clamp(18px, 2.5vw, 26px); background: var(--white); }
-.review-card blockquote { display: grid; align-content: space-between; gap: 22px; height: 100%; margin: 0; }
-.review-card blockquote > p { margin: 0; color: var(--ink); line-height: 1.75; overflow-wrap: anywhere; }
-.review-card cite { display: inline-flex; align-items: center; gap: 10px; color: var(--purple-deep); font-style: normal; font-weight: 800; }
+.review-layout { display: grid; grid-template-columns: minmax(200px, .55fr) minmax(0, 1.45fr); align-items: start; gap: clamp(28px, 4vw, 56px); }
+.review-carousel { min-width: 0; width: 100%; max-width: 840px; }
+.review-carousel:focus-visible { outline: 3px solid var(--purple-deep); outline-offset: 4px; }
+.review-carousel-viewport { overflow: hidden; border-radius: 14px 4px 14px 4px; }
+.review-carousel-track { display: flex; align-items: stretch; transition: transform 420ms ease; }
+.review-carousel-page { flex: 0 0 100%; min-width: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: 12px; }
+.review-card { min-width: 0; display: grid; grid-template-rows: auto auto 1fr; align-content: start; gap: 10px; border: 1px solid #c9c5d9; border-radius: 14px 4px 14px 4px; padding: 14px; background: var(--white); }
+.review-card blockquote { display: grid; align-content: space-between; gap: 6px; margin: 0; }
+.review-card blockquote > p { display: -webkit-box; margin: 0; overflow: hidden; color: var(--ink); line-height: 1.45; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.review-card cite { display: inline-flex; align-items: center; gap: 6px; color: var(--purple-deep); font-size: .78rem; font-style: normal; font-weight: 800; }
 .review-card cite::after { width: 20px; height: 6px; content: ""; transform: skewX(-24deg); background: var(--coral); }
-.review-card-image { display: block; width: 100%; height: auto; max-height: 280px; object-fit: contain; object-position: left center; border: 1px solid var(--line); border-radius: 8px; background: var(--white); }
-.review-rating { margin: 0; color: var(--coral-ink); font-size: 1rem; font-weight: 800; letter-spacing: .08em; }
+.review-card-image-frame { width: 100%; aspect-ratio: 2 / 1; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--white); }
+.review-card-image { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.review-rating { margin: 0; color: var(--coral-ink); font-size: .9rem; font-weight: 800; letter-spacing: .06em; }
 .review-submit-link { min-height: 44px; display: inline-flex; align-items: center; margin-top: 16px; color: var(--purple-deep); font-weight: 800; }
 .review-submit-link:hover { text-decoration-color: var(--coral); }
 .review-form { display: grid; gap: 16px; }
@@ -559,7 +564,6 @@ button { color: inherit; }
   .hero-character-stage { min-height: 0; }
   .hero-character { height: min(48vw, 450px); }
   .process-layout, .faq-layout, .review-layout { grid-template-columns: minmax(210px, .7fr) minmax(0, 1.3fr); gap: 40px; }
-  .review-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pricing-layout { grid-template-columns: minmax(190px, .75fr) minmax(0, 1.25fr); gap: 32px; }
   .pricing-item { grid-template-columns: minmax(0, 1fr) auto; gap: 10px 16px; }
   .pricing-item-summary { grid-column: 1; }
@@ -605,7 +609,6 @@ button { color: inherit; }
   .home-cut-divider::before, .home-cut-divider::after { background: repeating-linear-gradient(90deg, var(--purple) 0 10px, transparent 10px 16px); }
   .home-cut-divider span { width: 24px; height: 10px; }
   .process-layout, .faq-layout, .review-layout { grid-template-columns: 1fr; gap: 28px; }
-  .review-cards { grid-template-columns: minmax(0, 1fr); }
   .pricing-layout { grid-template-columns: 1fr; gap: 24px; }
   .pricing-visual { order: -1; }
   .pricing-character { width: min(58vw, 260px); max-height: 320px; }
@@ -667,12 +670,15 @@ button { color: inherit; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+  .review-carousel-track { transition: none; }
 }
 
 @media (max-width: 920px) {
   .account-shell .order-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .browser-checkout { grid-template-columns: minmax(0, 1.35fr) minmax(210px, .7fr); }
   .browser-checkout-running { grid-template-columns: minmax(0, 1fr); }
+  .review-layout { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .review-carousel { max-width: none; }
 }
 @media (max-width: 760px) {
   .account-shell .app-nav { min-height: 68px; }
@@ -701,6 +707,14 @@ button { color: inherit; }
   .account-shell .app-nav-links > a, .account-shell .app-nav-links > button { min-height: 48px; }
   .account-shell .app-nav-links > button { margin: 6px 0 0; }
   .account-shell .app-main { padding-bottom: 60px; }
+  .review-carousel-page { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .review-card { grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); grid-template-rows: auto 1fr; align-items: center; gap: 8px 12px; padding: 12px; }
+  .review-card-image-frame { grid-column: 1; grid-row: 1 / span 2; aspect-ratio: 1; }
+  .review-card blockquote { min-height: 0; gap: 8px; }
+  .review-card blockquote > p { font-size: .9rem; line-height: 1.5; }
+  .review-card cite { gap: 6px; font-size: .84rem; }
+  .review-card cite::after { width: 14px; }
+  .review-rating { font-size: .82rem; }
   .account-welcome { margin-bottom: 18px; padding: 22px; }
   .account-metric { min-height: 112px; padding: 13px; }
   .account-metric:first-child { padding: 13px; }

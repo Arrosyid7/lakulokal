@@ -16,6 +16,21 @@ describe("payment proof OCR parsing", () => {
     expect(extractReceiptAmounts("Rp1.000\nID Transaksi\n261021-NV66-YCUTDJ")).toEqual([1000]);
   });
 
+  it("reads the decimal rupiah totals shown on a BYOND BSI QRIS receipt", () => {
+    const receiptText = [
+      "Transaksi pembayaran",
+      "QRIS kamu berhasil",
+      "Nominal Transaksi Rp 1.000,00",
+      "Nama Merchant Toko Zanzum",
+      "MPAN 9360091530201643868",
+      "Nominal Transaksi Rp1000,00",
+      "Total Rp1000,00",
+      "RRN 0000000927A8"
+    ].join("\n");
+
+    expect(extractReceiptAmounts(receiptText)).toContain(1000);
+  });
+
   it("ignores transaction dates and unrelated numeric references", () => {
     expect(extractReceiptAmounts("Tanggal transaksi: 12/10/2026\nNomor referensi: 12345")).toEqual([]);
     expect(extractReceiptAmounts("Total pembayaran: Rp 1.000\nTanggal transaksi: 12/10/2026")).toEqual([1000]);

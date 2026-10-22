@@ -29,7 +29,8 @@ Use Nunito Sans for relaxed, easy-to-read interface text. Pair it with Baloo 2 f
 - Use bordered surfaces for forms and grouped account data, not as a container for every piece of content.
 - Give the footer a strong purple closing surface with practical contact and policy links.
 - Prefer hover and focus feedback; avoid motion that does not help orientation.
+- Home reviews show three compact cards together in a fixed image frame; each 3-second slide advances to the next group of three, pauses on hover or focus, and is disabled for reduced-motion preferences.
 
 ## Dials
 
-ENERGY 3 / RHYTHM 3 / MOTION 1.
+ENERGY 3 / RHYTHM 3 / MOTION 2.
