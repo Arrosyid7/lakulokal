@@ -19,7 +19,7 @@ export async function HomeReviews() {
       .not("rating", "is", null)
       .not("image_path", "is", null)
       .order("created_at", { ascending: false })
-      .limit(6);
+      .limit(12);
     if (result.error) {
       console.error("home_reviews_load_failed", { code: result.error.code });
       failed = true;
