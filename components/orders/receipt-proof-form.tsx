@@ -12,7 +12,7 @@ type Props = {
 const MAX_RECEIPT_SIZE = 5 * 1024 * 1024;
 const MAX_COMPRESSED_RECEIPT_SIZE = 750 * 1024;
 
-async function prepareReceiptForOcr(source: File): Promise<Blob> {
+async function prepareReceiptForOcr(source: Blob, enhance = false): Promise<HTMLCanvasElement> {
   const bitmap = await createImageBitmap(source);
   try {
     const scale = Math.min(2, 2200 / Math.max(bitmap.width, bitmap.height));
@@ -23,12 +23,9 @@ async function prepareReceiptForOcr(source: File): Promise<Blob> {
     if (!context) throw new Error("Gambar bukti belum dapat diproses di browser ini.");
     context.fillStyle = "#ffffff";
     context.fillRect(0, 0, canvas.width, canvas.height);
-    context.filter = "grayscale(1) contrast(1.2)";
+    if (enhance) context.filter = "grayscale(1) contrast(1.2)";
     context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
-    if (!blob) throw new Error("Gambar bukti belum dapat disiapkan untuk dibaca ulang.");
-    return blob;
+    return canvas;
   } finally {
     bitmap.close();
   }
@@ -87,12 +84,13 @@ export function ReceiptProofForm({ orderCode, amount, onSubmitted }: Props) {
       const { createWorker } = await import("tesseract.js");
       const ocrWorker = await createWorker("eng+ind");
       worker = ocrWorker;
-      const { data } = await ocrWorker.recognize(image);
+      const receiptCanvas = await prepareReceiptForOcr(image);
+      const { data } = await ocrWorker.recognize(receiptCanvas);
       let recognizedAmount = extractReceiptAmounts(data.text).find((candidate) => candidate === amount);
       if (recognizedAmount === undefined) {
         setMessage("Nominal belum cocok, mencoba membaca ulang bukti...");
-        const enhancedImage = await prepareReceiptForOcr(image);
-        const retry = await ocrWorker.recognize(enhancedImage);
+        const enhancedCanvas = await prepareReceiptForOcr(image, true);
+        const retry = await ocrWorker.recognize(enhancedCanvas);
         recognizedAmount = extractReceiptAmounts(retry.data.text).find((candidate) => candidate === amount);
       }
       if (recognizedAmount === undefined) {

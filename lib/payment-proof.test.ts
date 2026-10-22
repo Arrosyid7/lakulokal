@@ -31,6 +31,28 @@ describe("payment proof OCR parsing", () => {
     expect(extractReceiptAmounts(receiptText)).toContain(1000);
   });
 
+  it("reads the total transaction amount shown on a Livin' by Mandiri QRIS receipt", () => {
+    const receiptText = [
+      "QR Bayar",
+      "Pembayaran Berhasil!",
+      "22 Okt 2026 - 13:31:53 WIB - No. Ref. 2610221122572271398",
+      "Penerima",
+      "Toko Zanzum",
+      "Detail Transaksi",
+      "Total Transaksi Rp 1.000",
+      "Sumber Dana",
+      "RASYA GALUH DEWANTI",
+      "Bank Mandiri - .........2305",
+      "No. Referensi QRIS 610627607545",
+      "Pengakuisisi DANA",
+      "Merchant PAN 9360091500201643861",
+      "Customer PAN 9360000812272823052",
+      "Terminal ID 020164386"
+    ].join("\n");
+
+    expect(extractReceiptAmounts(receiptText)).toContain(1000);
+  });
+
   it("ignores transaction dates and unrelated numeric references", () => {
     expect(extractReceiptAmounts("Tanggal transaksi: 12/10/2026\nNomor referensi: 12345")).toEqual([]);
     expect(extractReceiptAmounts("Total pembayaran: Rp 1.000\nTanggal transaksi: 12/10/2026")).toEqual([1000]);
